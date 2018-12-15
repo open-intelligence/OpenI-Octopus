@@ -9,6 +9,7 @@ RUN	sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list &&
 	apt-get update && apt-get install -y --no-install-recommends \
 		build-essential \
 		git \
+		unzip \
 		wget \
 		libatlas-base-dev \
 		libboost-all-dev \
@@ -42,6 +43,8 @@ RUN	sed -i 's/archive.ubuntu.com/mirrors.ustc.edu.cn/g' /etc/apt/sources.list &&
 		libgoogle-glog-dev \
 		liblmdb-dev \
 		gfortran
+
+RUN unzip hice.zip
 
 # cmake : 3.11
 RUN   wget https://cmake.org/files/v3.11/cmake-3.11.0-rc4-Linux-x86_64.tar.gz && \
