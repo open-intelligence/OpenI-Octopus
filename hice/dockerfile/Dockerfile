@@ -1,7 +1,4 @@
-# This image contains all the libs and environment necessary for compiling and running Faster R-CNN
 FROM nvidia/cuda:8.0-cudnn6-devel-ubuntu16.04
-
-MAINTAINER zkzhu zkzhu@mail.ustc.edu.cn
 
 COPY . /root
 WORKDIR /root
