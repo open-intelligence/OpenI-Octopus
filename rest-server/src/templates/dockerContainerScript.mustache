@@ -1,0 +1,270 @@
+#!/bin/bash
+
+# Copyright (c) Microsoft Corporation
+# All rights reserved.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
+# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+# Bootstrap script for docker container.
+
+exec 17>/tmp/openi_dockercontainer_$OPENI_CONTAINER_ID.log
+BASH_XTRACEFD=17
+
+function exit_handler()
+{
+  printf "%s %s\n" \
+    "[DEBUG]" "EXIT signal received in docker container, exiting ..."
+  set +x
+  exec 17>&-
+
+  mkdir -p /{{{ jobData.userName }}}/{{{ jobData.jobName }}}/log/
+  cp /tmp/openi_dockercontainer_$OPENI_CONTAINER_ID.log /{{{ jobData.userName }}}/{{{ jobData.jobName }}}/log/
+
+  kill 0
+}
+
+function term_handler()
+{
+    echo pid:$$ finished
+}
+
+set -x
+trap exit_handler EXIT
+trap term_handler SIGTERM
+
+touch "/alive/docker_$OPENI_CONTAINER_ID"
+while /bin/true; do
+  [ $(( $(date +%s) - $(stat -c %Y /alive/yarn_$OPENI_CONTAINER_ID) )) -gt 60 ] \
+    && pkill -9 --ns 1
+  sleep 20
+done &
+
+CONTAINER_IP=$(cat /etc/hosts | awk -F ' ' 'NR==7 {print $1}')
+
+
+export OPENI_WORK_DIR="$(pwd)"
+
+export OPENI_JOB_NAME={{{ jobData.jobName }}}
+export OPENI_USER_NAME={{{ jobData.userName }}}
+export OPENI_CURRENT_TASK_ROLE_NAME={{{ taskData.name }}}
+export OPENI_CURRENT_TASK_ROLE_TASK_COUNT={{{ taskData.taskNumber }}}
+export OPENI_CURRENT_TASK_ROLE_CPU_COUNT={{{ taskData.cpuNumber }}}
+export OPENI_CURRENT_TASK_ROLE_MEM_MB={{{ taskData.memoryMB }}}
+export OPENI_CURRENT_TASK_ROLE_SHM_MB={{{ taskData.shmMB }}}
+export OPENI_CURRENT_TASK_ROLE_GPU_COUNT={{{ taskData.gpuNumber }}}
+export OPENI_JOB_TASK_COUNT={{{ tasksNumber }}}
+export OPENI_JOB_TASK_ROLE_COUNT={{{ taskRolesNumber }}}
+export OPENI_JOB_TASK_ROLE_LIST={{{ taskRoleList }}}
+export OPENI_KILL_ALL_ON_COMPLETED_TASK_NUM={{{ jobData.killAllOnCompletedTaskNumber }}}
+
+
+
+task_role_no={{{ idx }}}
+
+if [ -f /$OPENI_USER_NAME/$OPENI_JOB_NAME/tmp/$APP_ID-$task_role_no-$OPENI_TASK_INDEX-$OPENI_CONTAINER_HOST_IP-$OPENI_CONTAINER_HOST_PORT ]
+then
+    echo /$OPENI_USER_NAME/$OPENI_JOB_NAME/tmp/$APP_ID-$task_role_no-$OPENI_TASK_INDEX-$OPENI_CONTAINER_HOST_IP-$OPENI_CONTAINER_HOST_PORT existed, exiting now
+    exit 1
+else
+    echo creating /$OPENI_USER_NAME/$OPENI_JOB_NAME/tmp/$APP_ID-$task_role_no-$OPENI_TASK_INDEX-$OPENI_CONTAINER_HOST_IP-$OPENI_CONTAINER_HOST_PORT
+    touch /$OPENI_USER_NAME/$OPENI_JOB_NAME/tmp/$APP_ID-$task_role_no-$OPENI_TASK_INDEX-$OPENI_CONTAINER_HOST_IP-$OPENI_CONTAINER_HOST_PORT || exit 1
+
+    filename=/$OPENI_USER_NAME/$OPENI_JOB_NAME/tmp/$APP_ID-$task_role_no-$OPENI_TASK_INDEX-$OPENI_CONTAINER_HOST_IP-$OPENI_CONTAINER_HOST_PORT
+    echo OPENI_PORT_LIST_${OPENI_CURRENT_TASK_ROLE_NAME}_${OPENI_TASK_INDEX}="${OPENI_CONTAINER_HOST_IP},${OPENI_PORT_MAP_10001},${OPENI_PORT_MAP_10002},${OPENI_PORT_MAP_10003}" >$filename || exit 1
+
+fi
+
+
+while [ `ls -l /$OPENI_USER_NAME/$OPENI_JOB_NAME/tmp/ | grep "$APP_ID-" | wc -l` -lt  $OPENI_JOB_TASK_COUNT ]; do
+  printf "%s %s\n" "[INFO]" "Waiting for other containers ..."
+  sleep 10
+done
+
+for file in $(ls /$OPENI_USER_NAME/$OPENI_JOB_NAME/tmp/ | grep "$APP_ID-"); do
+     cat /$OPENI_USER_NAME/$OPENI_JOB_NAME/tmp/${file}
+     export eval $(cat /$OPENI_USER_NAME/$OPENI_JOB_NAME/tmp/${file} )
+done
+
+
+ls /$OPENI_USER_NAME/$OPENI_JOB_NAME/tmp/ \
+  | grep "$APP_ID-" \
+  | grep -oE "[^/]+$" \
+  | sed -e "s/^$APP_ID-//g" \
+  | sort -n -k 2 -t"-" \
+  > ContainerList
+
+
+if [ "$(cat ContainerList | wc -l)" -ne $OPENI_JOB_TASK_COUNT ]; then
+  printf "%s %s\n%s\n%s\n\n" \
+    "[ERROR]" "ContainerList" \
+    "$(cat ContainerList)" \
+    "$(cat ContainerList | wc -l) containers are available, not equal to $OPENI_JOB_TASK_COUNT, exit ..."
+  exit 2
+fi
+
+export OPENI_CURRENT_TASK_ROLE_CURRENT_TASK_INDEX=$((`cat ContainerList | grep "^$task_role_no-" | grep -n "$task_role_no-$OPENI_TASK_INDEX-$OPENI_CONTAINER_HOST_IP-$OPENI_CONTAINER_HOST_PORT" | cut -d ":" -f 1`-1))
+task_role_list=(${OPENI_JOB_TASK_ROLE_LIST//,/ })
+for i in `seq 0 $((OPENI_JOB_TASK_ROLE_COUNT-1))`; do
+  host_list=`cat ContainerList | grep "^$i-" | cut -d "-" -f 3-4 | tr "-" ":" | sed -e :E -e "N;s/\n/,/;tE"`
+  host_list=$(echo ${host_list} | sed 's/://g')
+  export OPENI_TASK_ROLE_${i}_HOST_LIST=$host_list
+  export OPENI_TASK_ROLE_${task_role_list[$i]}_HOST_LIST=$host_list
+done
+rm ContainerList
+
+printf "%s %s\n%s\n\n" "[INFO]" "ENV" "$(printenv | sort)"
+
+# Backward compatibility
+export OPENI_USERNAME=$OPENI_USER_NAME
+export OPENI_TASK_ROLE_NAME=$OPENI_CURRENT_TASK_ROLE_NAME
+export OPENI_TASK_ROLE_NUM=$OPENI_CURRENT_TASK_ROLE_TASK_COUNT
+export OPENI_TASK_CPU_NUM=$OPENI_CURRENT_TASK_ROLE_CPU_COUNT
+export OPENI_TASK_MEM_MB=$OPENI_CURRENT_TASK_ROLE_MEM_MB
+export OPENI_TASK_GPU_NUM=$OPENI_CURRENT_TASK_ROLE_GPU_COUNT
+export OPENI_TASK_ROLE_INDEX=$OPENI_CURRENT_TASK_ROLE_CURRENT_TASK_INDEX
+export OPENI_TASKS_NUM=$OPENI_JOB_TASK_COUNT
+export OPENI_TASK_ROLES_NUM=$OPENI_JOB_TASK_ROLE_COUNT
+export OPENI_TASK_ROLE_LIST=$OPENI_JOB_TASK_ROLE_LIST
+export OPENI_CURRENT_HOST_IP=$OPENI_CONTAINER_HOST_IP
+export OPENI_CURRENT_CONTAINER_IP=$CONTAINER_IP
+export OPENI_CURRENT_CONTAINER_PORT=$OPENI_CONTAINER_HOST_PORT
+
+function prepare_ssh()
+{
+  mkdir /root/.ssh
+  sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+  sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+}
+
+function start_ssh_service()
+{
+  printf "%s %s\n" \
+    "[INFO]" "start ssh service"
+  cat /root/.ssh/$APP_ID.pub >> /root/.ssh/authorized_keys
+  #sed -i 's/Port.*/Port '$OPENI_CONTAINER_SSH_PORT'/' /etc/ssh/sshd_config
+  echo "sshd:ALL" >> /etc/hosts.allow
+  service ssh restart
+}
+
+# Start sshd in docker container
+prepare_ssh
+hdfs_ssh_folder=${HDFS_LAUNCHER_PREFIX}/${OPENI_USER_NAME}/${OPENI_JOB_NAME}/ssh/${APP_ID}
+printf "%s %s\n%s %s\n%s %s\n" \
+  "[INFO]" "hdfs_ssh_folder is ${hdfs_ssh_folder}" \
+  "[INFO]" "task_role_no is ${task_role_no}" \
+  "[INFO]" "OPENI_TASK_INDEX is ${OPENI_TASK_INDEX}"
+
+# Let taskRoleNumber=0 and taskindex=0 execute upload ssh files
+if [ ${task_role_no} -eq 0 ] && [ ${OPENI_TASK_INDEX} -eq 0 ]; then
+  printf "%s %s %s\n%s\n" \
+    "[INFO]" "task_role_no:${task_role_no}" "OPENI_TASK_INDEX:${OPENI_TASK_INDEX}" \
+    "Execute upload key pair ..."
+  ssh-keygen -N '' -t rsa -f ~/.ssh/$APP_ID
+  mkdir -p "${hdfs_ssh_folder}/.ssh" || exit 1
+  cp -rf /root/.ssh/* "${hdfs_ssh_folder}/.ssh/"
+  chmod 777 -R ${hdfs_ssh_folder}/.ssh/*
+else
+  # Waiting for ssh key-pair ready
+  while [ ! -d ${hdfs_ssh_folder}/.ssh ]; do
+    echo "[INFO] waitting for ssh key ready"
+    sleep 10
+  done
+  printf "%s %s\n%s %s\n" \
+    "[INFO]" "ssh key pair ready ..." \
+    "[INFO]" "begin to download ssh key pair from hdfs ..."
+  cp -rf  "${hdfs_ssh_folder}/.ssh/" "/root/" || exit 1
+fi
+
+chmod 400 ~/.ssh/$APP_ID
+# Generate ssh connect info file in "OPENI_CONTAINER_ID-OPENI_CURRENT_OPENI_CONTAINER_HOST_IP-OPENI_CONTAINER_SSH_PORT" format on hdfs
+if [ -f ${hdfs_ssh_folder}/$OPENI_CONTAINER_ID-$OPENI_CONTAINER_HOST_IP-$OPENI_CONTAINER_SSH_PORT ];then
+    echo "${hdfs_ssh_folder}/$OPENI_CONTAINER_ID-$OPENI_CONTAINER_HOST_IP-$OPENI_CONTAINER_SSH_PORT existed, exiting now"
+    exit 1
+else
+    touch "${hdfs_ssh_folder}/$OPENI_CONTAINER_ID-$OPENI_CONTAINER_HOST_IP-$OPENI_CONTAINER_SSH_PORT"
+fi
+
+# Generate ssh config
+ssh_config_path=${HDFS_LAUNCHER_PREFIX}/${OPENI_USER_NAME}/${OPENI_JOB_NAME}/ssh/config
+mkdir -p ${ssh_config_path} || exit 1
+
+if [ -f ${ssh_config_path}/$APP_ID+$OPENI_CURRENT_TASK_ROLE_NAME+$OPENI_CURRENT_TASK_ROLE_CURRENT_TASK_INDEX+$OPENI_CONTAINER_HOST_IP+$OPENI_CONTAINER_SSH_PORT ];then
+    echo ${ssh_config_path}/$APP_ID+$OPENI_CURRENT_TASK_ROLE_NAME+$OPENI_CURRENT_TASK_ROLE_CURRENT_TASK_INDEX+$OPENI_CONTAINER_HOST_IP+$OPENI_CONTAINER_SSH_PORT existed, exiting now
+    exit 1
+else
+    touch ${ssh_config_path}/$APP_ID+$OPENI_CURRENT_TASK_ROLE_NAME+$OPENI_CURRENT_TASK_ROLE_CURRENT_TASK_INDEX+$OPENI_CONTAINER_HOST_IP+$OPENI_CONTAINER_SSH_PORT
+fi
+
+while [ `ls -l $ssh_config_path | grep "$APP_ID+" | wc -l` -lt  $OPENI_JOB_TASK_COUNT ]; do
+  printf "%s %s\n" "[INFO]" "Waiting for ssh service in other containers ..."
+  sleep 10
+done
+
+NodeList=($(ls ${ssh_config_path} \
+  | grep "$APP_ID+" \
+  | grep -oE "[^/]+$" \
+  | sed -e "s/^$APP_ID+//g" \
+  | sort -n))
+
+if [ "${#NodeList[@]}" -ne $OPENI_JOB_TASK_COUNT ]; then
+  printf "%s %s\n%s\n%s\n\n" \
+    "[ERROR]" "NodeList" \
+    "${NodeList[@]}" \
+    "ssh services in ${#NodeList[@]} containers are available, not equal to $OPENI_JOB_TASK_COUNT, exit ..."
+  exit 2
+fi
+
+for line in "${NodeList[@]}"; do
+  node=(${line//+/ });
+  printf "%s\n  %s\n  %s\n  %s\n  %s\n  %s\n  %s\n" \
+    "Host ${node[0]}-${node[1]}" \
+    "HostName ${node[2]}" \
+    "Port ${node[3]}" \
+    "User root" \
+    "StrictHostKeyChecking no" \
+    "UserKnownHostsFile /dev/null" \
+    "IdentityFile /root/.ssh/$APP_ID" >> /root/.ssh/config
+done
+
+# Start ssh service
+start_ssh_service
+
+
+# Write env to system-wide environment
+env | grep -E "^OPENI|PATH|PREFIX|JAVA|HADOOP|NVIDIA|CUDA" > /etc/environment
+
+sleep 10
+printf "%s %s\n\n" "[INFO]" "USER COMMAND START"
+{{{ taskData.command }}} || exit $?
+printf "\n%s %s\n\n" "[INFO]" "USER COMMAND END"
+
+{{# jobData.killAllOnCompletedTaskNumber }}
+if [ -f /$OPENI_USER_NAME/$OPENI_JOB_NAME/finished/$APP_ID-$task_role_no-$OPENI_TASK_INDEX ]
+then
+   echo "/$OPENI_USER_NAME/$OPENI_JOB_NAME/finished/$APP_ID-$task_role_no-$OPENI_TASK_INDEX existed exitng now"
+   exit 1
+else
+   echo "createing /$OPENI_USER_NAME/$OPENI_JOB_NAME/finished/$APP_ID-$task_role_no-$OPENI_TASK_INDEX"
+   touch "/$OPENI_USER_NAME/$OPENI_JOB_NAME/finished/$APP_ID-$task_role_no-$OPENI_TASK_INDEX" || exit 1
+fi
+
+while [ `ls -l /$OPENI_USER_NAME/$OPENI_JOB_NAME/finished/ | grep "$APP_ID-" | wc -l` -lt  $OPENI_KILL_ALL_ON_COMPLETED_TASK_NUM ]; do
+   sleep 10
+done
+{{/ jobData.killAllOnCompletedTaskNumber }}
+
+
+exit 0

@@ -1,0 +1,15 @@
+!!com.microsoft.frameworklauncher.common.model.LauncherRequest
+aclConfiguration:
+  namespaceAcls:
+    testString:
+      users: !!set
+        ? {name: testString}
+        : null
+  normalAdminUsers: !!set
+    ? {name: testString}
+    : null
+clusterConfiguration:
+  nodes:
+    testString: {gpuType: testString}
+launchedDataDeploymentVersion: testString
+launchingDataDeploymentVersion: testString

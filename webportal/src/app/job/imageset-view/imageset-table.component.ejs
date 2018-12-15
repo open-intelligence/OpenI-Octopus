@@ -1,0 +1,22 @@
+<table id="imageset-table" class="table table-bordered table-hover">
+  <thead>
+    <tr>
+            <th>Id</th>  
+            <th>Name</th>
+            <th>Path</th>  
+            <th>Provider</th>
+            <th>CreateTime</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% for (let i = 0; i < imagesets.length; i ++) { %>
+      <tr>
+            <td><a class="imageId"><%= imagesets[i].id %></a></td>
+            <td><%= imagesets[i].name %></td>
+            <td><%= imagesets[i].place %></td>
+            <td><%= imagesets[i].provider %></td>
+            <td><%= imagesets[i].createtime %></td>
+      </tr>
+    <% } %>
+  </tbody>
+</table>

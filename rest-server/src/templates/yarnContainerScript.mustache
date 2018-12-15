@@ -1,0 +1,206 @@
+#!/bin/bash
+
+# Copyright (c) Microsoft Corporation
+# All rights reserved.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
+# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+# Entrypoint script for yarn container.
+
+exec 13>/tmp/openi_yarncontainer_$CONTAINER_ID.log
+BASH_XTRACEFD=13
+
+
+openiHdfsDir=/gpai
+userHome=/ghome
+dataSetHome=/gdata
+modelHome=/gshare
+modelHub=/gmodel
+
+docker_name="$FRAMEWORK_NAME-$CONTAINER_ID"
+
+function exit_handler()
+{
+  echo  "[ERROR]" "EXIT signal received in yarn container, exiting ..."
+
+  leftLiteral="{"
+  rightLiteral="}"
+
+  pid=$(docker inspect -f ${leftLiteral}${leftLiteral}.State.Pid${rightLiteral}${rightLiteral} $docker_name 2>/dev/null)
+
+  if [ $pid ]; then
+      echo killing container $docker_name
+      kill -9 $pid
+      echo container $docker_name stopped
+  else
+     echo container $docker_name stopped already
+  fi
+
+  exec 13>&-
+  cp /tmp/openi_yarncontainer_$CONTAINER_ID.log  ${openiHdfsDir}/{{{ cluster_id }}}/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/log
+
+}
+
+set -x
+trap exit_handler EXIT
+
+
+export OPENI_DEFAULT_FS_URI={{{ hdfsUri }}}
+
+mkdir -p "/tmp/openi-root/alive/$APP_ID"
+while /bin/true; do
+  touch "/tmp/openi-root/alive/$APP_ID/yarn_$CONTAINER_ID"
+  sleep 20
+  [ -f "/tmp/openi-root/alive/$APP_ID/docker_$CONTAINER_ID" ] && [ ! "$(docker ps | grep $docker_name)" ] && break
+done &
+
+gpu_id=''
+nvidia_devices=''
+{{# taskData.gpuNumber }}
+nvidia_devices+='--device=/dev/nvidiactl --device=/dev/nvidia-uvm'
+gpu_bitmap=$(perl -e 'printf "%b",'$CONTAINER_GPUS)
+for (( i=0,j=$((${#gpu_bitmap}-1)); i<${#gpu_bitmap}; i++,j-- )); do
+  if [ ${gpu_bitmap:$i:1} -gt 0 ]; then
+    gpu_id+="$j,"
+    nvidia_devices+=" --device=/dev/nvidia$j"
+  fi
+done
+gpu_id=$(echo $gpu_id | sed "s/,$//g")
+{{/ taskData.gpuNumber }}
+printf "%s %s\n%s\n\n" "[INFO]" "GPU_ID" "$gpu_id"
+printf "%s %s\n%s\n\n" "[INFO]" "NVIDIA_DEVICES" "$nvidia_devices"
+
+
+{{# jobData.authFile }}
+IFS=$'\r\n' GLOBIGNORE='*' \
+  eval 'cred=($(hdfs dfs -cat {{{ jobData.authFile }}}))' \
+  || { echo 'Read authFile failed' ; exit 1; }
+docker login --username ${cred[1]} --password ${cred[2]} ${cred[0]} \
+  || { echo 'Authorized failed' ; exit 1; }
+{{/ jobData.authFile }}
+
+docker pull {{{ jobData.image }}} \
+  || { echo 'Can not pull Docker image' ; exit 1; }
+
+try_count=0
+TRY_MAX_COUNT=50
+
+RANDOM=`date +%N|sed s/...$//`
+while true ; do
+  port_ssh_allow=$(( (RANDOM % 25) + 10001 ))
+  if [ ! $(lsof -i:${port_ssh_allow} | grep -o PID) ]; then
+      break
+  else
+      try_count=$[try_count + 1]
+      if [ $try_count -lt $TRY_MAX_COUNT ];then
+          echo "waiting for available ssh-port"
+          sleep 1
+      else
+          echo "waiting for available ssh-port"
+          try_count=0
+          sleep 60
+      fi
+  fi
+done
+
+OPENI_CONTAINER_SSH_PORT=${port_ssh_allow}
+
+OPENI_PORT_LIST=()
+# Determine the container host port
+port_compare=()
+
+RANDOM=`date +%N|sed s/...$//`
+for port_index in 0 1  2
+do
+    while true ; do
+      port_allocate=$(( (RANDOM % 75) + 10026 ))
+      if [ ! $(lsof -i:${port_allocate}|grep -o PID) ] && [ "${port_compare[${port_allocate}]}_" != "1_" ]; then
+          OPENI_PORT_LIST[${port_index}]=${port_allocate}
+          port_compare[$port_allocate]=1
+          break
+      else
+          sleep 1
+      fi
+    done
+done
+
+bootscriptDir=${openiHdfsDir}/{{{ cluster_id }}}/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/DockerContainerScripts
+
+mkdir -p ${bootscriptDir}
+
+hdfs dfs  -get {{{ hdfsUri }}}/Container/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/DockerContainerScripts/{{{ idx }}}.sh  ${bootscriptDir}/script_${docker_name}.sh
+
+mkdir -p ${openiHdfsDir}/{{{ cluster_id }}}/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/tmp
+mkdir -p ${openiHdfsDir}/{{{ cluster_id }}}/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/finished
+mkdir -p ${openiHdfsDir}/{{{ cluster_id }}}/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/log
+mkdir -p ${openiHdfsDir}/{{{ cluster_id }}}/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/ssh
+mkdir -p ${userHome}/{{{ jobData.userName }}}
+mkdir -p ${modelHub}/{{{ jobData.userName }}}
+
+sleep 2
+
+model_mount=''
+if [ -d ${modelHub}/{{{ jobData.userName }}} ];then
+    model_mount="--volume ${modelHub}/{{{ jobData.userName }}}:/model-hub"
+fi
+
+docker run --name $docker_name \
+  --rm \
+  --tty \
+  -p $OPENI_CONTAINER_SSH_PORT:22 \
+  -p ${OPENI_PORT_LIST[0]}:10001 \
+  -p ${OPENI_PORT_LIST[1]}:10002 \
+  -p ${OPENI_PORT_LIST[2]}:10003 \
+  --privileged=false \
+  --cap-add=SYS_ADMIN \
+  --cap-add=IPC_LOCK \
+  --cpus={{{ taskData.cpuNumber }}} \
+  --memory={{{ taskData.memoryMB }}}m \
+  --shm-size={{{ taskData.shmMB }}}m \
+  $nvidia_devices \
+  --device=/dev/fuse \
+  --security-opt apparmor:unconfined \
+  --volume /var/drivers/nvidia/current:/usr/local/nvidia:ro \
+  --volume /tmp/openi-root/alive/$APP_ID:/alive \
+  --volume ${userHome}/{{{ jobData.userName }}}:/userhome \
+  ${model_mount} \
+  --volume ${openiHdfsDir}/{{{ cluster_id }}}/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/tmp:/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/tmp \
+  --volume ${openiHdfsDir}/{{{ cluster_id }}}/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/finished:/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/finished \
+  --volume ${openiHdfsDir}/{{{ cluster_id }}}/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/log:/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/log \
+  --volume ${openiHdfsDir}/{{{ cluster_id }}}/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/ssh:/{{{ jobData.userName }}}/{{{ jobData.jobName }}}/ssh \
+  -v ${dataSetHome}:/gdata:ro \
+  -v ${bootscriptDir}/script_${docker_name}.sh:/openi_bootstrap.sh \
+  --label GPU_ID=$gpu_id \
+  --label OPENI_HOSTNAME="$(hostname)" \
+  --label OPENI_JOB_NAME={{{ jobData.jobName }}} \
+  --label OPENI_JOB_VC_NAME={{{ jobData.virtualCluster }}} \
+  --label OPENI_USER_NAME={{{ jobData.userName }}} \
+  --label OPENI_CURRENT_TASK_ROLE_NAME={{{ taskData.name }}} \
+  --env USER_HOME=/userhome \
+  --env APP_ID=$APP_ID \
+  --env FRAMEWORK_NAME=$FRAMEWORK_NAME \
+  --env HADOOP_USER_NAME=$HADOOP_USER_NAME \
+  --env OPENI_TASK_INDEX=$TASK_INDEX \
+  --env OPENI_CONTAINER_HOST_IP=$CONTAINER_IP \
+  --env OPENI_CONTAINER_ID=$CONTAINER_ID \
+  --env OPENI_PORT_MAP_10001=${OPENI_PORT_LIST[0]} \
+  --env OPENI_PORT_MAP_10002=${OPENI_PORT_LIST[1]} \
+  --env OPENI_PORT_MAP_10003=${OPENI_PORT_LIST[2]} \
+  --env OPENI_CONTAINER_SSH_PORT=${OPENI_CONTAINER_SSH_PORT} \
+  --entrypoint '/bin/bash' {{{ jobData.image }}} \
+  '-c' '/bin/bash /openi_bootstrap.sh' \
+  || exit 1
+

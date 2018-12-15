@@ -1,0 +1,15 @@
+{
+  "abs": {
+    "description": "The absolute value of the input data, applied to each element",
+    "input": {
+      "name": "X",
+      "type_attr": "T",
+      "description": "input arg 1"
+    },
+    "output": {
+      "name": "Y",
+      "type_attr": "T",
+      "description": "output arg 1"
+    }
+  }
+}

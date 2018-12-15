@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns="">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    <!--[if IE]>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <![endif]-->
+    <title>Open Exchange Visualizer</title>
+    <!-- BOOTSTRAP CORE STYLE  -->
+    <link href="/static/assets/css/bootstrap.css" rel="stylesheet" />
+    <link href="/static/assets/css/fileinput.min.css" rel='stylesheet' type='text/css' />
+    <!-- FONT AWESOME STYLE  -->
+    <link href="/static/assets/css/font-awesome.css" rel="stylesheet" />
+    <!-- CUSTOM STYLE  -->
+    <link href="/static/assets/css/style.css" rel="stylesheet" />
+    <!-- GOOGLE FONT -->
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />
+
+</head>
+<body>
+    <div class="navbar navbar-inverse set-radius-zero" >
+        <div class="container">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="#" > 
+                    <h3> OPEN EXCHANGE VISUALIZER </h3> 
+                    <!-- <hr> -->
+                </a>
+            </div>
+
+            <div class="right-div">
+                <form class="navbar-form navbar-left">
+                    <input id="importModel" type='file' class="file" label='Upload' data-show-upload="false" data-show-caption="true" data-show-preview="false" accept='.json'>
+                    <!-- <input type="checkbox" checked onchange="reverse()"> -->
+                </form>
+                <!-- <label class="switch">
+                    <input type="checkbox" checked onchange="reverse()">
+                    <span class="slider round"></span>
+                </label> -->
+            </div>
+            <div class="checkbox right-div">
+                <form class="navbar-form navbar-left"> 
+                    <label> <input type="checkbox" checked onchange="reverse()"> Reverse model </label> 
+                </form>
+            </div> 
+        </div>
+    </div>
+    <!-- LOGO HEADER END-->
+    <!-- <section class="menu-section">
+        <div class="container">
+        </div>
+    </section> -->
+
+     <!-- MENU SECTION END-->
+    <div class="content-wrapper">
+        <svg id="draw" width='50px' height='50px'></svg>
+        <!-- </div> -->
+        <div class="right-div col-md-2">
+            <div class="panel panel-default">
+                <div  class="panel-heading">
+                    Information of Model
+                </div>
+                <div id="info-model" class="panel-body chat-widget-main">
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+    
+     <!-- CONTENT-WRAPPER SECTION END-->
+    <section class="footer-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <p>Copyright &copy; 2018. Institute of Digital Media, Peking University, China  </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+      <!-- FOOTER SECTION END-->
+    <!-- JAVASCRIPT FILES PLACED AT THE BOTTOM TO REDUCE THE LOADING TIME  -->
+    <!-- CORE JQUERY  -->
+    <script src="/static/assets/js/jquery-1.10.2.js"></script>
+    <!-- BOOTSTRAP SCRIPTS  -->
+    <script src="/static/assets/js/bootstrap.js"></script>
+    <script src="/static/assets/js/bootstrap.min.js"></script>
+    <!-- CUSTOM SCRIPTS  -->
+    <!-- <script src="assets/js/custom.js"></script> -->
+    <script src="/static/assets/js/fileinput.min.js"></script>
+
+    <script type="text/javascript" src="http://d3js.org/d3.v4.js"></script>
+    <script type="text/javascript" src="http://www.samsarin.com/project/dagre/latest/dagre.min.js"></script>
+    <script type="text/javascript" src="/static/draw.js"></script>
+  
+</body>
+</html>

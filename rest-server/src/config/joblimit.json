@@ -1,0 +1,8 @@
+{
+  "username": ["changfeng@leinao.ai"],
+  "islimit": true,
+  "tasknum": 3,
+  "cpunum": 4,
+  "gpunum": 1,
+  "mem": 49152
+}

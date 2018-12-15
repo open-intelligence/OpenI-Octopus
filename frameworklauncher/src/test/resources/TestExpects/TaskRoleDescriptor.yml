@@ -1,0 +1,24 @@
+!!com.microsoft.frameworklauncher.common.model.TaskRoleDescriptor
+applicationCompletionPolicy: {minFailedTaskCount: 0, minSucceededTaskCount: 0}
+platformSpecificParameters: {samePortAllocation: false, taskNodeGpuType: testString,
+  taskNodeLabel: testString}
+scaleUnitNumber: 0
+scaleUnitTimeoutSec: 0
+taskNumber: 0
+taskRetryPolicy: {fancyRetryPolicy: false, maxRetryCount: 0}
+taskService:
+  entryPoint: testString
+  resource:
+    cpuNumber: 0
+    diskMB: 0
+    diskType: HDD
+    gpuAttribute: 0
+    gpuNumber: 0
+    memoryMB: 0
+    portDefinitions:
+      testString: {count: 0, start: 0}
+    portNumber: 0
+    portRanges:
+    - {begin: 0, end: 0}
+  sourceLocations: [testString]
+  version: 0

@@ -1,0 +1,8 @@
+
+<section class='content'>
+  <h3>Hardware Utilization: <%= instance.split(':')[0] %></h3>
+  <iframe id='content-iframe'
+    style="display:block; width:100%; height:100%; border:none;"
+    src="<%= grafanaUri %>/dashboard/db/openi_nodeview?var-node=<%= instance %>">
+  </iframe>
+</section>

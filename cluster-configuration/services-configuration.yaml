@@ -1,0 +1,182 @@
+# Copyright (c) Microsoft Corporation
+# All rights reserved.
+#
+# MIT License
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+# documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
+# to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+# BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+# DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#
+#
+# Copyright (c) Peking University 2018
+#
+# The software is released under the Open-Intelligence Open Source License V1.0.
+# The copyright owner promises to follow "Open-Intelligence Open Source Platform
+# Management Regulation V1.0", which is provided by The New Generation of 
+# Artificial Intelligence Technology Innovation Strategic Alliance (the AITISA).
+
+cluster:
+
+  clusterid: openi-example
+
+  # Choose proper nvidia driver version from this url http://www.nvidia.com/object/linux-amd64-display-archive.html
+  nvidia-drivers-version: 384.111
+
+  # static docker-version
+  # https://download.docker.com/linux/static/stable/x86_64/docker-17.06.2-ce.tgz
+  # Docker client used by hadoop NM (node manager) to launch Docker containers (e.g., of a deep learning job) in the host env.
+  docker-verison: 17.06.2
+
+  # HDFS, zookeeper data path on your cluster machine.
+  data-path: "/datastorage"
+
+  # the docker registry to store docker images that contain system services like frameworklauncher, hadoop, etc.
+  docker-registry-info:
+
+    # If public, please fill it the same as your username
+    docker-namespace: your_registry_namespace
+
+    # E.g., gcr.io. If public，fill docker_registry_domain with word "public"
+    # docker_registry_domain: public
+    docker-registry-domain: your_registry_domain
+    # If the docker registry doesn't require authentication, please leave docker_username and docker_password empty
+    docker-username: your_registry_username
+    docker-password: your_registry_password
+
+    docker-tag: your_image_tag
+
+    # The name of the secret in kubernetes will be created in your cluster
+    # Must be lower case, e.g., regsecret.
+    secret-name: your_secret_name
+
+
+hadoop:
+  # If custom_hadoop_binary_path is None, script will download a standard version of hadoop binary for you
+  # hadoop-version
+  # http://archive.apache.org/dist/hadoop/common/hadoop-2.9.0/hadoop-2.9.0.tar.gz
+  custom-hadoop-binary-path: None
+  hadoop-version: 2.9.0
+  # Step 1 of 4 to set up Hadoop queues.
+  # Define all virtual clusters, equivalent concept of Hadoop queues.
+  # The capacity of each virtual cluster is specified as the percentage of the whole resources in the system.
+  # All un-configured resources will go to an auto-generated virtual cluster called 'default'.
+  virtualClusters:
+    vc1:
+      description: VC for Alice's team.
+      capacity: 20
+    vc2:
+      description: VC for Bob's team.
+      capacity: 20
+    vc3:
+      description: VC for Charlie's team.
+      capacity: 20
+
+  volumeMounts:
+    - mountPath: /gpai
+      name: scriptdir
+    - mountPath: /ghome
+      name: userhome
+    - mountPath: /gshare
+      name: share
+    - mountPath: /gmodel
+      name: model
+
+  volumes:
+    - name: scriptdir
+      hostPath:
+        path: /gpai
+    - name: userhome
+      hostPath:
+        path: /ghome
+    - name: share
+      hostPath:
+        path: /gshare
+    - name: model
+      hostPath:
+        path: /gmodel
+
+
+frameworklauncher:
+  frameworklauncher-port: 9086
+
+
+restserver:
+  # port for rest api server
+  server-port: 9186
+  # secret for signing authentication tokens, e.g., "Hello OPENI!"
+  jwt-secret: your_jwt_secret
+  # database admin username
+  default-openi-admin-username: your_default_openi_admin_username
+  # database admin password
+  default-openi-admin-password: your_default_openi_admin_password
+  # openi database
+  openi_db_host : "db-host-ip"
+  openi_db_port : 3308
+  openi_db_user : "db-user"
+  openi_db_pwd : "db-user-password"
+  openi_db_database : "db-database"
+  templates_store_path: "/var/openi/rest-server/templates"
+  # iptable path
+  nat-path: "/var/pai/rest-server/natconfig.json"
+  volumeMounts:
+    - mountPath: /gpai
+      name: scriptdir
+
+  volumes:
+    - name: scriptdir
+      hostPath:
+        path: /gpai
+webportal:
+  # port for webportal
+  server-port: 9286
+
+
+grafana:
+  # port for grafana
+  grafana-port: 3000
+
+
+prometheus:
+  # port for prometheus port
+  prometheus-port: 9091
+  # port for node exporter
+  node-exporter-port: 9100
+
+
+pylon:
+  # port of pylon
+  port: 80
+
+model-exchange:
+  port: 6023
+
+  volumeMounts:
+    - mountPath: /gmodel
+      name: scriptdir
+
+  volumes:
+    - name: scriptdir
+      hostPath:
+        path: /gmodel
+	
+model-hub:
+  server_port: 6024
+  mysql: root:root@tcp(192.168.113.221:3308)/modelhub
+  file_storage_path: /gmodel
+
+  volumeMounts:
+   - mountPath: /gmodel
+     name: scriptdir
+
+  volumes: 
+   - name: scriptdir
+     hostPath:
+       path: /gmodel

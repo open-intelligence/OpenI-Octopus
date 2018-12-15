@@ -1,0 +1,403 @@
+@charset "utf-8";
+blockquote,body,button,code,dd,div,dl,dt,fieldset,form,h1,h2,h3,h4,h5,h6,input,legend,li,ol,p,pre,td,textarea,th,ul {
+    padding: 0;
+    margin: 0;
+    font-family: -apple-system,SF UI Text,Arial,PingFang SC,Hiragino Sans GB,Microsoft YaHei,WenQuanYi Micro Hei,sans-serif;
+    list-style-type: none
+}
+body,button,input,select,textarea {
+    font-size: 14px;
+    line-height: 1.42857;
+    font-family: -apple-system,SF UI Text,Arial,PingFang SC,Hiragino Sans GB,Microsoft YaHei,WenQuanYi Micro Hei,sans-serif
+}
+table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: inherit
+}
+caption,th {
+    text-align: left
+}
+fieldset,img {
+    border: none
+}
+ol,ul {
+    list-style: none
+}
+h1,h2,h3,h4,h5,h6 {
+    font-size: 100%;
+    font-weight: 400
+}
+button,input,select,textarea {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    *font-size: 100%;
+    outline: none
+}
+address,b,caption,cite,code,dfn,em,i,optgroup,strong,th,var {
+    font-style: normal;
+    font-weight: 400
+}
+small {
+    font-size: 100%
+}
+a {
+    outline: none
+}
+a,a:hover {
+    text-decoration: none
+}
+.pull-left {
+    float: left
+}
+.pull-right {
+    float: right
+}
+.clearfix:after {
+    content: " ";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden
+}
+.clearfix {
+    zoom:1
+}
+.hide {
+    display: none
+}
+.show {
+    display: block
+}
+.ell {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden
+}
+:-moz-placeholder,::-moz-placeholder {
+    color: inherit
+}
+:-ms-input-placeholder {
+    color: inherit
+}
+::-webkit-input-placeholder {
+    color: inherit
+}
+
+.leinao-wrap {
+    background-color: #fff;
+    box-shadow: 0 2px 4px 0 rgba(211,214,220,0.78);
+    border-radius: 2px;
+}
+.userinfo-card {
+    position: relative;
+    padding: 36px 30px;
+    border-bottom: 1px solid #E6E7E9;
+}
+.userinfo-card .avatar-img {
+    float: left;
+    margin-right: 30px;
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+}
+.userinfo-card .user-info {
+    margin-left: 94px;
+}
+.userinfo-card h2 {
+    margin-bottom: 10px;
+}
+.userinfo-card .nickname {
+    font-size: 25px;
+    color: #4A4A4A;
+}
+.userinfo-card .icon-edit {
+    display: inline-block;
+    vertical-align: middle;
+    width: 20px;
+    height: 20px;
+    background: url(/assets/img/jobs/icon-edit.png) no-repeat;
+    background-size: 20px;
+}
+.userinfo-card .user-meta {
+    font-size: 16px;
+    color: #8C94A0;
+}
+.userinfo-card .user-meta li {
+    padding-top: 13px;
+}
+.userinfo-card .interval {
+    padding: 0 8px;
+}
+.userinfo-card .user-meta .icon {
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 10px;
+    width: 26px;
+    height: 26px;
+}
+.userinfo-card .user-meta .icon-userinfo {
+    background: url(/assets/img/jobs/icon-info.png) no-repeat;
+    background-size: 23px 22px;
+}
+.userinfo-card .user-meta .icon-motto {
+    background: url(/assets/img/jobs/icon-job.png) no-repeat;
+    background-size: 23px 22px;
+}
+.tips-wrap {
+    position: absolute;
+    top: 42px;
+    right: 30px;
+    background-color: #F0F2F5;
+    border-radius: 8px;
+}
+.tips-wrap .close {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    background: url(/assets/img/jobs/icon-close.png) no-repeat;
+    background-size: 100%;
+}
+.tips-wrap .text {
+    padding: 16px 40px;
+    font-size: 16px;
+    color: #FF625F;
+}
+
+.task-wrap {
+    position: relative;
+    padding: 36px 30px;
+    border-bottom: 1px solid #E6E7E9;
+}
+.task-wrap .col-1 {
+    float: left;
+    width: 100%;
+    margin-bottom: -20px;
+}
+.task-wrap .col-2 {
+    float: right;
+    width: 45.37%;
+}
+.task-box {
+    margin-left: -20px;
+}
+.task-box li {
+    float: left;
+    width: 50%;
+}
+.task-card {
+    position: relative;
+    margin-left: 20px;
+    margin-bottom: 20px;
+    height: 120px;
+    background-color: #F0F2F5;
+    border-radius: 8px;
+    color: #4A4A4A;
+    font-size: 18px;
+}
+.task-wait,
+.task-doing {
+    color: #fff;
+}
+.task-wait {
+    background-image: -webkit-linear-gradient(-49deg, rgba(247,195,36,1.00) 0%, #F58A23 100%);
+    background-image: linear-gradient(-49deg, rgba(247,195,36,1.00) 0%, #F58A23 100%);
+}
+.task-doing {
+    background-image: -webkit-linear-gradient(-50deg, rgba(16,195,247,0.79) 0%, #2E6CF9 100%);
+    background-image: linear-gradient(-50deg, rgba(16,195,247,0.79) 0%, #2E6CF9 100%);
+}
+.task-timer {
+    padding: 0 10%;
+    height: 260px;
+    color: #fff;
+    background-image: -webkit-linear-gradient(134deg, #468CFB 13%, rgba(139,30,237,0.75) 100%);
+    background-image: linear-gradient(134deg, #468CFB 13%, rgba(139,30,237,0.75) 100%);
+    border-radius: 8px;
+}
+
+.task-card .icon {
+    margin-top: 25px;
+    margin-left: 30px;
+    display: inline-block;
+    vertical-align: middle;
+}
+.task-card .icon-wait {
+    width: 30px;
+    height: 30px;
+    background: url(/assets/img/jobs/icon-wait.png) no-repeat;
+    background-size: 100%;
+}
+.task-card .icon-doing {
+    width: 36px;
+    height: 30px;
+    background: url(/assets/img/jobs/icon-doing.png) no-repeat;
+    background-size: 100%;
+}
+.task-card .icon-pause {
+    width: 32px;
+    height: 32px;
+    background: url(/assets/img/jobs/icon-pause.png) no-repeat;
+    background-size: 100%;
+}
+.task-card .icon-end {
+    width: 34px;
+    height: 23px;
+    background: url(/assets/img/jobs/icon-end.png) no-repeat;
+    background-size: 100%;
+}
+.task-card .text {
+    display: block;
+    padding-left: 30px;
+    padding-top: 15px;
+}
+.task-card .num {
+    position: absolute;
+    top: 16px;
+    right: 53px;
+    font-size: 36px;
+}
+
+.task-timer li {
+    float: left;
+    width: 50%;
+    text-align: center;
+}
+.task-timer .icon {
+    padding-top: 58px;
+}
+.task-timer .icon-rest {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    background: url(/assets/img/jobs/icon-rest.png) no-repeat;
+    background-size: 100%;
+}
+.task-timer .icon-used {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    background: url(/assets/img/jobs/icon-used.png) no-repeat;
+    background-size: 100%;
+}
+.task-timer .timer {
+    padding-top: 25px;
+    font-size: 14px;
+}
+.task-timer .time {
+    font-size: 36px;
+    letter-spacing: 1.5px;
+}
+.task-timer .text {
+    padding-top: 6px;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.other-wrap {
+    position: relative;
+    padding: 36px 30px;
+}
+.other-wrap .col-1 {
+    float: left;
+    width: 50%;
+    margin-bottom: -20px;
+}
+.other-wrap .col-2 {
+    float: right;
+    width: 45.37%;
+}
+.notice-list {
+    padding: 42px 30px;
+    height: 160px;
+    background-color: #E2E5EA;
+    box-shadow: 0 2px 4px 0 rgba(211,214,220,0.78);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.notice-list li {
+    padding: 8px 0;
+}
+.notice-list li a {
+    display: inline-block;
+    font-size: 16px;
+    color: #5F7382;
+}
+.pic-bg {
+    display: block;
+    height: 160px;
+    background-image: -webkit-linear-gradient(180deg, #d0e1e9 13%, #a3c0cf 100%);
+    background-image: linear-gradient(180deg, #d0e1e9 13%, #a3c0cf 100%);
+    border-radius: 8px;
+    box-shadow: 0 2px 4px 0 rgba(211,214,220,0.78);
+    text-align: center;
+    overflow: hidden;
+}
+.pic {
+    display: inline-block;
+    margin-top: 40px;
+    width: 378px;
+    height: 81px;
+}
+
+.tab-timers {
+    background-color: #F0F2F5;
+    height: 260px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.tab-timers .tab-hd {
+    background-color: #E0E3E8;
+    border-radius: 8px 8px 0 0;
+}
+.tab-timers .tab-hd .item {
+    float: left;
+    box-sizing: border-box;
+    border-left: 1px solid #D1D4D8;
+    width: 50%;
+    height: 48px;
+    line-height: 48px;
+    text-align: center;
+    font-size: 14px;
+    cursor: pointer;
+}
+.tab-timers .tab-hd .item:first-child {
+    border-left: 0;
+}
+.tab-timers .tab-hd .active {
+    color: #FF625F;
+}
+.tab-timers .tab-cont {
+    min-height: 212px;
+    padding: 0 10px 28px 30px;
+}
+.tab-timers .tab-cont dl {
+    float: left;
+    padding-top: 28px;
+    width: 33.3333%;
+}
+.tab-timers .tab-cont dt {
+    font-size: 24px;
+    color: #2D323B;
+}
+.tab-timers .tab-cont dd {
+    padding-top: 5px;
+    font-size: 14px;
+    color: #8E9091;
+}
+.more-link {
+    clear: both;
+    padding-top: 18px;
+    text-align: right;
+}
+.more-link a {
+    font-size: 14px;
+    color: #2D323B;
+}
+.more-link a:hover {
+    color: #FF625F;
+}

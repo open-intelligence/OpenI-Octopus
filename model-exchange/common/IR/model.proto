@@ -1,0 +1,188 @@
+// OPENI Intermediate Representation (IR)
+
+// Copyright (c) ...
+// Licensed under the MIT license
+
+syntax = "proto3";
+
+package qizhi;
+
+// From top-level to low-level proto
+
+// The protobuf format of the Model
+message Model {
+    // The version of the IR 
+    string version = 1;
+
+    // The contributors of this model
+    ContributorsList contributors = 8;
+
+    // The information of the framework or tool that generate this model
+    string framework_name = 2;
+    string framework_version = 3;
+
+    // The information of the model
+    string model_name = 4;
+    string model_version = 5;
+
+    // A documentation or paper for this model. The doc url can be avaiable.
+    string doc_url = 6;
+
+    // The param of this model 
+    Graph graph = 7;
+
+}
+
+// The contributors of the model
+message ContributorsList {
+    // name 
+    repeated string name = 1;
+    // email
+    repeated string email = 2;
+    // institute
+    repeated string institute = 3;
+}
+
+// ========================================================================
+// The above of this line is prepared for the model hub, 
+// it will not used in the model exchange.
+
+// The param of this model 
+message Graph {
+    // // The information of the Graph
+    // string name = 1;
+    // int64 version = 2;
+
+    // //  A documentation or paper for this graph. The doc url can be avaiable.
+    // string doc_string = 3;
+
+    // The nodes in the graph
+    repeated Node node = 4;
+}
+
+message Node {
+    // The information of the Node
+    string name = 1;
+
+    // The symbolic identifier of the Operator to execute
+    string operator = 2;
+
+    // A human-readable documentation for this node. Markdown is allowed.
+    string doc_string = 3;
+
+    // A definition for this node.
+    string definition = 4;
+    
+    // The input and output of the Node
+    repeated string input = 5;
+    repeated string output = 6;
+
+    // The attributes of the Node
+    map<string, Attribute> attribute = 7;
+}
+
+message Attribute {
+
+    message ListValue {
+        repeated string s = 2;                       // "list(string)"
+        repeated int64 i = 3 [packed = true];       // "list(int)"
+        repeated float f = 4 [packed = true];       // "list(float)"
+        repeated bool b = 5 [packed = true];        // "list(bool)"
+        repeated ValueType type = 6 [packed = true]; // "list(type)"
+        repeated TensorShape shape = 7;             // "list(shape)"
+        repeated Tensor tensor = 8;          // "list(tensor)"
+        repeated bytes bit = 9;             // "list(bytes)"
+    }
+
+    // one of these types
+    oneof value {
+        ListValue list = 1;
+        Type val = 2;
+    }
+
+    // the information of the Attribute
+    // string name = 3;
+}
+
+message Type {
+    oneof value {
+        int64 i = 1;
+        float f = 2;
+        string s = 3;
+        bool b = 4;
+        ValueType v = 5;
+        Tensor t = 6;
+        TensorShape shape = 7;
+        bytes bit = 8;
+    }
+}
+
+enum ValueType {
+    UNDEFINED = 0;
+    INT8 = 1;
+    INT16 = 2;
+    INT32 = 3;
+    INT64 = 4;
+    UINT8 = 5;
+    UINT16 = 6;
+    UINT32 = 7;
+    UINT64 = 8;
+    FLOAT16 = 9;
+    FLOAT32 = 10;
+    FLOAT64 = 11;
+    BOOL = 12;
+    STRING = 13;
+    COMPLEX64 = 14;
+    COMPLEX128 = 15;
+}
+
+message Tensor{
+    // The information of the Tensor
+    string name = 1;
+    string version = 2;
+
+    // The shape of the Tensor
+    TensorShape shape = 3;
+
+    // The value type of the tensor
+    ValueType type = 4;
+
+    bytes content = 13;
+
+    // DT_INT32, DT_INT16, DT_INT8.
+    repeated int32 int32_data = 5 [packed = true];
+
+    // DT_UINT32, DT_UINT16, DT_UINT8.
+    repeated int32 uint32_data = 6 [packed = true];
+
+    // DT_INT64
+    repeated int64 int64_data = 7 [packed = true];
+
+    // DT_UINT64
+    repeated int64 uint64_data = 8 [packed = true];
+
+    // DT_FLOAT16, DT_FLOAT32.
+    repeated float float_data = 9 [packed = true];
+
+    // DT_FLOAT64, DT_COMPLEX64, DT_COMPLEX128 (may be truncated)
+    repeated double double_data = 10 [packed = true];
+
+    // DT_BOOL
+    repeated bool bool_data = 11 [packed = true];
+
+    // DT_STRING
+    repeated bytes string_data = 12;
+}
+
+message TensorShape {
+    // One dimension of the tensor
+    message dimension {
+        int64 size = 1;
+        string name = 2;
+    }
+
+    repeated dimension dim = 2;
+
+    bool unknown = 3;
+}
+
