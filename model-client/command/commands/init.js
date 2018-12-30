@@ -45,8 +45,8 @@ function init(args,opt){
                 break;
             }else{
                 log.info(lang.New()
-                .zh("[INIT ERROR] - 项目地址格式不正确")
-                .en("[INIT ERROR] - Wrong form of repository address!"));
+                .zh("项目地址格式不正确")
+                .en("Wrong form of repository address!"));
     
                 log.info(lang.New()
                 .zh("正确的格式是'http(s)://host/username/project_name.ms'")

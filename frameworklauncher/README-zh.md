@@ -16,7 +16,7 @@
   DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-  
+
   Copyright (c) Peking University 2018
 
   The software is released under the Open-Intelligence Open Source License V1.0.
@@ -25,7 +25,7 @@
   Artificial Intelligence Technology Innovation Strategic Alliance (the AITISA).
 -->
 
-# 微软FrameworkLauncher
+# FrameworkLauncher
 
 搭建FrameworkLauncher（简称Launcher）是为了支持在 [YARN](http://hadoop.apache.org/) 容器内可以长期运行大规模服务，而无需更改该服务自身。 它还支持批量作业，如TensorFlow，CNTK等。
 

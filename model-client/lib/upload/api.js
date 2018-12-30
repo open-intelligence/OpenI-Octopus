@@ -24,6 +24,7 @@ function init(project,filesInfo){
           };
 
         let [err,_,body] = yield request(opt,resume);
+        
         if(err){
             throw err
         }
@@ -86,7 +87,8 @@ function upload(taskInfo,stream,callback){
         url:server.protocol+"//"+server.host+"/upload?"+query,
         method:"POST",
         headers:{
-           token:token
+           "token":token,
+           "content-type":"application/octet-stream"
         }
     };
 

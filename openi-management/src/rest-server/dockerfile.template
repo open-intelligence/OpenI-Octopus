@@ -23,7 +23,7 @@
 # Management Regulation V1.0", which is provided by The New Generation of 
 # Artificial Intelligence Technology Innovation Strategic Alliance (the AITISA).
 
-FROM node:boron
+FROM node:10.15
 
 ENV HADOOP_VERSION={{ clusterconfig['clusterinfo']['hadoopinfo']['hadoopversion'] }}
 
@@ -64,7 +64,7 @@ RUN npm install
 
 COPY copied_file/rest-server/ .
 
-RUN dos2unix src/templates/*
+RUN dos2unix app/templates/*
 
 EXPOSE ${SERVER_PORT}
 

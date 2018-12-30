@@ -97,10 +97,10 @@ func IsValidTempFile(filename string) bool{
  
 	list := strings.Split(filename,"_")
 
-	if list[3] != "Y" && list[3] != "N"{
-		return false
+	if !(list[3] == "Y" || list[3] == "N"){
+        return false
 	}
-
+	 
 	if !isNumberString(list[2]){
 		return false
 	}
@@ -149,7 +149,7 @@ func GetTempList(fileName string,dir string)([]*TempFile,error){
 		
 		 name:= fileInfoList[i].Name()
 
-		 //非法temp文件 或者名字不匹配
+	 
 		 if !IsValidTempFile(name) || strings.Index(name,fileName) !=0 {
 			 continue
 		 }

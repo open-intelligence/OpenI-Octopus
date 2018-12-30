@@ -5,9 +5,10 @@ import (
 	"time"
 	"ms_server/lib/persist/mysql"
 	"github.com/json-iterator/go"	
+	"ms_server/util/log"
+	"go.uber.org/zap"
 )
 
- 
 
 var task_map map[string] *Task
 
@@ -15,6 +16,10 @@ var task_map_mutex  *sync.Mutex
 
 
 func _GetTimeoutTaskList()[]string{
+
+	logger:= log.GetLogger()
+
+	defer logger.Sync()
 
 	timeout_list := make([]string,0)
 
@@ -32,40 +37,32 @@ func _GetTimeoutTaskList()[]string{
 
     //从数据库里面翻出来的超时任务只能在本地taskMap里面不存在的才能认为是
 		//死掉的上传任务，造成的原因是服务挂掉又重启
-	db:= mysql_util.GetDB()
-	sql:= "SELECT * FROM ms_task WHERE create_date < ?;"
- 
-	rows,err:= db.Query(sql,now - 2*60*60) //取超时2小时的
 	 
+	sql:= "SELECT * FROM ms_task WHERE create_date < ?;"
+
+	 
+	results,err := mysql_util.QueryAsJson(sql,now - 2*60*60)
+
+	if err != nil{
+		logger.Error(err.Error())
+		return timeout_list
+	}
 	
-	if err == nil{
+	task_map_mutex.Lock()
 
-		defer rows.Close()
+	for i:=0;i<results.Size();i++{
 
-		row_str,err:= mysql_util.RowsToJsonArray(rows)
-		 
-		if err == nil{
-		 
-		   var json = jsoniter.ConfigCompatibleWithStandardLibrary
+		id:= results.Get(i,"task_id").ToString()
 
-		   array:= json.Get([]byte(row_str))
+		if tk,ok:= task_map[id];!ok || nil == tk{
+			
+			timeout_list = append(timeout_list,id)
+		}
+	}
 
-		   task_map_mutex.Lock()
+	task_map_mutex.Unlock()
+	 
 
-		   for i:=0;i<array.Size();i++{
-
-			   id:= array.Get(i,"task_id").ToString()
-
-			   if tk,ok:= task_map[id];!ok || nil == tk{
-
-				  timeout_list = append(timeout_list,id)
-			   }
-			}
-
-		   task_map_mutex.Unlock()
-		} 
-	} 
-    
 	return timeout_list
 }
 
@@ -129,20 +126,41 @@ func SubmitMergeFileTask(task_id,file_name,file_dir string,callback_channel chan
 
 	 task_map_mutex.Unlock()
 
-	 go func(){
+	 go func(file,dir string){
+
 		 task.mutex.Lock()
+
 		 task.last_active_time = time.Now().Unix();
-		 var err error = merge(file_name,file_dir)
+         
+		 done,err  := merge(file,dir)
+
+		 if err != nil{
+
+			 logger := log.GetLogger()
+
+			 defer logger.Sync()
+
+			 logger.Error("Merge Error",zap.String("msg",err.Error()))
+		 }
+
+		 if true == done{
+			CleanTempFile(file,dir)
+		 }
+
 		 task.mutex.Unlock()
 		 if nil != callback_channel{
 			callback_channel <- err
 		 }
-	 }()
+
+	 }(file_name,file_dir)
 }
 
 func SubmitMergeProjectTask(task_id,file_dir string,project_info jsoniter.Any,callback_channel chan error){
+
 	var task *Task = nil
+	
 	var ok bool
+
 	task_map_mutex.Lock()
 
 	task,ok = task_map[task_id]
@@ -168,7 +186,6 @@ func SubmitMergeProjectTask(task_id,file_dir string,project_info jsoniter.Any,ca
 		if nil != callback_channel{
 			callback_channel <- err
 		}
-
 	}()
 }
 

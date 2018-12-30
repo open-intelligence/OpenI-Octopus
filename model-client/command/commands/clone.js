@@ -10,7 +10,7 @@ const fileUtil = require("../../utils/file");
 const lang = require("../../prototype/lang");
 const log = require("../../utils/log");
 const validate = require("../../utils/validate");
-const userInfo = require("../../lib/userInfo");
+const userLib = require("../../lib/user");
 
 function isExist(dir,project_name){
     let project_path = path.join(dir,project_name);
@@ -34,7 +34,6 @@ function GetVersions(user,project,server){
         if(err){
             throw err;
         }
- 
 
         if( body instanceof Buffer){
             body = body.toString();
@@ -48,6 +47,7 @@ function GetVersions(user,project,server){
             access_denied:false,
             versions:{}
         };
+
         if( body.success == true){
             response.success = true;
             response.versions = body.versions;
@@ -60,7 +60,6 @@ function GetVersions(user,project,server){
                 response.internal_error = true;
             }
         }
-
         
         return  response;
     });
@@ -75,13 +74,11 @@ function clone(args,opt){
         let cwd = process.cwd();
 
         let project_address = args[0];
-
-        console.log(project_address)
         
         if(!validate.isValidateProjectAddress(project_address)){
             log.info(lang.New()
-            .zh("[CLONE ERROR] - 项目地址格式不正确")
-            .en("[CLONE ERROR] - Wrong form of repository address!"));
+            .zh("项目地址格式不正确")
+            .en("Wrong form of repository address!"));
 
             log.info(lang.New()
             .zh("正确的格式是'http(s)://host/username/project_name.ms'")
@@ -120,7 +117,7 @@ function clone(args,opt){
             return false;
         }
 
-        let [err1,user_info]  = yield userInfo.GetInfo(server.hostname,user);
+        let [err1,user_info]  = yield userLib.getInfo(server.hostname,user);
 
         if(err1){
             throw err1;
@@ -139,10 +136,10 @@ function clone(args,opt){
         if(!response.success){
 
             if(response.internal_error == true){
-                log.info("[CLONE ERROR] - "+response.message);
+                log.info(response.message);
+            }else{
+                log.info(lang.New().en(`Access denied,Please login again.`).zh("鉴权失败，请登录远程仓库"));
             }
-
-            log.info(lang.New().en(`[CLONE ERROR] - Access denied,Please login again.`).zh("[CLONE ERROR] - 鉴权失败，请登录远程仓库"));
 
             return false;
 
@@ -150,8 +147,8 @@ function clone(args,opt){
 
         if(response.versions.length == 0){
             log.info(lang.New()
-            .en(`[CLONE ERROR] - Project "${project_name}" is not found at remote!`)
-            .zh(`[CLONE ERROR] - 项目"${project_name}"不存在`))
+            .en(`Project "${project_name}" is not found at remote!`)
+            .zh(`项目"${project_name}"不存在`))
            
             return false;
         }
@@ -170,8 +167,8 @@ function clone(args,opt){
             }
             if(!found){
                  log.info(lang.New()
-                 .en(`[CLONE ERROR] - The version "${version}" of "${project_name}" is not found`)
-                 .zh(`[CLONE ERROR] - 未找到${version}版的${project_name}`));
+                 .en(`The version "${version}" of "${project_name}" is not found`)
+                 .zh(`未找到${version}版的${project_name}`));
 
                  
                  return false;

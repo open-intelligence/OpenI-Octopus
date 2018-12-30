@@ -64,30 +64,22 @@ func  Login(user,pwd string) (string,string ,error) {
 
 func Signed(token string)(bool,string,error){
  
-	var json = jsoniter.ConfigCompatibleWithStandardLibrary
- 
 	sql:= "SELECT create_date,expiration ,username FROM ms_token WHERE token =?;"
-	db:= mysql_util.GetDB()
-	rows,err:= db.Query(sql,token) 
-	if nil != err{
-		return false,"",err
-	}
-	defer rows.Close()
-	rows_str,err:= mysql_util.RowsToJsonArray(rows);
+
+	results,err:= mysql_util.QueryAsJson(sql,token)
+	 
 
 	if nil != err{
 		return false,"",err
 	}
 
-	any:= json.Get([]byte(rows_str))
-
-	if 0 == any.Size(){
+	if 0 == results.Size(){
 		return false,"",nil
 	}
 
-	create_date := any.Get(0,"create_date").ToInt64()
-	expiration := any.Get(0,"expiration").ToInt64()
-	username:= any.Get(0,"username").ToString()
+	create_date := results.Get(0,"create_date").ToInt64()
+	expiration := results.Get(0,"expiration").ToInt64()
+	username:= results.Get(0,"username").ToString()
 	now:= time.Now().Unix()
 
 	if  now - create_date >= expiration{

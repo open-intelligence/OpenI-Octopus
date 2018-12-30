@@ -6,30 +6,19 @@ import (
 	"errors"
 )
 
+func  Info(user,project,version string) (string,jsoniter.Any,error) {
 
-func  Info(user,project,version string) (string,string,error) {
 	sql:= "SELECT * FROM ms_projects WHERE username = ? AND project_name = ?;"
-	db:= mysql_util.GetDB()
 
-	rows,err:= db.Query(sql,user,project)
+	results,err := mysql_util.QueryAsJson(sql,user,project)
+
 	
 	if nil != err{
-		return "","",err
+		return "",nil,err
 	}
 
-	defer rows.Close()
-
-	row_str,err:= mysql_util.RowsToJsonArray(rows)
-
-	if nil != err{
-		return "","",err
-	}
-	var json = jsoniter.ConfigCompatibleWithStandardLibrary
-
-	any:= json.Get([]byte(row_str))
-
-	if any.Size() == 0{
-		return "","",errors.New("没有找到"+project)
+	if results.Size() == 0{
+		return "",nil,errors.New(project +"  Not Found!")
 	}
 
 	var tar_version string = version
@@ -37,26 +26,26 @@ func  Info(user,project,version string) (string,string,error) {
 
 	if "" == version{
 		var create_date int64 = 0
-		for i:=0;i<any.Size();i++{
-			date:= any.Get(i).Get("create_date").ToInt64()
+		for i:=0;i<results.Size();i++{
+			date:= results.Get(i).Get("create_date").ToInt64()
 			if date > create_date{
 				create_date = date
-				tar_version = any.Get(i).Get("project_version").ToString()
+				tar_version = results.Get(i).Get("project_version").ToString()
 			}
 		}
 	} 
 
-	var info string = ""
+	var info  jsoniter.Any = nil
 
-	for i:= 0;i<any.Size();i++{
-		if tar_version == any.Get(i).Get("project_version").ToString(){
-			info = any.Get(i).Get("project_info").ToString()
+	for i:= 0;i<results.Size();i++{
+		if tar_version == results.Get(i).Get("project_version").ToString(){
+			info = results.Get(i).Get("project_info")
 			break
 		}
 	}
 
-	if "" == info{
-		return "","",errors.New("没有找到"+project)
+	if nil == info{
+		return "",nil,errors.New(project +"  Not Found!")
 	}
 	
 	return tar_version,info,nil

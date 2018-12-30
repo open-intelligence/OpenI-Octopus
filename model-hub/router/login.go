@@ -3,66 +3,66 @@ package router
 
 import (
 	"github.com/json-iterator/go"
-	"github.com/julienschmidt/httprouter"
-	"io/ioutil"
 	"ms_server/lib/login"
 	"net/http"
+	"ms_server/lib/gbeta2"
+	"ms_server/util/json"
+	"ms_server/util/http"
 )
 
+ func _login(w *gbeta2.Res, r *http.Request, ctx *gbeta2.Ctx,next gbeta2.Next)(J.JSON,error){
+	
+	body:= ctx.Get("body").(jsoniter.Any)
 
+	user := body.Get("user").ToString()
 
-func Login( r *http.Request, ps httprouter.Params)([]byte,error)  {
-
-	body,err:= ioutil.ReadAll(r.Body)
-
-	if err != nil {
-		return nil,err
-	}
-
-	var json = jsoniter.ConfigCompatibleWithStandardLibrary
-
-	var user string = json.Get(body,"user").ToString()
-
-     var pwd string = json.Get(body,"pwd").ToString()
+	pwd := body.Get("pwd").ToString()
 
 	if user == "" || pwd == ""{
-		return []byte(`{"success":false,"message":"user and pwd is required"}`),nil
+
+        return J.JSON{
+			"success": false,
+			"message":"user and pwd are required!",
+		},nil  
 	}
-
-
-	token, err_msg, err := login.Login(user,pwd)
+	  
+    token, err_msg, err := login.Login(user,pwd)
 
 	if nil!= err{
 		return nil,err
 	}
 
-	if token == ""{
+	if token == "" {
+
 		 if "" == err_msg{
 			 err_msg = "Login failed"
 		 }
 
-		 return []byte(`{"success":false,"message":"`+err_msg+`"}`),nil
+		 return J.JSON{
+			 "success":false,
+			 "message":err_msg,
+		 },nil
  
 	}
 
-	return []byte(`{"success":true,"token":"`+token+`"}`),nil
-
+	return J.JSON{
+		"success":true,
+		"token":token,
+	},nil
 }
 
-func Signed( r *http.Request, ps httprouter.Params)([]byte,error){
 
-	body,err:= ioutil.ReadAll(r.Body)
+func _signed (w *gbeta2.Res, r *http.Request, ctx *gbeta2.Ctx,next gbeta2.Next)(J.JSON,error){
 
-	if err != nil {
-		return nil,err
-	}
-	
-	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	body:= ctx.Get("body").(jsoniter.Any)
 
-	token := json.Get([]byte(body),"token").ToString();
-	
-	if "" == token{
-		return []byte(`{"success":false,"message":"Parameter token is required"}`),nil	 
+	token:= body.Get("token").ToString()
+
+	if "" == token {
+		return J.JSON{
+			"success":false,
+			"message":"Token is required!",
+		},nil
 	}
 
 	result,user,err := login.Signed(token)
@@ -72,9 +72,25 @@ func Signed( r *http.Request, ps httprouter.Params)([]byte,error){
 	}
 
 	if true ==  result{
-		return []byte(`{"success":true,"user":"`+user+`"}`),nil
+		return J.JSON{
+			"success":true,
+			"user":user,
+		},nil
 	}
 
-	return []byte(`{"success":false,"message":"Token is illegal"}`),nil
+	return J.JSON{
+		"success":false,
+	},nil
+}
+
+
+func LoginRouter()*gbeta2.Router{
 	
+	router:= gbeta2.New()
+
+	router.POST("/",http_util.HandleError(_login))
+
+	router.POST("/check",http_util.HandleError(_signed))
+
+	return router
 }

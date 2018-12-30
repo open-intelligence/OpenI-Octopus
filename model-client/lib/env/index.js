@@ -3,9 +3,13 @@ const os = require("os");
 const co = require("zco");
 const fs  = require("fs");
 const path = require("path");
+
+const Lock = require("../../prototype/concurrent");
+
 const tmpdir = os.tmpdir();
 const app_path = path.join(tmpdir,"ms_client");
-const c_lock = require("../../utils/concurrent").New(1);
+
+const c_lock =  new Lock(1);
 
 let defaultEnv = {
     "lang":"en"
@@ -28,6 +32,7 @@ function Reload(){
         yield c_lock.lock(resume);
 
         if(!fs.existsSync(env_path)){
+            
             return defaultEnv;
         }
 
@@ -61,10 +66,11 @@ function SetEnv(key,value){
         defaultEnv[key] = value;
         
  
-         let [err] = yield fs.writeFile(env_path,JSON.stringify(defaultEnv),resume);
-         if(err){
+        let [err] = yield fs.writeFile(env_path,JSON.stringify(defaultEnv),resume);
+        
+        if(err){
              throw err;
-         }
+        }
     }); 
 }
 

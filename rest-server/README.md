@@ -15,8 +15,14 @@
   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
   DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
--->
 
+  Copyright (c) Peking University 2018
+
+  The software is released under the Open-Intelligence Open Source License V1.0.
+  The copyright owner promises to follow "Open-Intelligence Open Source Platform
+  Management Regulation V1.0", which is provided by The New Generation of 
+  Artificial Intelligence Technology Innovation Strategic Alliance (the AITISA).
+-->
 
 # REST Server
 
@@ -477,7 +483,7 @@ Configure the rest server port in [services-configuration.yaml](../cluster-confi
     *Response if succeeded*
     ```
     Status: 200
-
+    
     {
       "message": "execute job $jobName successfully"
     }
@@ -486,11 +492,12 @@ Configure the rest server port in [services-configuration.yaml](../cluster-confi
     *Response if a server error occured*
     ```
     Status: 500
-
+    
     {
       "error": "JobExecuteError",
       "message": "job execute error"
     }
+    ```
 
 11. `GET virtual-clusters`
 

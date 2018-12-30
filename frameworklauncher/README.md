@@ -17,7 +17,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 -->
 
-# Microsoft FrameworkLauncher
+# FrameworkLauncher
 
 FrameworkLauncher (or Launcher for short) is built to enable running Large-Scale Long-Running Services inside [YARN](http://hadoop.apache.org/) Containers without making changes to the Services themselves. It also supports Batch Jobs, such as TensorFlow, CNTK, etc.
 

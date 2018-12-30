@@ -3,21 +3,26 @@
 const co = require("zco");
 const fs = require("fs");
 const path  = require("path");
-const lockFile = require("./lock");
-const fileUtil = require("../../utils/file");
 const uuidv4 = require('uuid/v4');
+
+const lockFile = require("./lock");
 const api = require("./api");
 const taskUtil = require("./task");
 const mergeUtil = require("./merge");
 const tempFile = require("./tempFile");
 const config = require('../../config');
-const lang = require("../../prototype/lang");
-const log = require("../../utils/log");
 
-const Reporter = require("../../utils/report");
+const log = require("../../utils/log");
+const fileUtil = require("../../utils/file");
+
+const lang = require("../../prototype/lang");
+const Reporter = require("../../prototype/report");
+const Lock = require("../../prototype/concurrent");
 
 //conccurent lock
-const c_lock = require("../../utils/concurrent").New(5);
+
+
+const c_lock = new Lock(5);
 
 const MAX_TRY_TIME = config.maxTryTime || 3;// max retry time when dowload data
  

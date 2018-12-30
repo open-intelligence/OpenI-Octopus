@@ -22,6 +22,8 @@ const (
 	UserCenter string  = "USER_CENTER"
 
 	Exchange string = "EXCHANGE_SERVICE"
+
+	ENV string = "MODE_HUB_ENV"
  
 )
 
@@ -71,6 +73,10 @@ func loadFromEnv(){
 	config[UserCenter] = os.Getenv(UserCenter)
 
 	config[Exchange] = os.Getenv(Exchange)
+
+	config[ENV] = os.Getenv(ENV)
+
+	
 	
 }
 
@@ -86,6 +92,10 @@ func InitConfig() error{
 	 }else{
 		loadFromEnv()
 	 }
+
+	if "" == config[ENV]{
+		config[ENV] = "dev"
+	}
 
 	if config[ServerPort] == ""{
 		return errors.New("Config Error! config 'SERVER_PORT' is neccessary!")

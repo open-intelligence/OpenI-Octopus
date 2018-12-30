@@ -2,8 +2,7 @@
 const co = require("zco");
 const Command = require("../../prototype/command");
 const lang = require("../../prototype/lang");
-const login = require("../../lib/login");
-const userInfo = require("../../lib/userInfo");
+const userLib = require("../../lib/user")
 const url = require("url");
 const log = require('../../utils/log');
 
@@ -43,10 +42,10 @@ function Login (args,opt){
 
         this.ctx.server = server;
 
-        let loginRes = yield login.login(user,pwd);
+        let loginRes = yield userLib.login(user,pwd);
 
         if(loginRes.success){
-            yield userInfo.SetInfo(server.hostname,loginRes.token,user);
+            yield userLib.setInfo(server.hostname,loginRes.token,user);
             log.info(lang.New().en("  Login successfully!").zh("登录成功"));
           
         }else{

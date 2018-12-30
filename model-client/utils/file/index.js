@@ -2,7 +2,9 @@
 const co = require("zco");
 const fs = require("fs");
 const path = require("path");
-const c_lock = require("../concurrent").New(1);
+const Lock = require("../../prototype/concurrent");
+
+const c_lock =  new Lock(1)
 
 function isDir(file_path){
     return co.brief(function*(resume){
@@ -53,7 +55,7 @@ function dirMustExist(dir_path){
         /*** 
          * 别以为单线程就不用加锁了，太天真了！！
          * 
-         * even is there is only on thread in node.js ,but a concurrent lock is neccessary here.
+         * even if there is only one thread in node.js ,but a concurrent lock is neccessary here.
          * too young too simple..... 
         */
         defer(function*(){
@@ -97,9 +99,7 @@ function dirMustExist(dir_path){
                     throw err;
                 }
             }
-           
         }
-        
     });
  }
 
@@ -175,6 +175,48 @@ function copy(src,dest,except = []){
         }
     });
 }
+
+function readDirInfo(dir){
+    return co.brief(function*(resume){
+      let dir_struct = {};
+     
+      let [err,stat] = yield fs.stat(dir,resume);
+ 
+      if (err){
+         throw err;
+      }
+ 
+      if (stat.isDirectory()){
+ 
+         dir_struct.type = "dir";
+         dir_struct.name = dir.split(/[\\/]/).pop()
+         dir_struct.child = [];
+ 
+         let [err,list] = yield fs.readdir(dir,resume);
+         if (err){
+             throw err;
+         }
+         for(let i=0;i<list.length;i++){
+             let node = yield readDirInfo(path.join(dir,list[i]))
+             if (null != node){
+                 dir_struct.child.push(node)
+             }
+         }
+ 
+     }else{
+         dir_struct.type = "file";
+         dir_struct.name = dir.split(/[\\/]/).pop();
+         dir_struct.size = stat.size;
+         dir_struct.mtime = stat.mtime.getTime();
+ 
+     }
+     return dir_struct;
+    });
+ }
+
+
+exports.readDirInfo = readDirInfo;
+
 exports.dirMustExist = dirMustExist;
 
 exports.isDir = isDir;

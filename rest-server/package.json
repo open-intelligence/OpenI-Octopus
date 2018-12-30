@@ -1,63 +1,61 @@
 {
-  "name": "pai-rest-server",
-  "version": "0.1.0",
-  "description": "RESTful api server for Microsoft Platform for AI",
-  "keywords": [
-    "REST",
-    "api",
-    "server",
-    "AI",
-    "platform",
-    "PAI"
-  ],
-  "author": "Microsoft",
-  "license": "MIT",
-  "homepage": "https://github.com/Microsoft/pai",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Microsoft/pai.git"
-  },
-  "bugs": {
-    "url": "https://github.com/Microsoft/pai/issues"
-  },
+  "name": "rest-server",
+  "version": "1.0.0",
+  "description": "the rest-server of openi",
+  "private": true,
   "dependencies": {
-    "async": "2.5.0",
-    "chai": "4.1.2",
-    "chai-http": "3.0.0",
-    "compression": "1.7.1",
-    "cookie-parser": "1.4.3",
-    "cors": "2.8.4",
-    "coveralls": "3.0.0",
-    "dotenv": "4.0.0",
-    "eslint": "4.17.0",
-    "eslint-config-google": "0.9.1",
-    "express": "4.16.2",
-    "express-jwt": "5.3.0",
-    "fs-extra": "4.0.2",
-    "http-errors": "1.6.3",
-    "joi": "13.0.1",
-    "jsonwebtoken": "8.1.0",
-    "lowdb": "1.0.0",
-    "marked": "0.5.2",
-    "mocha": "5.0.0",
-    "morgan": "1.9.0",
-    "mustache": "2.3.0",
-    "mysql": "2.15.0",
-    "nock": "9.1.6",
-    "node-etcd": "5.1.0",
-    "node-schedule": "1.3.0",
-    "nyc": "11.6.0",
-    "sequelize": "3.23.3",
-    "statuses": "1.5.0",
-    "unirest": "0.5.1",
-    "winston": "2.4.0"
+    "art-template": "^4.13.2",
+    "bluebird": "^3.5.3",
+    "egg": "^2.2.1",
+    "egg-cors": "^2.1.2",
+    "egg-router-plus": "^1.3.0",
+    "egg-scripts": "^2.5.0",
+    "egg-security": "^2.4.1",
+    "egg-sequelize": "^4.2.0",
+    "execa": "^1.0.0",
+    "fs-extra": "^7.0.1",
+    "joi": "^14.3.0",
+    "jsonwebtoken": "^8.4.0",
+    "koa-compress": "^3.0.0",
+    "koa-jwt": "^3.5.1",
+    "lowdb": "^1.0.0",
+    "marked": "^0.5.2",
+    "mustache": "^3.0.1",
+    "mysql2": "^1.6.4",
+    "unirest": "^0.5.1"
+  },
+  "devDependencies": {
+    "autod": "^3.0.1",
+    "autod-egg": "^1.0.0",
+    "egg-bin": "^4.3.5",
+    "egg-ci": "^1.8.0",
+    "egg-mock": "^3.14.0",
+    "eslint": "^4.11.0",
+    "eslint-config-egg": "^6.0.0",
+    "webstorm-disable-index": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=8.9.0"
   },
   "scripts": {
-    "coveralls": "nyc report --reporter=text-lcov | coveralls",
-    "lint": "eslint src/**/*.js",
-    "mocha": "mocha --require ./test/setup --ui bdd --recursive --timeout 1000 --exit",
-    "start": "node index.js",
-    "test": "npm run lint && nyc npm run mocha",
-    "initDB": "export DATASET_SQL_HOST=192.168.113.221 && export DATASET_SQL_PORT=3308 && export DATASET_SQL_USER=root && export DATASET_SQL_PWD=root && chmod +x initDB.sh && sh initDB.sh"
-  }
+    "start": "egg-scripts start --workers=3  --title=egg-server-rest-server",
+    "stop": "egg-scripts stop --title=egg-server-rest-server",
+    "dev": "egg-bin dev",
+    "debug": "egg-bin debug",
+    "test": "npm run lint -- --fix && npm run test-local",
+    "test-local": "egg-bin test",
+    "cov": "egg-bin cov",
+    "lint": "eslint .",
+    "ci": "npm run lint && npm run cov",
+    "autod": "autod"
+  },
+  "ci": {
+    "version": "8"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "author": "",
+  "license": "MIT"
 }

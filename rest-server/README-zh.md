@@ -15,8 +15,14 @@
   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
   DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
--->
 
+  Copyright (c) Peking University 2018
+
+  The software is released under the Open-Intelligence Open Source License V1.0.
+  The copyright owner promises to follow "Open-Intelligence Open Source Platform
+  Management Regulation V1.0", which is provided by The New Generation of 
+  Artificial Intelligence Technology Innovation Strategic Alliance (the AITISA).
+-->
 
 # REST Server
 
@@ -59,15 +65,15 @@ REST Server 提供一系列用于管理 jobs 的 API 接口。
     ```
     http://restserver/api/v1/jobs
     ```
-   获取名为 “exampleJob” job 的状态：
+      获取名为 “exampleJob” job 的状态：
     ```
     http://restserver/api/v1/jobs/exampleJob
     ```
-   获取 JSON格式的 job 配置文件：
+      获取 JSON格式的 job 配置文件：
     ```
     http://restserver/api/v1/jobs/exampleJob/config
     ```
-   获取 job 的 SSH信息
+      获取 job 的 SSH信息
     ```
     http://restserver/api/v1/jobs/exampleJob/ssh
     ```
@@ -154,7 +160,7 @@ REST Server 提供一系列用于管理 jobs 的 API 接口。
     ```
 
 3. `DELETE user` （需管理员权限）
-    
+   
     从系统中删除用户。
 
     *请求*
@@ -174,7 +180,7 @@ REST Server 提供一系列用于管理 jobs 的 API 接口。
 
     ```
     Status: 200
-  
+    
     {
       "message": "remove successfully"
     }
@@ -380,7 +386,7 @@ REST Server 提供一系列用于管理 jobs 的 API 接口。
     ```
     GET /api/v1/jobs/:jobName/config
     ```
-
+    
     *成功响应*
     ```
     {
@@ -389,21 +395,21 @@ REST Server 提供一系列用于管理 jobs 的 API 接口。
       ...
     }
     ```
-
+    
     *job 不存在时响应*
     ```
     Status: 404
-
+    
     {
       "error": "JobNotFound",
       "message": "could not find job $jobName"
     }
     ```
-
+    
     *失败响应*
     ```
     Status: 500
-
+    
     {
       "error": "InternalServerError",
       "message": "<depends on the error>"
@@ -460,7 +466,7 @@ REST Server 提供一系列用于管理 jobs 的 API 接口。
     ```
 
 10. `PUT jobs/:jobName/executionType`
-    
+
     启动或停止 job。
 
     *请求*
@@ -479,7 +485,7 @@ REST Server 提供一系列用于管理 jobs 的 API 接口。
     *成功响应*
     ```
     Status: 200
-
+    
     {
       "message": "execute job $jobName successfully"
     }
@@ -488,11 +494,12 @@ REST Server 提供一系列用于管理 jobs 的 API 接口。
     *失败响应*
     ```
     Status: 500
-
+    
     {
       "error": "JobExecuteError",
       "message": "job execute error"
     }
+    ```
 
 11. `GET virtual-clusters`
     

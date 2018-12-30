@@ -1,10 +1,11 @@
+
 package path_util
 
 import (
 	"strings"
 )
 
-// the Join method in standard lib is wrong. 
+// the Join method in the standard lib is wrong. 
 
 func Join(ps ... string)string{
 	path_:= make([]string,0)

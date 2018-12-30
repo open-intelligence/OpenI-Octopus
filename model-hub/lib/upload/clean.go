@@ -2,105 +2,127 @@ package upload
 
 import (
 	"os"
-	"fmt"
 	"ms_server/util/path"
 	"ms_server/lib/persist/file"
 	"ms_server/lib/persist/mysql"
-	"github.com/json-iterator/go"
+	"ms_server/util/log"
 )
 
-// 删除未上传完全的文件块，文件后缀是 `.mdzz`
 func CleanUnuploadedFile(dir string){
+	logger := log.GetLogger()
+	
+	defer logger.Sync()
+
 	file_list,err:= file_util.ReadDir(dir)
+
 	if err!= nil{
+		logger.Error(err.Error())
 		return 
 	}
+
 	for i:=0;i<len(file_list);i++{
+
 		name:= file_list[i].Name()
+
 		if file_list[i].IsDir(){
 			CleanUnuploadedFile(path_util.Join(dir,name))
-		}else{
+			continue
+		} 
 		   
-			if len(name) > 5 && ".mdzz" == name[len(name)-5:]{
-				os.Remove(path_util.Join(dir,name))
+		if len(name) > 5 && ".mdzz" == name[len(name)-5:]{
+			err:= os.Remove(path_util.Join(dir,name))
+			if nil != err{
+				logger.Error(err.Error())
 			}
 		}
+		 
 	}
 }
 
-// 删除上传任务，清空mysql 里面的相关数据和本地已经上传了的数据
-func CleanUploadTask(task_id string){
+ 
+func CleanUploadTask(task_id string)bool{
    //cancel merge goroutine
 
    task:= GetTask(task_id)
 
    if nil != task{
 	   if 0 != task.GetWriteCount() || task.IsAlive(){
-		   return 
+		   return false
 	   }
    }
-    
-   DeleteTask(task_id)
-   
-   db:= mysql_util.GetDB()
+
+   logger:=log.GetLogger()
+
+   defer logger.Sync()
 
    sql:= "SELECT temp_dir FROM ms_task WHERE task_id=?;"
 
-   rows,err:= db.Query(sql,task_id)
-
+   results,err := mysql_util.QueryAsJson(sql,task_id) 
+    
    if nil != err{
-	   fmt.Println("[CLEAN DEAD UPLOAD TASK ERROR] - ",err.Error())
-	   return 
+	   logger.Error(err.Error())
+	   return false
    }
 
-   row_str,err:= mysql_util.RowsToJsonArray(rows)
-
-   rows.Close()
-
-   if nil != err{
-	   fmt.Println("[CLEAN DEAD UPLOAD TASK ERROR] - ",err.Error())
-	   return 
+   if results.Size() == 0{
+	   return false
    }
 
-   var json = jsoniter.ConfigCompatibleWithStandardLibrary
-
-   if json.Get([]byte(row_str)).Size() == 0{
-	   return
-   }
-
-   temp_dir:= json.Get([]byte(row_str),0).Get("temp_dir").ToString()
+   temp_dir:= results.Get(0).Get("temp_dir").ToString()
 
    if "" == temp_dir{
-	   return 
+	   return  false
    }
 
-
    if file_util.Exist(temp_dir){
-	   // 删除本地临时的上传数据
+	  
 	   err = os.RemoveAll(temp_dir)
 
 	   if err != nil{
-		   fmt.Println("[CLEAN DEAD UPLOAD TASK ERROR] - ",err.Error())
-		   return 
+		   logger.Error(err.Error())
+		   return false
 	   }
    }
-   
+  
 
-   // 删除mysql 里面的数据
-   sql = "DELETE FROM ms_task WHERE task_id = ?";
-
-   stmt,err:= db.Prepare(sql)
+   err = mysql_util.Query("DELETE FROM ms_task WHERE task_id = ?",task_id)
 
    if err != nil{
-	   fmt.Println("[CLEAN DEAD UPLOAD TASK ERROR] - ",err.Error())
-	   return 
+	  logger.Error(err.Error())
+	  return false
    }
 
-   _,err = stmt.Exec(task_id)
+   DeleteTask(task_id)
 
-   if err != nil{
-	   fmt.Println("[CLEAN DEAD UPLOAD TASK ERROR] - ",err.Error())
-	   return 
-   }
+   return true
+
+}
+
+
+func CleanTempFile(file_name,file_dir string)(error){
+
+	logger := log.GetLogger()
+
+	defer logger.Sync()
+	
+	temp_list,err:= GetTempList(file_name,file_dir)
+
+	if nil != err{
+		logger.Error(err.Error())
+		return err
+	}
+
+	for i:=0;i<len(temp_list);i++{
+		file_path := path_util.Join(file_dir,temp_list[i].ToString())
+		if file_util.Exist(file_path){
+			err = os.Remove(file_path)
+			if nil != err{
+				logger.Error(err.Error())
+				return err
+			}
+		}
+	}
+
+	return nil
 
 }

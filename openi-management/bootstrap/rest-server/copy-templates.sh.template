@@ -2,5 +2,5 @@
 
 mkdir -p {{ clusterinfo['restserverinfo']['templates_store_path'] }}
 
-cp -f  /home/amax/openi/rest-server/src/templates/* {{ clusterinfo['restserverinfo']['templates_store_path'] }}
+cp -f  /home/amax/openi/rest-server/app/templates/* {{ clusterinfo['restserverinfo']['templates_store_path'] }}
 

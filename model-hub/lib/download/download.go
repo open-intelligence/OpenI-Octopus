@@ -10,38 +10,24 @@ import (
 	"ms_server/lib/persist/mysql"
 	"github.com/json-iterator/go"
 	"ms_server/util/path"
+	
 )
 
-func PrepareDownload(user string, project_name string, project_version string)(bool, string, error){
-	 
-	db := mysql_util.GetDB()
-	 
+func PrepareDownload(user string, project_name string, project_version string)(bool, jsoniter.Any, error){
+
 	sql := "SELECT project_info FROM ms_projects WHERE username=? AND project_name=? AND project_version=?;"
-	rows,err:= db.Query(sql,user,project_name,project_version)
-
 	 
-	if err != nil{
-		return false,"", err
+	results,err:= mysql_util.QueryAsJson(sql,user,project_name,project_version)
+
+	if nil != err{
+		return false,nil,err
 	}
 
-	defer rows.Close()
-
-	rows_str,err:= mysql_util.RowsToJsonArray(rows);
-
-	if err != nil{
-		return false,"", err
-	}
-
-	
-	var json = jsoniter.ConfigCompatibleWithStandardLibrary
-
-	any:= json.Get([]byte(rows_str))
-
-	if 0 == any.Size(){
-		return false ,"",nil
+	if 0 == results.Size(){
+		return false ,nil,nil
 	}
  
-	return true,any.Get(0).Get("project_info").ToString(), err
+	return true,results.Get(0).Get("project_info"), err
 }
 
 func DownloadChunk(user,project,version,file, seq,chunksize string, w io.Writer)(error){
@@ -66,7 +52,6 @@ func DownloadChunk(user,project,version,file, seq,chunksize string, w io.Writer)
 
 	fd, err := os.OpenFile(filepath,os.O_RDONLY,os.ModePerm)
 
-
 	if err != nil{
 		return err
 	}
@@ -81,22 +66,18 @@ func DownloadChunk(user,project,version,file, seq,chunksize string, w io.Writer)
 
  
 	if start >= fileSize{
-        return errors.New(fmt.Sprintf("The target block is not exist! seq:%d,block_size:%s",seq_int64,chunksize))
+		return errors.New(fmt.Sprintf("The target block is not exist! seq:%d,block_size:%s",seq_int64,chunksize))
 	}
 
 	defer fd.Close()
-
-	
  
 	fd.Seek(start,0)
 
 	err = Pipe(fd,w,chunk_int64)
-	 
 
 	return err
 }
 
-// 下载的状态由客户端维护，下载有没有成功客户端知道，commit 只是为了流程上完整，其实可以删掉的
 
 func Commit(download_id string)(error){
 	return nil

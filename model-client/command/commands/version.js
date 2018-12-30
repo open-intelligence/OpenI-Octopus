@@ -14,7 +14,7 @@ function create(cwd,args,opt){
           let version = args[1];
 
           if (!version){
-              log.info("[VERSION CREATE ERROR] - "+lang.New().en("Parameter 'version' is required!").zh("缺失参数'version'(版本号)"))  
+              log.info(lang.New().en("Parameter 'version' is required!").zh("缺失参数'version'(版本号)"))  
               return null;
           }
           
@@ -33,7 +33,7 @@ function create(cwd,args,opt){
           }
 
           if(json.versions.includes(version)){
-              log.info("[VERSION CREATE ERROR] "+lang.New().en(`Version "${version}" has already existed.`).zh(`版本"${version}"已经存在`));
+              log.info(lang.New().en(`Version "${version}" has already existed.`).zh(`版本"${version}"已经存在`));
               return null;
           }
 
@@ -83,7 +83,7 @@ function create(cwd,args,opt){
               yield fileUtil.copy(src_path,cwd,[path.join(src_path,"project.json")]);
           }
 
-          log.info("[VERSION CREATE] - "+lang.New().en(`Create new version "${version}" successfully!`).zh(`版本${version}创建成功`));
+          log.info(lang.New().en(`Create new version "${version}" successfully!`).zh(`版本${version}创建成功`));
 
     });
 }
@@ -92,8 +92,7 @@ function _switch(cwd,version){
     return co.brief(function*(resume){
         let [err,file] = yield fs.readFile(path.join(cwd,"project.json"),resume);
         if(err){
-            log.info("[]VERSION SWITCH ERROR] - "+err.message);
-            
+            log.info(lang.New().en("Failed to switch version,"+err.message).zh("切换版本失败,"+err.message));
             return false;
         }
         let json = JSON.parse(file);
@@ -102,20 +101,20 @@ function _switch(cwd,version){
             return null;
         }
         if(!json.versions.includes(version)){
-            log.info("[VERSION SWITCH ERROR] - "+lang.New().en(`The version "${version}" has not existed!`).zh(`版本"${version}"不存在`));
+            log.info(lang.New().en(`The version "${version}" has not existed!`).zh(`版本"${version}"不存在`));
           
             return null;
         }
         let target_version_cache_path = path.join(cwd,".ms","v"+version);
 
         if(!fs.existsSync(target_version_cache_path)){
-            log.info("[VERSION SWITCH ERROR] - "+lang.New().en(`The version "${version}" has not existed!`).zh(`版本"${version}"不存在`));
+            log.info(lang.New().en(`The version "${version}" has not existed!`).zh(`版本"${version}"不存在`));
          
             return null;
         }
 
         if(!fs.existsSync(path.join(target_version_cache_path,"project.json"))){
-            log.info("[VERSION SWITCH ERROR] - "+lang.New().en("Missing 'project.json'.").zh("缺失'project.json'."));
+            log.info(lang.New().en("Missing 'project.json'.").zh("缺失'project.json'."));
             return null;
         }
 
@@ -128,7 +127,7 @@ function _switch(cwd,version){
 
         if(err){
             
-            log.info("[VERSION SWITCH ERROR] - "+err.message);
+            log.info(lang.New().en("Failed to switch version,"+err.message).zh("切换版本失败,"+err.message));
             return false;
             
         }
@@ -142,14 +141,14 @@ function _switch(cwd,version){
         [err,file] = yield fs.readFile(path.join(cwd,"project.json"),resume);
 
         if(err){
-            log.info("[VERSION SWITCH ERROR] - "+err.message);
+            log.info(lang.New().en("Failed to switch version,"+err.message).zh("切换版本失败,"+err.message));
             return false;
         }
 
         json = JSON.parse(file);
 
         if(false == json.synced){
-            log.info("[VERSION SWITCH] - "+lang.New().en("Start to download data from remote repository server\n").zh("开始从远程仓库下载项目数据"));
+            log.info(lang.New().en("Start to download data from remote repository server\n").zh("开始从远程仓库下载项目数据"));
             yield download.download();
             delete json.synced;
             [err] = yield fs.writeFile(path.join(cwd,"project.json"),JSON.stringify(json," ",2),resume);
@@ -158,7 +157,7 @@ function _switch(cwd,version){
             }
         }
 
-        log.info(lang.New().en("[VERSION SWITCH] - Successfully").zh("成功切换版本"));
+        log.info(lang.New().en("Successfully").zh("成功切换版本"));
 
     });
 }
@@ -167,7 +166,7 @@ function current(cwd){
     return co.brief(function*(resume){
         let [err,file] = yield fs.readFile(path.join(cwd,"project.json"),resume);
         if(err){
-            console.log("[VERSION LIST ERROR] - "+err.message);
+            log.info(lang.New().en("Failed to print current version,"+err.message).zh("打印当前版本号失败,"+err.message))
             return false;
         }
         let json = JSON.parse(file);
@@ -180,7 +179,8 @@ function list(cwd){
     return co.brief(function*(resume){
          let [err,file] = yield fs.readFile(path.join(cwd,"project.json"),resume);
          if(err){
-             console.log("[VERSION LIST ERROR] - "+err.message);
+             log.info(lang.New().en("Failed to list versions,"+err.message).zh("列出版本列表失败,"+err.message))
+
              return false;
          }
          let json = JSON.parse(file);
@@ -209,21 +209,25 @@ function version(args,opt){
             yield current(cwd);
             return false;
         }
+
         let sub_command = args[0];
 
         if("create" == sub_command){
+            
             yield create(cwd,args,opt);
-        }else if("switch" == sub_command){
-            if (!opt.v){
-                log.info("[VERSION SWITCH ERROR] - "+lang.New().en("Parameter 'version' is required!").zh("缺少'版本号'参数"));
 
-                
+        }else if("switch" == sub_command){
+
+            if (!opt.v){
+                log.info(lang.New().en("Parameter 'version' is required!").zh("缺少'版本号'参数"));
             }else{
                 yield _switch(cwd,opt.v);
             }
             
         }else if("list" == sub_command){
+
             yield list(cwd,opt);
+
         }else{
             log.info(lang.New().en(`Command "version ${sub_command}" is not found`).zh(`无此命令 "version ${sub_command}"`))
              
@@ -234,6 +238,7 @@ function version(args,opt){
 }
 
 let type = lang.New().en("About Project Management").zh("项目管理相关");
+
 let note = lang.New().en("List,create,or switch versions.").zh("罗列,创建,或者切换版本");
 
 const cmd = new Command("version",version,type);
@@ -248,7 +253,7 @@ cmd.usage("version switch -v 'version'",lang.New().en("Switch to target version.
 
 cmd.usage("version list",lang.New().en("List all versions.").zh("列出所有的版本"));
 
-cmd.usage("version",lang.New().en("Print the current versio.n").zh("打印出当前版本号"));
+cmd.usage("version",lang.New().en("Print the current version.").zh("打印出当前版本号"));
 
 module.exports = cmd;
  

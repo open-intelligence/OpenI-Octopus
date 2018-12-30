@@ -1,31 +1,35 @@
 package router
 
 import   (
-	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"net/url"
-	"io/ioutil"
-	"errors"
 	"ms_server/lib/project"
 	"github.com/json-iterator/go"
+	"ms_server/lib/gbeta2"
+	"ms_server/util/json"
+	"ms_server/util/http"
 )
 
+func _versions (w *gbeta2.Res, r *http.Request, ctx *gbeta2.Ctx,next gbeta2.Next)(J.JSON,error){
 
-func Versions(r *http.Request,ps httprouter.Params)([]byte,error){
-	query,err:= url.ParseQuery(r.URL.RawQuery)
-	if nil != err{
-		return nil,err
-	}
+	query :=  ctx.Get("query").(url.Values)
 	
-	user:= query.Get("user")
-	project_name:=query.Get("project_name")
+	user := query.Get("user")
 
-	if "" == user {
-		return  []byte(`{"success":false,"message":"Query parameter 'user' is required!"}`),nil
+	project_name := query.Get("project_name")
+
+	if "" == user{
+		return J.JSON{
+			"success":false,
+			"message":"Query parameter 'user' is required!",
+		},nil
 	}
 
-	if "" == project_name {
-		return  []byte(`{"success":false,"message":"Query parameter 'project_name' is required!"}`),nil
+	if "" == project_name{
+		return J.JSON{
+			"success":false,
+			"message":"Query parameter 'project_name' is required!",
+		},nil
 	}
 
 	versions,err:= project.GetVersions(user,project_name)
@@ -34,23 +38,25 @@ func Versions(r *http.Request,ps httprouter.Params)([]byte,error){
 		return nil,err
 	}
 
-	return []byte(`{"success":true,"versions":`+versions+`}`),nil
+	return J.JSON{
+		"success":true,
+		"versions":versions,
+	},nil
+
 }
 
+func _info(w *gbeta2.Res, r *http.Request, ctx *gbeta2.Ctx,next gbeta2.Next)(J.JSON,error){
 
-func Info(r *http.Request,ps httprouter.Params)([]byte,error){
-	query,err:= url.ParseQuery(r.URL.RawQuery)
-
-	if nil != err{
-		return nil,err
-	}
-
+	query :=  ctx.Get("query").(url.Values)
 	user:= query.Get("user")
 	project_name:= query.Get("project_name")
 	version:= query.Get("project_version")
 
 	if "" == user || project_name == "" || "" == version{
-		return nil, errors.New("Missing parameter,please check your input (user,project_name,project_version)")
+		return J.JSON{
+			"success":false,
+			"message":"Missing parameter,please check your input (user,project_name,project_version)",
+		},nil
 	}
 
 	tar_version,info,err :=  project.Info(user,project_name,version);
@@ -59,32 +65,48 @@ func Info(r *http.Request,ps httprouter.Params)([]byte,error){
 		return nil,err
 	}
 
-	return []byte(`{"success":true,"version":"`+tar_version+`","info":`+info+`}`),nil
- }
+	return J.JSON{
+		"success":true,
+		"version":tar_version,
+		"info":info,
+	},nil
+}
 
 
- func Convert(r *http.Request,ps httprouter.Params)([]byte,error){
+func _convert(w *gbeta2.Res, r *http.Request, ctx *gbeta2.Ctx,next gbeta2.Next)(J.JSON,error){
 
-	body,err:= ioutil.ReadAll(r.Body)
+	 body := ctx.Get("body").(jsoniter.Any)
+	 
+	 success,failed_message,err:= project.Convert(body.Get("project"),body.Get("params"))
 
-	if err != nil {
-		return nil,err
-	}
+	 if nil != err{
+		 return nil,err
+	 }
 
-	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+	 if true == success{
+		 return J.JSON{
+			 "success":true,
+			 "message":"Convert successfully!",
+		 },nil
+	 }
 
-	 params := json.Get(body)
+	 return J.JSON{
+		 "success":false,
+		 "message":failed_message,
+	 },nil
+}
 
-	success,failed_message,err:= project.Convert(params.Get("project"),params.Get("params"))
+func ProjectRouter()*gbeta2.Router{
 
-	if nil != err{
-		return nil ,err
-	}
+	router:= gbeta2.New()
 
-	if true == success{
-		return []byte(`{"success":true,"message":"Convert successfully"}`),nil
-	}else{
-		return []byte(`{"success":false,"message":"`+failed_message+`"}`),nil
-	}
+	router.GET("/versions", http_util.HandleError(_versions))
 
- }
+	router.POST("/convert",http_util.HandleError(_convert))
+
+	router.POST("/info",http_util.HandleError(_info))
+	
+	return router
+}
+ 
+ 

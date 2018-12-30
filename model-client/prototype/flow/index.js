@@ -10,6 +10,15 @@ const CONSTANT = {
     COMMAND:2
 };
 
+var blank=function(num,char){
+    var str="";
+    for(var i=0;i<num;i++){
+        str+= char || " ";
+    }
+    return str;
+}
+
+
 
 function Flow (){
     this._flows = [];
@@ -60,16 +69,8 @@ Flow.prototype.use = function(){
     
 }
 
-var blank=function(num,char){
-    var str="";
-    for(var i=0;i<num;i++){
-        str+= char || " ";
-    }
-    return str;
-}
-
-
 Flow.prototype._linkNote = function(){
+    
     if(this._note_linked != ""){
         return this._note_linked;
     }
@@ -127,6 +128,7 @@ Flow.prototype._linkNote = function(){
     return notes_str;
 }
 
+
 Flow.prototype._helpCommand = function(cmd_name = ""){
     let cmd = null;
     for(let i = 0;i<this._cmds.length;i++){
@@ -139,23 +141,25 @@ Flow.prototype._helpCommand = function(cmd_name = ""){
     if (null == cmd){
          return lang.New().en(`Command "${cmd_name}" is not found!`)
         .zh(`没有找到"${cmd_name}"命令`);
-    }else{
-        let usages = cmd.usage();
-        let str = "\n";
-        let max_len = 0;
+    } 
+    
+    let usages = cmd.usage();
+    let str = "\n";
+    let max_len = 0;
         
-        for(let i=0;i<usages.length;i++){
-           let exp = chalk.blue(usages[i].exp);
+    for(let i=0;i<usages.length;i++){
 
-           if(exp.length  > max_len){
-               max_len = exp.length;
-           }
+        let exp = chalk.blue(usages[i].exp);
+
+        if(exp.length  > max_len){
+            max_len = exp.length;
         }
-        for(let i=0;i<usages.length;i++){
-            str+= blank(2)+chalk.blue(usages[i].exp)+blank(max_len - usages[i].exp.length+4)+usages[i].note+"\n"
-        }
-        return str;
     }
+    for(let i=0;i<usages.length;i++){
+        str+= blank(2)+chalk.blue(usages[i].exp)+blank(max_len - usages[i].exp.length+4)+usages[i].note+"\n"
+    }
+    return str;
+    
 }
 
 Flow.prototype.run = function (cwd,args,opt){
@@ -207,7 +211,7 @@ Flow.prototype.run = function (cwd,args,opt){
         }
 
         return next;
-    })
+    });
 
 }
 

@@ -156,7 +156,7 @@ func DirMustExist(dir string){
 }
 
 
-func ReadDirInfo(dir string,file_type string,node_name string)(string,error){
+func ReadDirIn(dir string,file_type string,node_name string)(string,error){
 	
 	if "file" == file_type{
 		fd,err:= os.Open(dir)
@@ -187,7 +187,7 @@ func ReadDirInfo(dir string,file_type string,node_name string)(string,error){
 
 		if file_list[0].IsDir(){
 
-			node,err:= ReadDirInfo(path_util.Join(dir,file_list[0].Name()),"dir",file_list[0].Name())
+			node,err:= ReadDirIn(path_util.Join(dir,file_list[0].Name()),"dir",file_list[0].Name())
 			if nil != err{
 				   return "",err
 			}
@@ -199,7 +199,7 @@ func ReadDirInfo(dir string,file_type string,node_name string)(string,error){
         if len(file_list) >1 {
 			for i:=1;i<len(file_list);i++{
 				if file_list[i].IsDir(){
-					node,err:= ReadDirInfo(path_util.Join(dir,file_list[i].Name()),"dir",file_list[i].Name())
+					node,err:= ReadDirIn(path_util.Join(dir,file_list[i].Name()),"dir",file_list[i].Name())
 					if nil != err{
 						return "",err
 					}

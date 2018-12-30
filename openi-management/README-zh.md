@@ -15,10 +15,10 @@
   NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
   DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-  
+
 
   Copyright (c) Peking University 2018
-  
+
   The software is released under the Open-Intelligence Open Source License V1.0.
   The copyright owner promises to follow "Open-Intelligence Open Source Platform
   Management Regulation V1.0", which is provided by The New Generation of 
@@ -45,9 +45,9 @@ Each k8s component runs in a Docker container. If Docker is missing in the OS, t
 
 ## Kubernetes 高可用性
 
-####方法一
+#### 方法一
 
-因为云服务，例如azure总是有负载平衡服务。所以当部署pai到云平台时，你可以选择负载平衡服务去实现高可用性。在搭建你的kubernetes集群时，你应该配置你的负载平衡。请使用你的权限设置后端。并且使用在 [kubernetes-configuration.yaml](../cluster-configuration/kubernetes-configuration.yaml)中负载平衡的ip去配置下面的属性。
+因为云服务，例如azure总是有负载平衡服务。所以当部署OpenI到云平台时，你可以选择负载平衡服务去实现高可用性。在搭建你的kubernetes集群时，你应该配置你的负载平衡。请使用你的权限设置后端。并且使用在 [kubernetes-configuration.yaml](../cluster-configuration/kubernetes-configuration.yaml)中负载平衡的ip去配置下面的属性。
 
 ```yaml
 
@@ -141,11 +141,11 @@ load-balance-ip: master ip
 
 
 
-## 准备你的开发环境
+## 准备开发环境
 
 
 #### 主机环境
-确保你的开发箱拥有对集群的网络访问权限
+确保你的主机环境拥有对集群的网络访问权限
 
 Python(2.x)和 库 的安装:
 ```yaml
@@ -156,8 +156,8 @@ sudo pip install python-etcd kubernetes
 注意：kubectl 将被安装到这个开发箱中。所以你有权访问你的kubernetes 集群
 
 #### 在一个docker容器中
-- 确保你的开发箱拥有对集群的网络访问权限。
-- 确保你的开发箱子已经被安装到了docker中。
+- 确保你的docker环境拥有对集群的网络访问权限。
+- 确保你的开发环境已经被安装到了docker中。
 ```bash
 sudo docker build -t kubernetes-deployment .
 sudo docker run -itd \
@@ -189,7 +189,7 @@ sudo ./k8sClusterManagement.py -p /path/to/configuration/directory -a deploy
 sudo ./k8sClusterManagement.py -p /path/to/configuration/directory -a clean
 ```
 
-## 只安装kubectl到你的开发箱中
+## 只安装kubectl到你的开发环境中
 ```bash
 sudo ./k8sClusterManagement.py -p /path/to/configuration/directory -a install_kubectl
 ```
@@ -221,9 +221,9 @@ sudo ./k8sClusterManagement.py -p /path/to/configuration/directory -f yournodeli
 
 
 
-# Kubernetes上的部署服务
+# 利用Kubernetes部署服务
 
-这个文献解释如何使用Kubernetes 去部署系统服务，包括框架搭建，hadoop，rest server以及门户网站。
+本章节解释如何使用Kubernetes 部署系统服务，包括框架搭建，hadoop，rest server以及门户网站。
 
 ## 条件
 
@@ -239,17 +239,17 @@ sudo pip install kubernetes
 
 为了存储docker镜像去部署服务，整个部署的过程要进一步依赖docker注册服务 (例如, [Docker hub](https://docs.docker.com/docker-hub/)) 
 
-## 准备hadoop配置（修补）
+## 准备hadoop配置（补丁）
 
 ```
 sudo ./prepare_hadoop_config.sh
 ```
 
-根据你的环境，你可以在这步定制hadoop配置。
+根据你的环境，你可以在这步自定义hadoop配置。
 
 ## 集群配置和脚本生成
 
-配置这个 [cluster configuration](../cluster-configuration/)。链接中的配置文件解释了一个例子，这个例子包含了一些细节。当部署你的服务到集群时，请用你自己的配置替换指定字段。
+配置 [cluster configuration](../cluster-configuration/)。链接中的配置文件解释了一个例子，这个例子包含了一些细节。当部署你的服务到集群时，请用你自己的配置替换指定字段。
 
 注意：不要改变文件名！
 
@@ -274,13 +274,14 @@ sudo ./cleanup-service.py
 
 ## 对于高级用户：自定义或重新配置hadoop服务
 
-在重定义之前，请使用k8s去停止hadoop服务并且移除hadoop配置表。用户可以定义hadoop配置在
-./bootstrap/hadoop-service/hadoop-configuration/ 中（配置文件由./prepare_hadoop_config.sh生成）。在确定必要的改变之后，请运行
+在重定义之前，请使用k8s停止hadoop服务并且移除hadoop配置表。用户可以定义hadoop配置在
+./bootstrap/hadoop-service/hadoop-configuration/ 中（配置文件由./prepare_hadoop_config.sh生成）。在确定修改完毕后，请运行
+
 ```
 ./bootstrap/hadoop-service/start.sh
 ```
 
-##对于开发者来说：怎样去添加（移除）服务到（从）集群中 ？
+## 如何在集群中添加（移除）服务 ？
 
 创建一个带有新服务名字的文件夹，把你docker镜像中的全部文件放到这个文件夹中，然后把文件夹放到路径/src/,并且更新 [service.yaml](service.yaml)中服务列表的详细信息。
 

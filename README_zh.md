@@ -78,8 +78,9 @@ Web门户上也提供了Web UI进行集群的管理。
 ## 系统结构
 
 <p style="text-align: left;">
-  <img src="./sysarch.png" title="System Architecture" alt="System Architecture" />
+  <img src="./sysarch-zh.png" title="System Architecture" alt="System Architecture" />
 </p>
+
 
 系统的整体结构如上图所示。
 用户通过[Web门户](./webportal/README.md)提交了任务作业或集群状态监视的申请，该操作会调用[REST服务器](./rest-server/README.md)提供的API。

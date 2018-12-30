@@ -1,12 +1,14 @@
 // created by yyrdl on 2018.12.5
 const co = require("zco");
-const project = require("./project");
 const api = require("./api");
 const streamUtil = require("./stream");
+const fileUtil = require("../../utils/file");
+const taskUtil = require("./task");
 const log = require("../../utils/log");
 const config = require("../../config");
 const lang = require("../../prototype/lang");
-const Reporter = require("../../utils/report");
+const Reporter = require("../../prototype/report");
+const Lock = require("../../prototype/concurrent")
 
 const MAX_TRY_TIME = config.maxTryTime || 3;
 const BLOCK_SIZE = config.blockSize || 64 * 1024 * 1024; //default 64MB
@@ -14,7 +16,7 @@ const BLOCK_SIZE = config.blockSize || 64 * 1024 * 1024; //default 64MB
 /**
  * conccurrent lock
  */
-const c_lock = require('../../utils/concurrent').New(5);
+const c_lock = new Lock(5);
 
 function uploadFile(taskInfo,reporter) {
 	return co.brief(function  * (resume, defer) {
@@ -70,14 +72,14 @@ function beforeUpload() {
 
 		let projectInfo = this.ctx.profile;
 
+		 
 		log.info(lang.New().zh(`准备上传${projectInfo.name}的${projectInfo.current}版`)
 		.en(`Start to upload version "${projectInfo.current}" of "${projectInfo.name}"`))
 
-		 
+		
+		let  filesInfo = yield fileUtil.readDirInfo(cwd)
 
-		let  filesInfo = yield project.filesInfo(cwd);
-
-	 
+		filesInfo.name  = projectInfo.name || filesInfo.name;
 
 		if("dir" == filesInfo.type){
 			filesInfo.child = filesInfo.child.filter(it=>{
@@ -95,7 +97,7 @@ function beforeUpload() {
 		let task_id = initRes.upload_id;
 
 		//generate upload tasks 
-		let  tasks = yield project.genUploadTask(cwd, config.blockSize);
+		let  tasks = yield taskUtil.genUploadTask(cwd, config.blockSize);
 
         // ignore other versions
 		tasks = tasks.filter(it=>{
@@ -208,6 +210,7 @@ function uploadProject() {
 			let res = yield api.commit(task_id);
 		 
 			if (false == res.success) {
+
 				this.ctx.lastUploadError = res.message;
 
 				success = false;
@@ -218,20 +221,20 @@ function uploadProject() {
 			if (res.left.length == 0) {
 				success = true;
 				break;
-			} else {
-				for (let j = 0; j < res.left.length; j++) {
-					let file = res.left[j];
-					for (let k = 0; k < file.lack.length; k++) {
-						let block = mini_tasks_map[file.file + "_" + file.lack[k]];
-						if (block) {
-							block.success = false;
-						}
+			}  
+			
+			for (let j = 0; j < res.left.length; j++) {
+				let file = res.left[j];
+				for (let k = 0; k < file.lack.length; k++) {
+					let block = mini_tasks_map[file.file + "_" + file.lack[k]];
+					if (block) {
+						block.success = false;
 					}
 				}
-
-				yield startUpload(mini_tasks,reporter);
-		
 			}
+
+			yield startUpload(mini_tasks,reporter);
+			 
 		}
 
 		if (!success) {

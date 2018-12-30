@@ -5,9 +5,9 @@ const co = require("zco");
 const fs = require("fs");
 const path = require("path");
 const tempFile = require("./tempFile");
- 
+const Lock = require("../../prototype/concurrent");
 
-const c_lock  = require("../../utils/concurrent").New(5);
+const c_lock  =  new Lock(5);
 
 function merge(writeStream,readStream,callback){
 

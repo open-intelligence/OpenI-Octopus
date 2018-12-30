@@ -1,66 +1,67 @@
-
 package main
 
 import (
-    "log"
-    "os"
-    "fmt"
-    "github.com/julienschmidt/httprouter"
-    "net/http"
-    "ms_server/router"
-    "ms_server/config"
-    "ms_server/lib/persist/file"
-     mw "ms_server/middleware"
+	"os"
+	"net/http"
+	"ms_server/config"
+	"ms_server/lib/gbeta2"
+	"ms_server/util/log"
+	"ms_server/lib/persist/file"
+	 mw "ms_server/middleware"
+	"ms_server/router"
 )
 
-func setUp(){
-     //read config
-   
-    err:= config.InitConfig()
-    
-    if nil != err{
-        log.Fatal(err)
-        os.Exit(1)
-    }
-    // create root dir for files
-    if false == file_util.Exist(config.Get(config.FileStoragePath)){
-        os.MkdirAll(config.Get(config.FileStoragePath),os.ModeDir)
-    }
-    
+func setUp() {
+	//read config
+	logger := log.GetLogger()
+
+	defer logger.Sync()
+
+	err := config.InitConfig()
+
+	if nil != err {
+		logger.Fatal(err.Error())
+	}
+	// create root dir for storage
+	if false == file_util.Exist(config.Get(config.FileStoragePath)) {
+		os.MkdirAll(config.Get(config.FileStoragePath), os.ModeDir|os.ModePerm)
+	}
 }
 
-func main()  {
+func main() {
 
-    setUp()
-   
-    Router := httprouter.New()
+	setUp()
 
-    Router.POST("/login",mw.Link(mw.Wrap(router.Login)))
+	logger:= log.GetLogger()
 
-    Router.POST("/login/check",mw.Link(mw.Wrap(router.Signed)))
+	defer logger.Sync()
 
-    Router.POST("/project/info",mw.Link(mw.TokenRequired,mw.Wrap(router.Info)))
+	Router := gbeta2.New()
 
-    Router.GET("/project/versions",mw.Link(mw.TokenRequired,mw.Wrap(router.Versions)))
+	Router.Mw(mw.GetLogger(nil))
 
-    Router.POST("/project/convert",mw.Link(mw.TokenRequired,mw.Wrap(router.Convert)))
-    
-    Router.POST("/upload/init",mw.Link(mw.TokenRequired,mw.Wrap(router.InitUpload)))
+	Router.GET("/", router.Index)
 
-    Router.POST("/upload/commit",mw.Link(mw.TokenRequired,mw.Wrap(router.CommitUpload)))
+	Router.Use("/", mw.JSON_Parser)
 
-    Router.POST("/download/init",mw.Link(mw.TokenRequired,mw.Wrap(router.InitDownload)))
+	Router.Use("/", mw.Query_Parser)
 
-    Router.POST("/download/commit",mw.Link(mw.TokenRequired,mw.Wrap(router.CommitDowload)))
-    
-    Router.POST("/upload",mw.Link(mw.TokenRequired,router.Upload))
-    
-    Router.GET("/download",mw.Link(mw.TokenRequired,router.Download))
-    
+	Router.SubRouter("/login", router.LoginRouter())
 
-    fmt.Println("MS_SERVER is running at port:"+config.Get(config.ServerPort))
-    
-    log.Fatal(http.ListenAndServe(":"+config.Get(config.ServerPort), Router))
+	Router.Use("/", mw.TokenRequired) // token is required
 
-    
+	Router.SubRouter("/project", router.ProjectRouter())
+
+	Router.SubRouter("/upload", router.UploadRouter())
+
+	Router.SubRouter("/download", router.DownloadRouter())
+
+	logger.Info("Model-Hub is running at port:" + config.Get(config.ServerPort))
+
+	err := http.ListenAndServe(":"+config.Get(config.ServerPort), Router.Build())
+
+	if nil != err{
+		logger.Fatal(err.Error())
+	}
+
 }

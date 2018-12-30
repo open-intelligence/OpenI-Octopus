@@ -45,7 +45,7 @@ spec:
         securityContext:
           privileged: true
         volumeMounts:
-        - mountPath: /usr/src/app/src/templates
+        - mountPath: /usr/src/app/app/templates
           name: templates
 
 {% if 'volumeMounts' in clusterinfo['restserverinfo'] %}
@@ -56,6 +56,8 @@ spec:
 {% endif %}
 
         env:
+	- name: EGG_SERVER_ENV
+          value: prod
         - name: LAUNCHER_WEBSERVICE_URI
           value: {{ clusterinfo['restserverinfo']['webservice_uri'] }}
         - name: HDFS_URI

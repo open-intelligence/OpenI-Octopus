@@ -11,6 +11,7 @@ import (
 	"database/sql"
 	_ "github.com/go-sql-driver/mysql"
 	"ms_server/config"
+	"github.com/json-iterator/go"
 )
 
 var db *sql.DB = nil
@@ -23,7 +24,6 @@ func init(){
 
 func initDB(){
 	var err error
-	fmt.Println(config.Get(config.Mysql))
 	db, err = sql.Open("mysql", config.Get(config.Mysql))
 	if nil != err {
 		fmt.Println("Can't  connect to mysql :"+config.Get(config.Mysql))
@@ -119,4 +119,57 @@ func RowsToJsonArray(rows *sql.Rows)(string, error){
 	}
     
     return list,nil
+}
+
+func Query(sql string ,args ... interface{})error{
+	db:= GetDB()
+	rows,err:= db.Query(sql,args ...)
+
+	if nil != err{
+		return err
+	}
+
+	if nil != rows{
+		rows.Close()
+	}
+	return nil
+}
+
+func QueryAsString(sql string ,args ... interface{})(string,error){
+	db:= GetDB()
+
+	rows,err:= db.Query(sql,args ...)
+
+	if nil != err{
+		return "",err
+	}
+
+	defer rows.Close()
+
+	str,err:= RowsToJsonArray(rows)
+
+	return str,err
+}
+
+
+func QueryAsJson(sql string, args ... interface{})(jsoniter.Any,error){
+	db:= GetDB()
+
+	rows,err:= db.Query(sql,args ...)
+
+	if nil != err{
+		return nil,err
+	}
+
+	defer rows.Close()
+
+	str,err:= RowsToJsonArray(rows)
+
+	if err != nil{
+		return nil,err
+	}
+
+	var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+	return json.Get([]byte(str)),nil
 }

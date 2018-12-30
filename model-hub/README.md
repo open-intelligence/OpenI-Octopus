@@ -1,6 +1,6 @@
 # 模块系统后端
 
-model-hub 是OPENI模型仓库的后端，负责存储用户的模型数据，用户可以通过客户端（model-client）上传和下载自己的模型数据。
+model-hub 是QIZHI模型仓库的后端，负责存储用户的模型数据，用户可以通过客户端（model-client）上传和下载自己的模型数据。
 
 
 # 一. 编译
@@ -10,7 +10,7 @@ model-hub 是OPENI模型仓库的后端，负责存储用户的模型数据，�
 > go version >= 1.11
 
 
-# 二. 环境配置
+# 二. 环境变量
 
    * `SERVER_PORT`  服务监听的端口号
    * `FILE_STORAGE_PATH` 模型数据存储的根目录
@@ -40,15 +40,23 @@ model-hub 是OPENI模型仓库的后端，负责存储用户的模型数据，�
 
 # 三. 目录结构
 
-  * `./main.go`    项目主入口
-  * `./config`     环境变量配置相关
-  * `./router`     定义路由的处理句柄
-  * `./middleware` 定义的中间件，如权限检查
-  * `./lib/upload`  定义处理文件上传的相关方法
-  * `./lib/login`  用户权限相关的方法
-  * `./lib/persist` 存储相关（文件和mysql）
-  * `./lib/project`  定义项目操作相关的方法
-  * `./lib/download` 定义文件下载相关的方法
+* `./main.go` 项目主文件
+* `./router`  API的子路由
+* `./middleware` 中间件，包含token鉴权，输入预处理 和 API日志
+    * `./auth.go` token 鉴权
+    * `./json_parser.go` json数据预处理
+    * `./query_parser.go` query 数据预处理
+    * `./logger.go` api 日志
+    * `./upload_exist.go` 上传任务是否存在的前置检查
+* `./lib` 模块库
+    * `./upload` 上传模块
+    * `./download` 下载模块
+    * `./user`  用户模块
+    * `./persist` 数据持久化模块
+    * `./gbeta2`  自研http路由框架
+    * `./project` 模型项目操作相关
+* `./config` 环境配置相关
+
 
 # 四. API 
 

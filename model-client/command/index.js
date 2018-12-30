@@ -23,9 +23,9 @@ const cmd_exit = require("./commands/exit");
 const cmd_lang  = require("./commands/lang");
 
 
-const exist = require("./middlewares/exist")
-const notFound =  require("./middlewares/not_found");
-const signed = require("./middlewares/signed");
+const exist = require("./middlewares/project_exist")
+const not_found =  require("./middlewares/not_found");
+const check_login = require("./middlewares/check_login");
 
 require("./setup").run();
 
@@ -44,15 +44,13 @@ flow.use("touch",cmd_touch)//done
 flow.use("init",cmd_init);//done
 flow.use("login",cmd_login);//done
 flow.use("clone",cmd_clone);//done
-flow.use("pull",exist,signed,cmd_pull);//done
-flow.use("push",exist,signed,cmd_push);//done
+flow.use("pull",exist,check_login,cmd_pull);//done
+flow.use("push",exist,check_login,cmd_push);//done
 flow.use("version",exist,cmd_version);//done
-flow.use("convert",exist,signed,cmd_convert);//done
+flow.use("convert",exist,check_login,cmd_convert);//done
 
 
-
-
-flow.use(notFound);
+flow.use(not_found);
 
 
 co(function*(resume){

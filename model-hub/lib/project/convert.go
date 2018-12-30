@@ -52,9 +52,11 @@ func prepareParam(output,root_path string,params jsoniter.Any)string{
 }
 
 func resetProjectInfo(user,project,version string)error{
+
 	dir:= path_util.Join(config.Get(config.FileStoragePath),user,project,"v"+version);
 
-	info,err:= file_util.ReadDirInfo(dir,"dir",project)
+	info,err:= file_util.ReadDirIn(dir,"dir",project)
+
 	if err != nil{
 		return err
 	}
@@ -106,9 +108,11 @@ func Convert(info  jsoniter.Any,params jsoniter.Any)(bool,string,error)  {
 	if nil != err{
 		return false,"",err
 	}
+
 	defer resp.Body.Close()
 	
 	body, err := ioutil.ReadAll(resp.Body)
+	
 	if err != nil {
 	    return false,"",err
 	}
