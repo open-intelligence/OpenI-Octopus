@@ -2,7 +2,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License. See License.txt in the project root for license information.
 #----------------------------------------------------------------------------------------------
-
+# -*- coding: UTF-8 -*-
 import os
 import numpy as np
 import common.IR.model_pb2 as model_pb2

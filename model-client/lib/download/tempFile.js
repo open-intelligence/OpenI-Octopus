@@ -96,7 +96,11 @@ function getTempFileList(dir,fileName){
         }
         
         return result.sort(function(a,b){
-            return a.seq > b.seq;
+            if (a.seq == b.seq ){
+                return 0;
+            }
+
+            return a.seq > b.seq  ? 1 : -1;
         });
     });
 }

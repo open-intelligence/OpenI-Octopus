@@ -1,0 +1,65 @@
+# 使用frameworkcontroller管理pod，生成yaml文件如下：
+     apiVersion: frameworkcontroller.microsoft.com/v1
+kind: Framework
+metadata:
+  name: nputest
+spec:
+  executionType: Start
+  retryPolicy:
+    fancyRetryPolicy: true
+    maxRetryCount: 2
+  taskRoles:
+  - name: ps
+    taskNumber: 1
+    frameworkAttemptCompletionPolicy:
+      minFailedTaskCount: 1
+      minSucceededTaskCount: -1
+    task:
+      retryPolicy:
+        fancyRetryPolicy: false
+        maxRetryCount: 0
+      pod:
+        spec:
+          restartPolicy: Never
+          hostNetwork: false
+          containers:
+          - name: nvidiatest
+            image: cambricon-test2:v0.4
+            command: [
+            "sh", "-c",
+            "/mnt/frameworkbarrier/injector.sh && sleep 10d"]
+            resources:
+              limits:
+                cambricon.com/mlu: 1
+            volumeMounts:
+            - name: cambricon-datasets
+              mountPath: /Cambricon-MLU100/datasets
+            - name: model
+              mountPath: /Cambricon-MLU100/models
+            - name: frameworkbarrier-volume
+              mountPath: /mnt/frameworkbarrier
+            - name: nvidia-runfile
+              mountPath: /home
+          serviceAccountName: frameworkbarrier
+          initContainers:
+          - name: framenameworkbarrier
+            image: frameworkcontroller/frameworkbarrier
+            volumeMounts:
+            - name: frameworkbarrier-volume
+              mountPath: /mnt/frameworkbarrier
+          volumes:
+          - name: frameworkbarrier-volume
+            emptyDir: {}
+          - name: nvidia-runfile
+            hostPath:
+                path: /home/amax
+          - name: cambricon-datasets
+            hostPath:
+                path: /home/cambricon/V7.3.2/Cambricon-MLU100/datasets
+          - name: model
+            hostPath:
+                path: /home/cambricon/V7.3.2/Cambricon-MLU100/models
+   # 使用kubectl create -f  ...yaml生成pod
+   # 进入pod，运行./run_all.sh 
+ 
+     

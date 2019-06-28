@@ -16,14 +16,6 @@
 # NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
 # DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
-#
-# Copyright (c) Peking University 2018
-#
-# The software is released under the Open-Intelligence Open Source License V1.0.
-# The copyright owner promises to follow "Open-Intelligence Open Source Platform
-# Management Regulation V1.0", which is provided by The New Generation of 
-# Artificial Intelligence Technology Innovation Strategic Alliance (the AITISA).
 
 #get the config generating script from kubenretes configmap
 cp /frameworklauncher-configuration/${GENERATE_CONFIG}  generate_config.sh

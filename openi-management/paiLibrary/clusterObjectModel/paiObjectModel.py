@@ -163,6 +163,7 @@ class paiObjectModel:
             host["node-exporter"] = "true"
             host["model-exchange"] = "true"
             host["model-hub"] = "true"
+            host["mysql-db"] = "true"
 
         if "openi-worker" in host and host["openi-worker"] == "true":
 
@@ -256,8 +257,17 @@ class paiObjectModel:
             serviceDict["clusterinfo"]["restserverinfo"]["openi_db_pwd"]
         serviceDict["clusterinfo"]["restserverinfo"]["openi_db_database"] = \
             serviceDict["clusterinfo"]["restserverinfo"]["openi_db_database"]
+        serviceDict["clusterinfo"]["restserverinfo"]["influx_db_host"] = \
+            serviceDict["clusterinfo"]["restserverinfo"]["influx_db_host"]
+        serviceDict["clusterinfo"]["restserverinfo"]["influx_db_port"] = \
+            serviceDict["clusterinfo"]["restserverinfo"]["influx_db_port"]
+        serviceDict["clusterinfo"]["restserverinfo"]["influx_db_user"] = \
+            serviceDict["clusterinfo"]["restserverinfo"]["influx_db_user"]
+        serviceDict["clusterinfo"]["restserverinfo"]["influx_db_pwd"] = \
+            serviceDict["clusterinfo"]["restserverinfo"]["influx_db_pwd"]
         serviceDict["clusterinfo"]["restserverinfo"]["etcd_uri"] = self.getEtcdUri()
         serviceDict["clusterinfo"]["restserverinfo"]["yarn_uri"] = self.getYarnWebPortalUri()
+        serviceDict["clusterinfo"]["restserverinfo"]["image_factory_uri"] = self.getImageFactoryUri()
         serviceDict["clusterinfo"]["restserverinfo"]["clusterid"] = \
             self.rawData["serviceConfiguration"]["cluster"]["clusterid"]
 
@@ -308,6 +318,10 @@ class paiObjectModel:
 
         serviceDict["clusterinfo"]["modelhubinfo"]["user_center"] = "http://{0}:{1}".format(self.getMasterIP(),serviceDict["clusterinfo"]["restserverinfo"]["server-port"])
         serviceDict["clusterinfo"]["modelhubinfo"]["exchange_service"] = "http://{0}:{1}".format(self.getMasterIP(),serviceDict["clusterinfo"]["modelexchangeinfo"]["port"])
+
+        # mysql-db:
+        serviceDict["clusterinfo"]["mysql-dbinfo"] = self.rawData["serviceConfiguration"]["mysql-db"]
+
         # section
 
         serviceDict["clusterinfo"]["pyloninfo"] = \
@@ -412,7 +426,12 @@ class paiObjectModel:
         ret = "http://{0}:{1}".format(vip, str(port))
         return ret
 
+    def getImageFactoryUri(self):
 
+        vip = self.getMasterIP()
+        port = self.rawData["serviceConfiguration"]["image-factory"]["port"]
+        ret = "http://{0}:{1}".format(vip, str(port))
+        return ret
 
     def getEtcdUri(self):
 

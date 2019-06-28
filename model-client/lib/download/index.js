@@ -58,11 +58,10 @@ function downloadWorker(dir,task_info,reporter){
 
            yield  c_lock.lock(resume);
 
-
            let [err0] = yield fileUtil.dirMustExist(file_dir);
 
            if(err0){
-              
+
                log.debug(err0)
 
                return {
@@ -78,7 +77,6 @@ function downloadWorker(dir,task_info,reporter){
 
     
            if(err){
-
                log.debug(err);
     
                return {

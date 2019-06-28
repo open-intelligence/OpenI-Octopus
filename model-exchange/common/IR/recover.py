@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from six import string_types as _string_types
 
 # import mmdnn.conversion.common.IR.graph_pb2 as graph_pb2

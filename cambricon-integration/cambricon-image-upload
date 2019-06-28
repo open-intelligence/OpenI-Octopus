@@ -1,0 +1,6 @@
+上传镜像到harbor
+   - docker login -u openi -p OpenI:192.168.202.102:5000
+   - docker tags cambricon/test/ubuntu:v4.1 192.168.202.74:5000/openi/cambricon-office-ubuntu:v0.4
+   - docker push 192.168.202.74:5000/openi/cambricon-office-ubuntu:v0.4
+   - docker tags cambricon-test2:v0.4 192.168.202.74:5000/openi/cambricon-Neuware:v0.4
+   - docker push 192.168.202.74:5000/openi/cambricon-Neuware:v0.4

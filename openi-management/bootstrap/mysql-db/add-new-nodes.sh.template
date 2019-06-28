@@ -1,0 +1,13 @@
+#!/bin/bash
+
+pushd $(dirname "$0") > /dev/null
+
+{% if new_machine_list != None %}
+{% for host in new_machine_list %}
+    {% if 'mysql-db' in host and host[ 'mysql-db' ] == 'true' %}
+kubectl label nodes {{ host[ 'nodename' ] }} mysql-db=true
+    {% endif %}
+{% endfor %}
+{% endif %}
+
+popd > /dev/null

@@ -47,7 +47,9 @@ spec:
         volumeMounts:
         - mountPath: /usr/src/app/app/templates
           name: templates
-
+        - mountPath: /ghome
+          name: ghome
+    
 {% if 'volumeMounts' in clusterinfo['restserverinfo'] %}
   {% for volumeinfo in clusterinfo['restserverinfo']['volumeMounts'] %}
         - mountPath: {{ volumeinfo['mountPath'] }}
@@ -56,7 +58,7 @@ spec:
 {% endif %}
 
         env:
-	- name: EGG_SERVER_ENV
+        - name: EGG_SERVER_ENV
           value: prod
         - name: LAUNCHER_WEBSERVICE_URI
           value: {{ clusterinfo['restserverinfo']['webservice_uri'] }}
@@ -88,6 +90,22 @@ spec:
           value: "{{ clusterinfo['restserverinfo']['openi_db_pwd'] }}"
         - name: OPENI_DB_DATABASE
           value: {{ clusterinfo['restserverinfo']['openi_db_database'] }}
+        - name: INFLUX_DB_HOST
+          value: {{ clusterinfo['restserverinfo']['influx_db_host'] }}
+        - name: INFLUX_DB_PORT
+          value: "{{ clusterinfo['restserverinfo']['influx_db_port'] }}"
+        - name: INFLUX_DB_USERNAME
+          value: {{ clusterinfo['restserverinfo']['influx_db_user'] }}
+        - name: INFLUX_DB_PASSWORD
+          value: "{{ clusterinfo['restserverinfo']['influx_db_pwd'] }}"
+        - name: IMAGE_FACTORY_URI
+          value: {{ clusterinfo['restserverinfo']['image_factory_uri'] }}
+        - name: DOCKER_REGISTRY_ADDR
+          value: {{ clusterinfo['dockerregistryinfo']['docker_registry_domain'] }}
+        - name: DOCKER_USER
+          value: {{ clusterinfo['dockerregistryinfo']['docker_username'] }}
+        - name: DOCKER_PASSWORD
+          value: {{ clusterinfo['dockerregistryinfo']['docker_password'] }}
         ports:
         - name: rest-server
           containerPort: 8080
@@ -98,6 +116,9 @@ spec:
       - name: templates
         hostPath:
           path: {{ clusterinfo['restserverinfo']['templates_store_path'] }}
+      - name: ghome
+        hostPath:
+          path: /ghome
 
 {% if 'volumes' in clusterinfo['restserverinfo'] %}
   {% for volumeinfo in clusterinfo['restserverinfo']['volumes'] %}

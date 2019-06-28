@@ -72,7 +72,15 @@ function dirMustExist(dir_path){
         }
 
         let dirs = dir_path.split(/[\\/]/);
-      
+
+        if(dirs[0] == ""){
+            dirs[0] = "/";
+        }
+
+        dirs = dirs.filter(function(sub){
+            return sub != "";
+        })
+        
         let subdir = dirs[0];
 
         for(let i=1;i<dirs.length;i++){

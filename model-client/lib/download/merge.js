@@ -9,20 +9,26 @@ const Lock = require("../../prototype/concurrent");
 
 const c_lock  =  new Lock(5);
 
+ 
+
 function merge(writeStream,readStream,callback){
 
      let replied = false;
 
+     function onwrite_error(err){
+        reply(err);
+     }
+
+
      function reply(err){
          if(!replied){
+             writeStream.removeListener("error",onwrite_error);
              replied = true;
              callback && callback(err);
          }
      }
 
-     writeStream.on("error",function(err){
-         reply(err);
-     });
+     writeStream.on("error",onwrite_error);
 
      readStream.on("error",function(err){
          reply(err);
@@ -58,7 +64,8 @@ function mergeFile(dir,fileName){
 
         //get temp file list which is a part of file `fileName`
         let file_list = yield tempFile.getTempFileList(dir,fileName);
-
+ 
+      
         if (0 == file_list.length){
             return 
         }
@@ -79,13 +86,15 @@ function mergeFile(dir,fileName){
         }
 
        
+       
         if(!(file_list[0].seq == 1 || file_list[0].merged == true)){
             return null;
         }
 
+        
         let writer = fs.createWriteStream(path.join(dir,file_list[0].temp_name),{
             flags:'a'
-        });        
+        });
 
         for(let i=1;i<file_list.length;i++){
             let reader = fs.createReadStream(path.join(dir,file_list[i].temp_name));
@@ -122,6 +131,3 @@ function mergeFile(dir,fileName){
 }
 
 exports.mergeFile = mergeFile;
-
-
- 

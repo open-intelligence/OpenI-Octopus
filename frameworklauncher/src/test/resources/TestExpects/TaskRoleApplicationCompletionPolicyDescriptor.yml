@@ -1,2 +1,0 @@
-!!com.microsoft.frameworklauncher.common.model.TaskRoleApplicationCompletionPolicyDescriptor {
-  minFailedTaskCount: 0, minSucceededTaskCount: 0}

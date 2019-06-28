@@ -1,578 +1,129 @@
-<!--
-  Copyright (c) Microsoft Corporation
-  All rights reserved.
-
-  MIT License
-
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-  documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-  the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
-  to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-  THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-  BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-  DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-  Copyright (c) Peking University 2018
-
-  The software is released under the Open-Intelligence Open Source License V1.0.
-  The copyright owner promises to follow "Open-Intelligence Open Source Platform
-  Management Regulation V1.0", which is provided by The New Generation of 
-  Artificial Intelligence Technology Innovation Strategic Alliance (the AITISA).
--->
-
 # REST Server
 
+## What is REST Server?
+
 REST Server exposes a set of interface that allows you to manage jobs.
+It is a Node.js API service base on Egg.js for cluster that deliver client requests to different upstream services, including FrameworkLauncher, Apache Hadoop YARN and WebHDFS with some request transformation.
+You can see [egg docs][egg] for more detail.
+
+## Architecture
+```
+|-- rest-server
+    |-- app
+        |-- controller                  -- used to parse the input from user, return the corresponding results after processing
+        |-- controllerSchema            -- used to valid parameters for the input from user
+        |-- error                       -- used to define the error code
+        |-- extend                      -- used for extensions of the framework
+        |-- middleware                  -- uesd for middleware
+        |-- model                       -- used for data model by sequelizejs or other dao
+        |-- routes                      -- used to define specific routing
+        |-- schedule                    -- used to store some schduled tasks
+        |-- service                     -- used for business logic layer, optional, recommend to use
+        |-- templates                   -- some sh script when service is starting
+        |-- tpl                         -- some file template for response output
+        |-- route.js                    -- used to configure URL routing rules,
+    |-- config
+        |-- config.default.js           -- the default config
+        |-- config.local.js             -- the development config
+        |-- config.prod.js              -- the deploy config
+        |-- config.unitest.js           -- the unitest config
+        |-- plugin.js                   -- used to configure the plugins that need to be loaded
+    |-- run                             -- runtime context configuration
+    |-- test                            -- unit test logic
+    |-- util                            -- common helper function
+    |-- agent.js                        -- used to customize the initialization agent at startup
+    |-- app.js                          -- used to customize the initialization works at startup
+    |-- initDB.sh                       -- init sql
+    |-- package.json
+```
 
-## Quick Start
+## Dependencies
 
-1. Job config file
+To start a REST Server service, the following services should be ready and correctly configured.
 
-    Prepare a job config file as described in [examples/README.md](../job-tutorial/README.md#json-config-file-for-job-submission), for example, `exampleJob.json`.
+* FrameworkLauncher
+* Apache Hadoop YARN
+* HDFS
 
-2. Authentication
+## QuickStart
 
-    HTTP POST your username and password to get an access token from:
-    ```
-    http://restserver/api/v1/token
-    ```
-    For example, with [curl](https://curl.haxx.se/), you can execute below command line:
-    ```sh
-    curl -H "Content-Type: application/x-www-form-urlencoded" \
-         -X POST http://restserver/api/v1/token \
-         -d "username=YOUR_USERNAME" -d "password=YOUR_PASSWORD"
-    ```
+### InitDatabase
 
-3. Submit a job
+Before the service startup, must init database in Mysql-5.7.25^. you can find the init sql in ./initDB.sql.
 
-    HTTP POST the config file as json with access token in header to:
-    ```
-    http://restserver/api/v1/jobs
-    ```
-    For example, you can execute below command line:
-    ```sh
-    curl -H "Content-Type: application/json" \
-         -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-         -X POST http://restserver/api/v1/jobs \
-         -d @exampleJob.json
-    ```
+### Development
 
-4. Monitor the job
+If REST Server is need to be deployed as a standalone service, you need modify the configuration information in that config/config.local.js, and Then:
+```bash
+$ npm i
+$ npm run dev
+$ open http://localhost:9186/
+```
 
-    Check the list of jobs at:
-    ```
-    http://restserver/api/v1/jobs
-    ```
-    Check your exampleJob status at:
-    ```
-    http://restserver/api/v1/jobs/exampleJob
-    ```
-    Get the job config JSON content:
-    ```
-    http://restserver/api/v1/jobs/exampleJob/config
-    ```
-    Get the job's SSH info:
-    ```
-    http://restserver/api/v1/jobs/exampleJob/ssh
-    ```
+[egg]: https://eggjs.org
 
-## RestAPI
+## Configuration
 
-### Root URI
+If REST Server is deployed by openi-management, configuration is located in
+`restserver` block of service-configuration file in /cluster-configuration, including:
 
-Configure the rest server port in [services-configuration.yaml](../cluster-configuration/services-configuration.yaml).
+* `SERVER_PORT`: Integer. The network port to access the web portal. The default value is 9186.
+* `OPENI_DB_HOST`: The host of mysql for REST-Server
+* `OPENI_DB_PORT`: The port of mysql for REST-Server
+* `OPENI_DB_USER`: The username of mysql for REST-Server
+* `OPENI_DB_PWD` : The password of mysql for REST-Server
+* `NAT_FILE`: The file path of defining the network NAT.
+* `JWT_SECRET`: A random secret token for user authorization, keep it secret to users.
 
-### API Details
+---
 
-1. `POST token`
+If REST Server is deployed manually, the following fields should be configured as environment
+variables:
 
-    Authenticated and get an access token in the system.
+* `LAUNCHER_WEBSERVICE_URI`: URI endpoint of Framework Launcher.
+* `HDFS_URI`: URI endpoint of HDFS.
+* `WEBHDFS_URI`: URI endpoint of WebHDFS.
+* `YARN_URI`: URI endpoint of Apache Hadoop YARN.
+* `PROMETHEUS_URI`: URI endpoint of Prometheus.
+* `K8S_API_SERVER_URI`: URI endpoint of K8S api server.
+* `JWT_SECRET`: A random secret token for user authorization, keep it secret to users.
 
-    *Request*
-    ```
-    POST /api/v1/token
-    ```
+## Deployment
 
-    *Parameters*
-    ```
-    {
-      "username": "your username",
-      "password": "your password",
-      "expiration": "expiration time in seconds"
-    }
-    ```
+The deployment of REST Server goes with the bootstrapping process of the whole Openi cluster.
 
-    *Response if succeeded*
-    ```
-    {
-      "token": "your access token",
-      "user": "username"
-    }
-    ```
+```bash
+$ cd ../openi-management/
+$ sudo ./docker_build.py -p ../cluster-configuration/ -n rest-server
+$ sudo ./deploy.py -p ../cluster-configuration/ -d -s rest-server
+```
+## API document
 
-    *Response if an error occured*
-    ```
-    Status: 401
+The api document of REST Server is builded on [apidocjs](http://apidocjs.com/). it need to build:
 
-    {
-      "error": "AuthenticationFailed",
-      "message": "authentication failed"
-    }
-    ```
+```bash
+$ npm run doc
 
-2. `PUT user`
+## build docker image
+$ sudo docker build -t $host/openi/rest-server-apidoc:$version -f DockerFile.apidoc .
+$ sudo docker push $host/openi/rest-server-apidoc:$version
+$ sudo docker run -p 8081:80 -d $host/openi/rest-server-apidoc:$version
+```
+After building, you can find the /doc in the rootdirectory of REST-Server.
 
-    Update a user in the system.
-    Administrator can add user or change other user's password; user can change his own password.
+## Upgrading
 
-    *Request*
-    ```
-    PUT /api/v1/user
-    Authorization: Bearer <ACCESS_TOKEN>
-    ```
+REST Server is a stateless service, so it could be upgraded without any extra operation.
 
-    *Parameters*
-    ```
-    {
-      "username": "username in [_A-Za-z0-9]+ format",
-      "password": "password at least 6 characters",
-      "admin": true | false,
-      "modify": true | false
-    }
-    ```
+## High Availability
 
-    *Response if succeeded*
-    ```
-    {
-      "message": "update successfully"
-    }
-    ```
+REST Server is a stateless service, so it could be extends for high availability without any extra operation.
 
-    *Response if an error occured*
-    ```
-    Status: 500
+## Runtime Requirements
 
-    {
-      "error": "UpdateFailed",
-      "message": "update failed"
-    }
-    ```
+To run REST Server on system, a [Node.js](https://nodejs.org) 10.15+ runtime is required, with [npm](https://www.npmjs.com/) installed.
 
-3. `DELETE user` (administrator only)
 
-    Remove a user in the system.
 
-    *Request*
-    ```
-    DELETE /api/v1/user
-    Authorization: Bearer <ACCESS_TOKEN>
-    ```
-
-    *Parameters*
-    ```
-    {
-      "username": "username to be removed"
-    }
-    ```
-
-    *Response if succeeded*
-    ```
-	Status: 200
-	
-    {
-      "message": "remove successfully"
-    }
-    ```
-
-    *Response if an error occured*
-    ```
-    Status: 500
-
-    {
-      "error": "RemoveFailed",
-      "message": "remove failed"
-    }
-    ```
-	
-	*Response if not authorized*
-    ```
-    Status: 401
-
-    {
-      "error": "NotAuthorized",
-      "message": "not authorized"
-    }
-    ```
-
-4. `PUT user/:username/virtualClusters` (administrator only)
-
-    Administrators can update user's virtual cluster. Administrators can access all virtual clusters, all users can access default virtual cluster.
-
-    *Request*
-    ```
-    PUT /api/v1/user/:username/virtualClusters
-    Authorization: Bearer <ACCESS_TOKEN>
-    ```
-
-    *Parameters*
-    ```
-    {
-      "virtualClusters": "virtual cluster list separated by commas (e.g. vc1,vc2)"
-    }
-    ```
-
-    *Response if succeeded*
-    ```
-    Status: 201
-
-    {
-      "message": "update user virtual clusters successfully"
-    }
-    ```
-
-    *Response if a server error occured*
-    ```
-    Status: 500
-
-    {
-      "error": "UpdateVcFailed",
-      "message": "update user virtual cluster failed"
-    }
-    ```
-
-    *Response if not authorized*
-    ```
-    Status: 401
-
-    {
-      "error": "NotAuthorized",
-      "message": "not authorized"
-    }
-    ```
-
-5. `GET jobs`
-
-    Get the list of jobs.
-
-    *Request*
-    ```
-    GET /api/v1/jobs
-    ```
-
-    *Parameters*
-    ```
-    {
-      "username": "filter jobs with username"
-    }
-    ```
-
-    *Response if succeeded*
-    ```
-    {
-      [ ... ]
-    }
-    ```
-
-    *Response if a server error occured*
-    ```
-    Status: 500
-
-    {
-      "error": "GetJobListError",
-      "message": "get job list error"
-    }
-    ```
-
-6. `GET jobs/:jobName`
-
-    Get job status in the system.
-
-    *Request*
-    ```
-    GET /api/v1/jobs/:jobName
-    ```
-
-    *Response if succeeded*
-    ```
-    {
-      name: "jobName",
-      state: "jobState",
-      createdTime: "createdTimestamp",
-      completedTime: "completedTimestamp",
-      appId: "applicationId",
-      appProgress: "applicationProgress",
-      appTrackingUrl: "applicationTrackingUrl",
-      appLaunchedTime: "applicationLaunchedTimestamp",
-      appCompletedTime: "applicationCompletedTimestamp",
-      appExitCode: applicationExitCode,
-      appExitDiagnostics: "applicationExitDiagnostics"
-    }
-    ```
-
-    *Response if the job does not exist*
-    ```
-    Status: 404
-
-    {
-      "error": "JobNotFound",
-      "message": "could not find job $jobName"
-    }
-    ```
-
-    *Response if a server error occured*
-    ```
-    Status: 500
-
-    {
-      "error": "JobNotFound",
-      "message": "could not find job $jobName"
-    }
-    ```
-
-7. `POST jobs`
-
-    Submit a job in the system.
-
-    *Request*
-    ```
-    POST /api/v1/jobs
-    Authorization: Bearer <ACCESS_TOKEN>
-    ```
-
-    *Parameters*
-
-    [job config json](../job-tutorial/README.md#json-config-file-for-job-submission)
-
-    *Response if succeeded*
-    ```
-    Status: 201
-
-    {
-      "message": "update job $jobName successfully"
-    }
-    ```
-
-    *Response if there is a duplicated job submission*
-    ```
-    Status: 400
-    
-    {
-      "error": "JobUpdateError",
-      "message": "job update error"
-    }
-    ```
-    
-    *Response if a server error occured*
-    ```
-    Status: 500
-
-    {
-      "error": "JobUpdateError",
-      "message": "job update error"
-    }
-    ```
-
-8. `GET jobs/:jobName/config`
-
-    Get job config JSON content.
-
-    *Request*
-    ```
-    GET /api/v1/jobs/:jobName/config
-    ```
-
-    *Response if succeeded*
-    ```
-    {
-      "jobName": "test",
-      "image": "pai.run.tensorflow",
-      ...
-    }
-    ```
-
-    *Response if the job does not exist*
-    ```
-    Status: 404
-
-    {
-      "error": "JobNotFound",
-      "message": "could not find job $jobName"
-    }
-    ```
-
-    *Response if a server error occured*
-    ```
-    Status: 500
-
-    {
-      "error": "InternalServerError",
-      "message": "<depends on the error>"
-    }
-    ```
-
-9. `GET jobs/:jobName/ssh`
-
-    Get job SSH info.
-
-    *Request*
-    ```
-    GET /api/v1/jobs/:jobName/ssh
-    ```
-
-    *Response if succeeded*
-    ```
-    {
-      "containers": [
-        {
-          "id": "<container id>",
-          "sshIp": "<ip to access the container's ssh service>",
-          "sshPort": "<port to access the container's ssh service>"
-        },
-        ...
-      ],
-      "keyPair": {
-        "folderPath": "HDFS path to the job's ssh folder",
-        "publicKeyFileName": "file name of the public key file",
-        "privateKeyFileName": "file name of the private key file",
-        "privateKeyDirectDownloadLink": "HTTP URL to download the private key file"
-      }
-    }
-    ```
-
-    *Response if the job does not exist*
-    ```
-    Status: 404
-
-    {
-      "error": "JobNotFound",
-      "message": "could not find job $jobName"
-    }
-    ```
-
-    *Response if a server error occured*
-    ```
-    Status: 500
-
-    {
-      "error": "InternalServerError",
-      "message": "<depends on the error>"
-    }
-    ```
-
-10. `PUT jobs/:jobName/executionType`
-
-    Start or stop a job.
-
-    *Request*
-    ```
-    PUT /api/v1/jobs/:jobName/executionType
-    Authorization: Bearer <ACCESS_TOKEN>
-    ```
-
-    *Parameters*
-    ```
-    {
-      "value": "START" | "STOP"
-    }
-    ```
-
-    *Response if succeeded*
-    ```
-    Status: 200
-    
-    {
-      "message": "execute job $jobName successfully"
-    }
-    ```
-
-    *Response if a server error occured*
-    ```
-    Status: 500
-    
-    {
-      "error": "JobExecuteError",
-      "message": "job execute error"
-    }
-    ```
-
-11. `GET virtual-clusters`
-
-    Get the list of virtual clusters.
-
-    *Request*
-    ```
-    GET /api/v1/virtual-clusters
-    ```
-
-    *Response if succeeded*
-    ```
-    {
-      "vc1": 
-      {
-      }
-      ...
-    }
-    ```
-
-    *Response if a server error occured*
-    ```
-    Status: 500
-
-    {
-      "error": "GetVirtualClusterListError",
-      "message": "get virtual cluster list error"
-    }
-    ```
-    
-12. `GET virtual-clusters/:vcName`
-
-    Get virtual cluster status in the system.
-
-    *Request*
-    ```
-    GET /api/v1/virtual-clusters/:vcName
-    ```
-
-    *Response if succeeded*
-    ```
-    {
-      //capacity percentage this virtual cluster can use of entire cluster
-      "capacity":50,
-      //max capacity percentage this virtual cluster can use of entire cluster
-      "maxCapacity":100,
-      // used capacity percentage this virtual cluster can use of entire cluster
-      "usedCapacity":0,
-      "numActiveJobs":0,
-      "numJobs":0,
-      "numPendingJobs":0,
-      "resourcesUsed":{  
-       "memory":0,
-       "vCores":0,
-       "GPUs":0
-      },
-    }
-    ```
-
-    *Response if the virtual cluster does not exist*
-    ```
-    Status: 404
-
-    {
-      "error": "VirtualClusterNotFound",
-      "message": "could not find virtual cluster $vcName"
-    }
-    ```
-
-    *Response if a server error occured*
-    ```
-    Status: 500
-
-    {
-      "error": "InternalServerError",
-      "message": "internal server error"
-    }
-    ```
+[pai-management]: ../pai-management
+[service-configuration]: ../../examples/cluster-configuration/services-configuration.yaml

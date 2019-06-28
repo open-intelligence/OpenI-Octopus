@@ -1,0 +1,33 @@
+1. 在docker环境下运行寒武纪软件栈： 
+ - 进入docker环境。  
+   ./run-cambricon-test-docker.sh
+ - 环境变量初始化。  
+   source env.sh
+ - Caffe example 的编译与运行  
+   - online example:  
+   - 注释：online example模型中分类模型的运行，数据类型是float16  
+   - cd Cambricon-Test/caffe/examples/online/c++/classification  
+   ./run_fp16.sh  
+   - offline example:
+   - 注释： offline example模型中分类模型的运行，数据类型是float16 
+   - cd Cambricon-Test/caffe/examples/offline/c++/classification  
+   ./run_fp16.sh  
+ - Tensorflow example 的编译与运行
+   - online example:
+   - cd Cambricon-Test/tensorflow/examples/online/c++/classification
+   - ./tensorflow-v1.10_online_block.sh alexnet mlu float16 dense 2 4 1 0 1000
+   - offline example:
+   - cd Cambricon-Test/tensorflow/examples/offline/classification
+   - ./tensorflow-v1.10_online_block.sh alexnet mlu float16 dense 2 4 1 0 1000
+ - MXNet example 的编译与运行
+   - online example:
+   - ./run_all.sh
+   - offline example:
+   - ./run_all_pipe.sh
+ - ONNX example 的编译与运行
+   - online example:
+   - cd Cambricon-Test/onnx/examples/online/classification
+   - ./run_online.sh model is_sparse device_option other_option
+   - offline example:
+   - cd Cambricon-Test/onnx/examples/offline/classification
+   - ./run_offline.sh model option channel_num

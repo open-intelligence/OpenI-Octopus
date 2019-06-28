@@ -1,0 +1,35 @@
+env: "prod"
+
+cluster: "openi-test"
+
+common:
+  mysql: 
+    host: ""
+    port: ""
+    user: ""
+    pwd: ""
+  influxdb: 
+    host: ""
+    port: ""
+    user: ""
+    pwd: ""
+  dockerRegistry:
+    host: ""
+    port: ""
+    user: ""
+    pwd: ""
+  prometheus: ""
+
+
+restServer:
+  jwtSecret: ""
+  volumes:
+    - name: "ghome"
+      mountPath: "/ghome"
+      hostPath: "/ghome"
+    - name: "gpai"
+      mountPath: "/gpai"
+      hostPath: "/gpai"
+  k8sApiServer:
+    host: ""
+    kubeConfigPath: ""

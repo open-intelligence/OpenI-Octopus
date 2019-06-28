@@ -18,9 +18,10 @@ OPENI支持在GPU集群中运行AI任务作业（比如深度学习任务作业�
 为了能得到更好的性能，OPENI支持细粒度的拓扑感知任务部署，可以获取到指定位置的GPU（比如获取在相同的PCI-E交换机下的GPU）。
 
 启智采用[microservices](https://en.wikipedia.org/wiki/Microservices) 结构：每一个组件都在一个容器中运行。 
-平台利用[Kubernetes](https://kubernetes.io/) 来部署和管理系统中的静态组件。
-其余动态的深度学习任务使用[Hadoop](http://hadoop.apache.org/) YARN和[GPU强化](https://issues.apache.org/jira/browse/YARN-7481)进行调度和管理。 
-训练数据和训练结果储存在Hadoop HDFS上。
+平台利用[Kubernetes](https://kubernetes.io/) 来部署和管理系统服务。
+平台的最新版本，动态的深度学习任务的调度引擎也使用Kubernetes，使得系统服务和深度学习任务都使用Kubernetes进行调度和管理。 
+训练数据和训练结果储存可根据平台/设备需求自定义。任务日志采用[Filebeat](https://www.elastic.co/cn/products/beats/filebeat)收集，
+[Elasticsearch](https://www.elastic.co/cn/products/elasticsearch)集群存储。
 
 ## 用于研发及教育的开源AI平台
 
@@ -44,17 +45,15 @@ OPENI以开源的模式运营：来自学术和工业界的贡献我们都非常
 ### 前提要求
 
 该系统在一组机器集群上运行，每台机器都配有一块或多块GPU。
-集群中的每台机器都运行Ubuntu 16.4 LTS，并有一个静态分配的IP地址。为了部署服务，系统进一步使用Docker注册服务 (例如[Docker hub](https://docs.docker.com/docker-hub/)) 来存储要部署的服务的Docker镜像。系统还需要一台可以完全访问集群的、运行有相同环境的开发机器。系统还需要[NTP](http://www.ntp.org/)服务进行时钟同步。
+集群中的每台机器都运行Ubuntu 18.4 LTS，并有一个静态分配的IP地址。为了部署服务，系统进一步使用Docker注册服务 (例如[Docker hub](https://docs.docker.com/docker-hub/)) 来存储要部署的服务的Docker镜像。系统还需要一台可以完全访问集群的、运行有相同环境的开发机器。系统还需要[NTP](http://www.ntp.org/)服务进行时钟同步。
 
 ### 部署过程
 
 执行以下几个步骤来部署和使用本系统。
 
-1. 为[Hadoop AI](./hadoop-ai/README.md)构造二进制文件并将其放在指定路径中*
-2. [部署kubernetes和系统服务](./openi-management/README.md)
+1. [部署kubernetes 1.13和系统服务](./openi-management/README.md)
+2. 使用kubernetes部署[FrameworkController服务](https://github.com/microsoft/frameworkcontroller)
 3. 访问[web门户页面](./webportal/README.md) 进行任务提交和集群管理
-
-\* 如果跳过步骤1，则将会安装标准版Hadoop 2.9.0。
 
 #### Kubernetes部署
 
@@ -69,7 +68,7 @@ OPENI以开源的模式运营：来自学术和工业界的贡献我们都非常
 #### 作业管理
 
 系统服务部署完成后, 用户可以访问Web门户页面（一个Web UI界面）来进行集群和作业管理。
-关于任务作业的提交，请参阅[指南](job-tutorial/README.md)。
+关于任务作业的提交，请参阅[指南](./user%20manual.pdf)。
 
 #### 集群管理
 
@@ -78,12 +77,12 @@ Web门户上也提供了Web UI进行集群的管理。
 ## 系统结构
 
 <p style="text-align: left;">
-  <img src="./sysarch-zh.png" title="System Architecture" alt="System Architecture" />
+  <img src="./sysarch.png" title="System Architecture" alt="System Architecture" />
 </p>
 
-
 系统的整体结构如上图所示。
-用户通过[Web门户](./webportal/README.md)提交了任务作业或集群状态监视的申请，该操作会调用[REST服务器](./rest-server/README.md)提供的API。
-第三方工具也可以直接调用REST服务器进行作业管理。收到API调用后，REST服务器与[FrameworkLauncher](./frameworklauncher/README.md)（简称Launcher）协同工作来进行作业管理。Launcher服务器处理来自REST服务器的请求，并将任务作业提交到Hadoop YARN。由YARN和[GPU强化](https://issues.apache.org/jira/browse/YARN-7481)调度的作业, 可以使用集群中的GPU资源进行深度学习运算。其他基于CPU的AI工作或者传统的大数据任务作业也可以在平台上运行，与那些基于GPU的作业共存。
-平台使用HDFS来存储数据。我们假设所有任务作业都支持HDFS。 所有静态服务（蓝色框）都由Kubernetes管理，而任务作业（紫色框）则由Hadoop YARN管理。
+用户通过[Web门户](./webportal/README.md)提交了任务作业或集群状态监视的申请，该操作会调用[Restserver服务](./rest-server/README.md)提供的API。
+第三方工具也可以直接调用Restserver服务进行作业管理。收到API调用后，Restserver服务会将任务作业提交到k8s ApiServer，k8s的调度引擎负责对任务作业进行调度，调度完成后任务就可以使用集群节点中的GPU资源进行深度学习运算。
+[FrameworkController服务](https://github.com/microsoft/frameworkcontroller)负责监控任务作业在K8s集群中的生命周期。Restserver服务向k8s ApiServer获取任务的状态，并且Web网页可以展示在界面上。
+其他基于CPU的AI工作或者传统的大数据任务作业也可以在平台上运行，与那些基于GPU的作业共存。平台训练数据和训练结果储存可根据平台/设备需求自定义。
 

@@ -1,27 +1,9 @@
-// Copyright (c) Microsoft Corporation
-// All rights reserved.
-//
-// MIT License
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 'use strict';
 
-const path = require('path');
-const xTemplate = require('art-template');
-const CryptoUtil = require('../../util/crypto.js');
-const JobUtil = require('../../util/job.js');
+const LError = require('../error/proto');
+const ECode = require('../error/code');
 const Controller = require('egg').Controller;
+
 
 class JobController extends Controller {
 
@@ -38,92 +20,187 @@ class JobController extends Controller {
     if (ctx.state.user.admin === false) {
       query.username = ctx.state.user.username;
     }
-    const jobList = await service.job.getJobList(query);
+
+    let jobList = [];
+
+    try {
+
+      jobList = await service.k8sJobService.getFrameworkList(query);
+
+    } catch (e) {
+      throw new LError(ECode.NOT_FOUND, e.message);
+    }
     ctx.success(jobList);
   }
 
-  async remove() {
+  async stop() {
     const { ctx, service } = this;
     const { user, job } = ctx.state;
     const params = Object.assign({}, ctx.request.body, user);
 
-    await service.job.deleteJob(job.name, params);
+    await service.k8sJobService.stopFramework(job.name, params);
+
     ctx.success();
   }
 
-  async execute() {
+  async excute() {
+
     const { ctx, service } = this;
-    const { user, job } = ctx.state;
-    const params = Object.assign({}, ctx.request.body, user);
 
-    await service.job.putJobExecutionType(job.name, params);
-    ctx.success();
-  }
+    const { user: { username, admin: isAdmin, orgId } } = ctx.state;
 
-  async update() {
-    const { ctx, service } = this;
-    const { user, job } = ctx.state;
-    if (job.taskRoles) {
-      await service.job.checkMinTaskNumber(job);
-    }
+    const job = ctx.request.body;
 
-    const name = job.name;
-    const data = ctx.request.body;
-    data.originalData = ctx.state.originalBody;
-    data.userName = user.username;
+    if (!isAdmin) {
 
-    const jobLimitDb = JobUtil.getJobLimitConfig(this.config.jobLimit);
-    const numJson = JobUtil.severalNum(data);
-    const isResOver = JobUtil.ifOverLimit(numJson, jobLimitDb);
-    const isUserLimit = JobUtil.isUserInLimitList(jobLimitDb, ctx.request.req);
-    this.logger.info('[update Job]: does user in limit list? %d', isUserLimit);
-    // Limit all users when islimit is true. Limit single user when islimit is false and username in limit list.
-    if (jobLimitDb.get('islimit').value() === true || isUserLimit) {
-      if (isResOver !== 'OK') {
-        return ctx.notImplemented().failure(isResOver, isResOver);
+      const whiteList = await service.user.loadCheckWhiteList();
+
+      if (whiteList.indexOf(username) == -1) {
+
+        await service.k8sJobService.resourceLimitCheck(job, username);
+
       }
+
     }
 
-    await service.job.putJob(name, data);
-    ctx.success({}, `update job ${name} successfully`);
+    await service.k8sJobService.runFramework({user:username,org_id:orgId}, job);
+
+    ctx.success({}, `update job ${job.jobName} successfully`);
   }
 
   async getConfig() {
     const { ctx, service } = this;
     const { job } = ctx.state;
-    const result = await service.job.getJobConfig(job.jobStatus.username, job.name);
+    const result = await service.k8sJobService.getFrameworkConfig( job.name);
+    if (null == result){
+      throw new LError(ECode.NOT_FOUND,"config for "+job.name+" not found");
+    }
     ctx.success(result);
   }
 
-  async getSshInfo() {
+  async getCheckLimit() {
     const { ctx, service } = this;
-    const { job } = ctx.state;
-    const result = await service.job.getJobSshInfo(
-      job.jobStatus.username,
-      job.name,
-      job.jobStatus.appId);
-    ctx.success(result);
+    const { user } = ctx.state;
+    const limiter = { enabledLimiter: true };
+    if (user.admin) {
+      limiter.enabledLimiter = false;
+      return ctx.success(limiter);
+    }
+    const whiteList = await service.user.loadCheckWhiteList();
+
+    if (whiteList.indexOf(user.username) > -1) {
+      limiter.enabledLimiter = false;
+      return ctx.success(limiter);
+    }
+
+    const result = await service.k8sJobService.getCheckLimit({ userName: user.username });
+
+
+    const query = {};
+
+    if (ctx.state.user.admin === false) {
+        query.username = ctx.state.user.username;
+    }
+
+    let jobList = [];
+
+    try {
+        jobList = await service.k8sJobService.getFrameworkResourceList(query);
+
+    } catch (e) {
+        throw new LError(ECode.NOT_FOUND, e.message);
+    }
+
+    result.jobInfoList = jobList || [];
+    ctx.success(Object.assign(limiter, result));
   }
 
-  async getSshFile() {
-    const { ctx, service } = this;
-    const { job } = ctx.state;
-    let ext = ctx.query.e;
-    const isWin = ext === 'bat';
-    ext = isWin ? 'bat' : 'sh';
-    const result = await service.job.getJobSshInfo(job.jobStatus.username, job.name, job.jobStatus.appId);
 
-    const sshAuthScript = xTemplate(path.resolve(__dirname + `/../tpl/jobContainerSsh2${ext}.tpl`), {
-      privateKeyFileName: result.keyPair.privateKeyFileName,
-      privateKey: CryptoUtil.formatPrivateKey(result.keyPair.privateKey, isWin),
-      sshIp: result.containers[0].sshIp,
-      sshPort: result.containers[0].sshPort,
-    });
-    // Content-Disposition: attachment; filename="logo.png"
-    // Content-Type: image/png
-    ctx.set('Content-Disposition', 'attachment; filename="' + result.keyPair.privateKeyFileName + (isWin ? ext : '') + '"');
-    ctx.set('Content-Type', 'application/octet-stream');
-    ctx.body = sshAuthScript;
+
+  async commitImage(){
+
+      const { ctx, service } = this;
+      const { job,user } = ctx.state;
+      const imageInfo = ctx.request.body;
+
+      let gpuType = job.config.gpuType;
+
+      if(gpuType!=="debug")
+      {
+          throw new LError(ECode.FAILURE, "only debug-type job can commit image");
+          return;
+      }
+
+      let containerId = imageInfo.taskContainerId;
+
+      let result = {};
+
+      try {
+          let imageSizeInfo = await service.dockerCommitService.queryImageSize(imageInfo.ip,containerId);
+
+          if(imageSizeInfo&&imageSizeInfo.success){
+              if(imageSizeInfo.size > this.config.docker.maxImageSize){
+                  throw new LError(ECode.OVER_MAX_SIZE, "over max image size 20GB");
+              }
+          }else{
+              throw new LError(ECode.FAILURE, "can not query image size");
+          }
+
+          let imageStatusInfo = await service.dockerCommitService.queryImageStatus(containerId);
+
+          if(imageStatusInfo && imageStatusInfo.success)
+          {
+              if(imageStatusInfo.commit.status !== "SUCCEEDED" &&
+                  imageStatusInfo.commit.status !== "FAILED"){
+
+                  ctx.success({success:true,msg:"commit task is processing!"});
+
+                  return;
+              }
+          }
+
+          result = await service.dockerCommitService.commitImage(
+              user.username,
+              imageInfo.ip,
+              containerId,
+              imageInfo.imageDescription);
+
+          if(result && !result.success){
+              throw new LError(ECode.FAILURE, result.msg);
+          }
+
+      } catch (e) {
+          throw new LError(ECode.FAILURE, e.message);
+      }
+      ctx.success(result);
+  }
+
+  async queryImageStatus() {
+      const {ctx, service} = this;
+      const { job } = ctx.state;
+
+      let gpuType = job.config.gpuType;
+
+      if(gpuType!=="debug")
+      {
+          throw new LError(ECode.FAILURE, "only query debug-type job image status");
+          return;
+      }
+
+      const imageInfo = ctx.request.query;
+
+      let result = {};
+
+      let containerId = imageInfo.taskContainerId;
+
+      try {
+          result = await service.dockerCommitService.queryImageStatus(containerId);
+
+      } catch (e) {
+          throw new LError(ECode.FAILURE, e.message);
+      }
+
+      ctx.success(result);
   }
 }
 

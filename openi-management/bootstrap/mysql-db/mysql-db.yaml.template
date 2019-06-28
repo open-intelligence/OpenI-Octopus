@@ -1,0 +1,36 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: mysql-db-ds
+spec:
+  template:
+    metadata:
+      name: mysql-db
+      labels:
+        app: mysql-db
+    spec:
+      hostNetwork: false
+      hostPID: false
+      nodeSelector:
+        mysql-db: "true"
+      containers:
+        - name: mysql-db
+          image: {{ clusterinfo['dockerregistryinfo']['prefix'] }}mysql-db:{{ clusterinfo['dockerregistryinfo']['docker_tag'] }}
+          imagePullPolicy: Always
+          volumeMounts:
+          - mountPath: /var/lib/mysql
+            name: mysql-storage
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+          ports:
+            - name: mysql-db
+              containerPort: 3306
+              hostPort: {{ clusterinfo['mysql-dbinfo']['mysql-port'] }}
+      imagePullSecrets:
+        - name: {{ clusterinfo['dockerregistryinfo']['secretname'] }}
+      volumes:
+        - name: mysql-storage
+          hostPath:
+            path: {{ clusterinfo['mysql-dbinfo'][ 'mysql-data-path' ] }}/mysqldata
+

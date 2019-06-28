@@ -1,0 +1,54 @@
+export default {
+    "jobDetail.view.jobConfig":"Job Config",
+    "jobDetail.view.applicationSummary":"Job Running Summary",
+    "jobDetail.goto.trackingPage":"Job Tracking Page",
+    "jobDetail.goto.jobMetricsPage":"Job Metrics Page",
+    "jobDetail.goto.jobTerminal":"Job Terminal",
+    "jobDetail.config.modal.title":"Configuration",
+    "jobDetail.applicationSummary.modal.title":"Job Running Summary",
+    "jobDetail.applicationSummary.modal.startTime":"Start Time:",
+    "jobDetail.applicationSummary.modal.finishTime":"Finish Time:",
+    "jobDetail.applicationSummary.modal.exitDiagnostics":"Exit Diagnostics:",
+    "jobDetail.applicationSummary.modal.emptyAppExitDiagnostics":"Not available yet.",
+    'jobDetail.task.column.taskRole':'TaskName',
+    'jobDetail.task.column.taskIndex':'Index',
+    'jobDetail.task.column.containerName':'Container',
+    'jobDetail.task.column.ip':'IP',
+    'jobDetail.task.column.port':'Port',
+    'jobDetail.task.column.gpus':'GPUs',
+    'jobDetail.task.column.actions':'Actions',
+    'jobDetail.task.download.sshFile':'SSH Login',
+    'jobDetail.task.debug':'Debug',
+    'jobDetail.task.goto.trackingPage':"Tracking Page",
+    "jobDetail.task.goto.metricsPage":"Task Metrics",
+    'jobDetail.task.goto.commitImage':"Image Commit",
+    'jobDetail.task.commitimage.title':'Commit Image Of Task',
+    'jobDetail.task.commitimage.imageName':'Image Name：',
+    'jobDetail.task.commitimage.lastImageStatus':'Last Image：',
+    'jobDetail.task.commitimage.imageDescription':'Image Description：',
+    'jobDetail.task.commitimage.confirm':'Commit Continue',
+    'jobDetail.task.imagestate.PROCESSING':'Processing',
+    'jobDetail.task.imagestate.SUCCEEDED':'Succeeded',
+    'jobDetail.task.imagestate.FAILED':'Failed',
+    'jobDetail.task.imagestate.ONLINE':'Available',
+    'jobDetail.task.imagestate.NOT_ONLINE':'Failed to connect server',
+    'jobDetail.task.commitimage.successed':'Send Create Task Image Request Successfully',
+    'jobDetail.task.commitimage.failed':'Failed to Send Create Task Image Request',
+    'jobDetail.task.commitimage.overmaxsize':'Failed to create task image.Image size limit exceeded.The max is 20GB',
+    'jobDetail.ssh.modal.title':'SSH Login Information',
+    'jobDetail.ssh.modal.downloadSsh':"Download ",
+    'jobDetail.ssh.modal.noticeDownload.title':"Notice:",
+    'jobDetail.ssh.modal.noticeDownload.notice1.unix':"After downloading the [.sh] file in Unix system, " +
+                                                       "you need to use the following command to add executable permissions to the file:",
+    'jobDetail.ssh.modal.noticeDownload.notice1.window':"After download the [.bat] file in Windows system,you better to move it to the user directory." +
+                                                        "If it is not in the user directory, " +
+                                                        "right click on \"Property - Security - Edit\" and select the group or The current user within the username," +
+                                                        " set full control to allow.",
+    'jobDetail.ssh.modal.noticeDownload.notice2.exec':'Before executing ',
+    'jobDetail.ssh.modal.noticeDownload.notice2.result':" ,please install the openssh software. " +
+                                                "After executing the [.sh] file, the [.pem] private key file is generated in the same directory. " +
+                                                "The private key file can be used to config openssh client or other client to login your Docker container.",
+    'jobDetail.ssh.modal.noticeDownload.notice3':"Your Docker container information：",
+
+    'jobDetail.fetch.failed':'fail to get job detail info'
+}

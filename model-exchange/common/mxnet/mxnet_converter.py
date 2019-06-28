@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -291,7 +292,7 @@ class MxNetConverter(Converter):
         self.IR_layer_map[IR_node.name] = IR_node
 
     def set_output_shape(self, source_node, IR_node, attr_name="_output_shapes"):
-        sym_group = self.model.symbol.get_internals()
+        sym_group = self.model.symbochanl.get_internals()
         for sym in sym_group:
             if source_node.name == sym.name:
                 arg_shape, output_shape, aux_shape = sym.infer_shape(data = self.data_shape)

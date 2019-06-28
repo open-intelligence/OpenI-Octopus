@@ -11,60 +11,21 @@ http://<pylon_server>/<service>/api/<version>/...
 ```
 
 Available services:
-
-- OPENI's REST server: `http://<pylon_server>/rest-server/api/v1/...`
-- Kubernetes API server: `http://<pylon_server>/kubernetes/api/v1/...`
-- WebHDFS API server: `http://<pylon_server>/webhdfs/api/v1/...`
-- Prometheus API server: `http://<pylon_server>/prometheus/api/v1/...`
+- Webportal service： `http://<pylon_server>/openi/...`
+- Restserver API service: `http://<pylon_server>/rest-server/api/v1/...`
+- Elasticsearch API service：`http://<pylon_server>/es/...`
+- grafana API service：`http://<pylon_server>/grafana/...`
 
 For example:
 
-- Rest-server API: http://10.0.3.9/rest-server/api/v1/jobs
-- Kubernetes API: http://10.0.3.9/kubernetes/api/v1/nodes
-- WebHDFS API: http://10.0.3.9/webhdfs/api/v1/?op=LISTSTATUS
-- Prometheus API: http://10.0.3.9/prometheus/api/v1/query?query=up
+- Webportal service： http://10.0.3.9/openi/
+- Restserver API service： http://10.0.3.9/rest-server/api/v1/jobs
+- Elasticsearch API service：http://10.0.3.9/es/_search
+- grafana API service：http://10.0.3.9/grafana/d/ft1oaQnWk/clustermetrics?orgId=1&from=now-5m&to=now&var-Node=All
 
-## Web Portals
-
-The following web portals can be accessed via Pylon:
-
-- K8s dashboard: `http://<pylon_server>/kubernetes-dashboard/`
-- Yarn web portal: `http://<pylon_server>/yarn/`
-- WebHDFS dashboard: `http://<pylon_server>/webhdfs/`
-- Grafana: `http://<pylon_server>/grafana/`
-- OPENI web portal: `http://<pylon_server>/`
-
-## Developer's Guide
-
-### Local Debugging
-
-Steps:
-- (In Windows command line) Run the following .bat file:
-  ```
-  set REST_SERVER_URI=...
-  set K8S_API_SERVER_URI=...
-  set WEBHDFS_URI=...
-  set PROMETHEUS_URI=...
-  set K8S_DASHBOARD_URI=...
-  set YARN_WEB_PORTAL_URI=...
-  set GRAFANA_URI=...
-  set OPENI_WEB_PORTAL_URI=...
-  ```
-- Run: `python render.py`
-- Copy the generated `nginx.conf` to the nginx configuration folder.
 
 ### Deploy to a OPENI Cluster
 
-The [readme](../service-deployment/README.md) in service deployment introduces the overall installation process. 
+cd openi
 
-The following parameters in the [clusterconfig.yaml](../service-deployment/clusterconfig-example.yaml) should be correctly configured:
-
-- `rest_server_uri`: String. The root url of the REST server.
-- `k8s_api_server_uri`: String. The root url of Kubernetes's API server.
-- `webhdfs_uri`: String. The root url of WebHDFS's API server.
-- `prometheus_uri`: String. The root url of Prometheus's API server.
-- `k8s_dashboard_uri`: String. The root url of the Kubernetes dashboard.
-- `yarn_web_portal_uri`: String. The root url of the Yarn web portal.
-- `grafana_uri`: String. The root url of Grafana.
-- `openi_web_portal_uri`: String. The root url of the OPENI web portal.
-- `port`: Integer. The port number to access the Pylon service. 
+kubectl apply -f ./pylon

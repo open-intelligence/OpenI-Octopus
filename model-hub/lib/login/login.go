@@ -34,8 +34,8 @@ func  Login(user,pwd string) (string,string ,error) {
 
 	any:= json.Get(body);
 
-	if "0" == any.Get("retCode").ToString(){
-		token:=  any.Get("result").Get("token").ToString();
+	if "S000" == any.Get("code").ToString(){
+		token:=  any.Get("payload").Get("token").ToString();
 		if ""!= token {
 			db:= mysql_util.GetDB()
 			sql:= "DELETE  FROM ms_token WHERE username = ?;"

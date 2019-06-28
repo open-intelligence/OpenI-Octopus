@@ -187,6 +187,8 @@ function readConfig(yml_path){
 
 function convert(args,opt){
     return co.brief(function*(resume){
+
+        //return log.info(lang.New().en("Convert successfully!Please use command 'pull' to fetch the result").zh("转换成功,请用'pull'命令拉取结果到本地"));
         
         let param_path = opt.p ;
 

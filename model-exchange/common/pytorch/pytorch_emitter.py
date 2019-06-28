@@ -2,7 +2,7 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License. See License.txt in the project root for license information.
 #----------------------------------------------------------------------------------------------
-
+# -*- coding: UTF-8 -*-
 import os
 import numpy as np
 from six import string_types as _string_types

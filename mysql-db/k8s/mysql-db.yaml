@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql-db
+  namespace: kube-system
+  labels:
+    k8s-app: mysql-db
+spec:
+  serviceName: mysql-db
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: mysql-db
+  template:
+    metadata:
+      name: mysql-db
+      labels:
+        k8s-app: mysql-db
+    spec:
+      nodeSelector:
+        mysql-db: "true"
+      containers:
+        - name: mysql-db
+          image: mysql:5.7
+          imagePullPolicy: Always
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: mysql-storage
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+          ports:
+            - name: mysql-db
+              containerPort: 3306
+              hostPort: 3308
+      volumes:
+        - name: mysql-storage
+          hostPath:
+            path: /home/amax/mysqldata
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-db
+  namespace: kube-system
+  labels:
+    k8s-app: mysql-db
+spec:
+  clusterIP: None
+  ports:
+    - name: mysql-db
+      port: 3308
+      protocol: TCP
+      targetPort: mysql-db
+  selector:
+    k8s-app: mysql-db

@@ -1,0 +1,26 @@
+本地k8s环境搭建（使用kubeadm）
+ -  关闭防火墙
+    - systemctl stop firewalld
+    - systemctl disable firewalld
+ -  禁用Selinux
+    - apt install selinux-utils
+    - setenforce 0
+ -  安装指定版本的docker
+ -  启动docker service
+    - systemctl enable docker
+    - systemctl start docker
+    - systemctl status docker
+ -  安装kubectl，kubelet，kubeadm
+    - cat <<EOF >/etc/apt/sources.list.d/kubernetes.list
+    - deb http://mirrors.ustc.edu.cn/kubernetes/apt kubernetes-xenial main
+    - EOF
+ -  安装
+    - apt-get update && apt-get install -y kubelet kubeadm kubectl
+    - systemctl enable kubelet
+ -  配置master
+    - export KUBECONFIG=/etc/kubernetes/admin.conf
+ -  重起kubelet
+    - systemctl daemon-reload
+    - systemctl restart kubele
+ -  在master节点上执行
+    - kubeadm init --pod-network-cidr=192.168.202.102/16 --apiserver-advertise-address=192.168.202.102 --kubernetes-version=v1.14.1 --ignore-preflight-errors=Swap

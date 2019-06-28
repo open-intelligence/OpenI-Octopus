@@ -98,7 +98,7 @@
 	
 	var _ext; // DataTable.ext
 	var _Api; // DataTable.Api
-	var _api_register; // DataTable.Api.register
+	var _api_register; // DataTable.Api.Register
 	var _api_registerPlural; // DataTable.Api.registerPlural
 	
 	var _re_new_lines = /[\r\n]/g;
@@ -6269,7 +6269,7 @@
 	
 	/**
 	 * Computed structure of the DataTables API, defined by the options passed to
-	 * `DataTable.Api.register()` when building the API.
+	 * `DataTable.Api.Register()` when building the API.
 	 *
 	 * The structure is built in order to speed creation and extension of the Api
 	 * objects since the extensions are effectively pre-parsed.

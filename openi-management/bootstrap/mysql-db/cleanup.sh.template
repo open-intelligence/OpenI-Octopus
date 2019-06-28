@@ -1,0 +1,13 @@
+#!/bin/bash
+
+pushd $(dirname "$0") > /dev/null
+
+kubectl delete ds mysql-db-ds
+
+{% for host in machinelist %}
+    {% if 'mysql-db' in machinelist[ host ] and machinelist[ host ][ 'mysql-db' ] == 'true' %}
+kubectl label nodes {{ machinelist[ host ][ 'nodename' ] }} mysql-db-
+    {% endif %}
+{% endfor %}
+
+popd > /dev/null

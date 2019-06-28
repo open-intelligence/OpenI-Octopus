@@ -33,8 +33,8 @@ function run(){
     log.info(logo)
 
 
-    log.info(lang.New().en("Client For QiZhi Module System,Copyright 2018 PCL All Rights Reserved")
-    .zh("启智模块系统客户端   鹏城实验室保留所有权利"));
+    log.info(lang.New().en("Client For QiZhi Model System,Copyright 2018 PCL All Rights Reserved")
+    .zh("启智模型系统客户端   鹏城实验室保留所有权利"));
 
     log.info(lang.New().en("Type 'help' for tips").zh("输入'help'获取帮助"));
 }

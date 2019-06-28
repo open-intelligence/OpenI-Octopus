@@ -1,23 +1,7 @@
-// Copyright (c) Microsoft Corporation
-// All rights reserved.
-//
-// MIT License
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 'use strict';
-const LError = require("../app/error/proto");
-const ECode = require("../app/error/code");
+const path = require('path');
+const LError = require('../app/error/proto');
+const ECode = require('../app/error/code');
 module.exports = appInfo => {
 
   const config = exports = {};
@@ -25,13 +9,15 @@ module.exports = appInfo => {
   config.keys = appInfo.name + '_1545288328934_4914';
 
   config.clusterId = 'openi-pcl';
+
   config.cluster = {
     listen: {
       port: 9186,
     },
   };
+  
   config.jwt = {
-    secret: 'Hello OPENI PCL!',
+    secret: process.env.JWT_SECRET || 'Hello OPENI PCL!',
   };
 
   config.security = {
@@ -46,56 +32,78 @@ module.exports = appInfo => {
     benchmark: true,
     timezone: '+08:00',
     define: {
+      charset: 'utf8',
+      collate: 'utf8_general_ci',
       freezeTableName: false,
       underscored: true,
+      timestamps: true,
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     },
   };
 
-  config.launcherConfig = {
-    webserviceRequestHeaders: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
+  config.commonKeys = {
+    jobConfig: {
+      limitKey: 'JOB_CONFIG_TYPE.LIMITS',
+      whiteListKey: 'JOB_CONFIG_TYPE.LIMIT_WHITE_LIST',
     },
-    jobRootDir: './frameworklauncher',
-    jobDirCleanUpIntervalSecond: 7200,
-    jobConfigFileName: 'JobConfig.json',
-    frameworkDescriptionFilename: 'FrameworkDescription.json',
   };
+
+  config.proxyDB = {
+    fileDB: {
+      filePath: path.join(__dirname, '../rest-server'),
+      fileName: 'proxy_db.json',
+    },
+  };
+
+  config.jobConfigDB = {
+      debugJobDurationMsec: 2*60*60*1000,
+      fileDB: {
+          filePath: path.join(__dirname, '../rest-server'),
+          fileName: 'config_db.json',
+      },
+  };
+
+  config.jobTypes = {
+      gpuTypeMap:{"dgx":true,"debug":true},
+      cpuTypeMap:{"debug_cpu":true}
+  };
+
 
   // define the order of middleware and options,
   const middlewareConfig = {
-    middleware: [ 'validateHandler', 'jwtHandler', 'compressHandler', 'notfoundHandler' ],
+    middleware: [ 'validateHandler', 'jwtHandler', 'compressHandler', 'checkUserStatus', 'checkUserIsAdmin', 'notfoundHandler' ],
     jwtHandler: {
       secret: config.jwt.secret,
-      ignore: [ '/api/v1/token' ],
+      ignore: [ '/api/v1/token', '/api/v1/third/oauth' ],
     },
     compressHandler: {
       threshold: 2048,
     },
+    checkUserIsAdmin: {
+      match: /^\/api\/v1\/(acl|hardwares|services)/,
+    },
   };
+  
+
+  
   config.onerror = {
+    accepts(ctx) {
+      if (ctx.acceptJSON) return 'json';
+      if (ctx.acceptJSONP) return 'js';
+      return 'json';
+    },
     all: (err, ctx) => {
-      
-      ctx.set("Content-Type","application/json");
-
+      ctx.set('Content-Type', 'application/json');
       if (err && typeof err.toJson === 'function') {
-
         ctx.status = 200;
-        ctx.body =  err.toJson();
-
-      } else{
-       
+        ctx.body = err.toJson();
+      } else if (ctx.status === 401) {
+        ctx.body = new LError(ECode.ACCESS_DENIED, 'Invalid token').toJson();
+      } else {
         ctx.status = 500;
-
-        let msg = err ? (err.message || err) :"Unknown Error";
-       
-        if(err){
-          ctx.logger.error(err);
-        }else{
-          ctx.logger.error(msg);
-        }
-        ctx.body =  JSON.stringify((new LError(ECode.INTERNAL_ERROR, msg)).toJson());
-
+        const msg = err ? (err.message || err) : 'Unknown Error';
+        ctx.body = (new LError(ECode.INTERNAL_ERROR, msg)).toJson();
       }
     },
   };

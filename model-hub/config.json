@@ -1,7 +1,7 @@
 {
 	"SERVER_PORT":"8080",
 	"FILE_STORAGE_PATH": "./data",
-	"MYSQL": "root:root@tcp(192.168.113.221:3308)/modelhub",
-	"USER_CENTER":"http://192.168.113.221:9186",
-	"EXCHANGE_SERVICE":"http://192.168.113.221:6023"
+	"MYSQL": "root:root@tcp(192.168.202.50:3308)/modelhub",
+	"USER_CENTER":"http://192.168.202.50:9186",
+	"EXCHANGE_SERVICE":"http://192.168.202.50:6023"
 }

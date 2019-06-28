@@ -2,9 +2,13 @@
   "name": "rest-server",
   "version": "1.0.0",
   "description": "the rest-server of openi",
+  "apidoc": {
+    "title": "Custom apiDoc browser title",
+    "url": ""
+  },
   "private": true,
   "dependencies": {
-    "art-template": "^4.13.2",
+    "apidoc": "^0.17.7",
     "bluebird": "^3.5.3",
     "egg": "^2.2.1",
     "egg-cors": "^2.1.2",
@@ -15,14 +19,18 @@
     "execa": "^1.0.0",
     "fs-extra": "^7.0.1",
     "joi": "^14.3.0",
+    "js-yaml": "^3.13.1",
     "jsonwebtoken": "^8.4.0",
     "koa-compress": "^3.0.0",
-    "koa-jwt": "^3.5.1",
+    "koa-jwt": "3.5.1",
+    "lodash": "^4.17.11",
     "lowdb": "^1.0.0",
-    "marked": "^0.5.2",
+    "marked": "^0.6.2",
     "mustache": "^3.0.1",
     "mysql2": "^1.6.4",
-    "unirest": "^0.5.1"
+    "nanoid": "^2.0.1",
+    "request": "^2.88.0",
+    "unirest": "^0.6.0"
   },
   "devDependencies": {
     "autod": "^3.0.1",
@@ -38,7 +46,7 @@
     "node": ">=8.9.0"
   },
   "scripts": {
-    "start": "egg-scripts start --workers=3  --title=egg-server-rest-server",
+    "start": "egg-scripts start --workers=3 --title=egg-server-rest-server",
     "stop": "egg-scripts stop --title=egg-server-rest-server",
     "dev": "egg-bin dev",
     "debug": "egg-bin debug",
@@ -47,7 +55,8 @@
     "cov": "egg-bin cov",
     "lint": "eslint .",
     "ci": "npm run lint && npm run cov",
-    "autod": "autod"
+    "autod": "autod",
+    "doc": "apidoc -i app/ -o doc/"
   },
   "ci": {
     "version": "8"

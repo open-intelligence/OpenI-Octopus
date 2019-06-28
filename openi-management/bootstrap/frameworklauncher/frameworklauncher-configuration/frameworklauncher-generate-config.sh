@@ -50,3 +50,7 @@ cp  /frameworklauncher-configuration/frameworklauncher.yml /usr/local/launcher/f
 sed  -i "s/{ZOOKEEPER_ADDRESS}/${ZOOKEEPER_ADDRESS}/g" /usr/local/launcher/frameworklauncher.yml
 sed  -i "s/{FRAMEWORKLAUNCHER_VIP}/${FRAMEWORKLAUNCHER_VIP}/g" /usr/local/launcher/frameworklauncher.yml
 sed  -i "s/{FRAMEWORKLAUNCHER_PORT}/${FRAMEWORKLAUNCHER_PORT}/g" /usr/local/launcher/frameworklauncher.yml
+
+sed  -i "s%{DATABASE_URL}%${DATABASE_URL}%g" /usr/local/launcher/frameworklauncher.yml
+sed  -i "s/{DATABASE_USER}/${DATABASE_USER}/g" /usr/local/launcher/frameworklauncher.yml
+sed  -i "s/{DATABASE_PASSWORD}/${DATABASE_PASSWORD}/g" /usr/local/launcher/frameworklauncher.yml

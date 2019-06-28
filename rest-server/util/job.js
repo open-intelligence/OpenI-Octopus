@@ -16,6 +16,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 'use strict';
+
 const path = require('path');
 const fse = require('fs-extra');
 const low = require('lowdb');
@@ -45,6 +46,7 @@ const severalNum = jobConfig => {
   let gpuNum = 0;
   let mem = 0;
   let taskNum = 0;
+
   for (let i = 0; i < rolesNum - 1; ++i) {
     cpuNum += parseInt(jobConfig.taskRoles[i].cpuNumber) * parseInt(jobConfig.taskRoles[i].taskNumber);
     gpuNum += parseInt(jobConfig.taskRoles[i].gpuNumber) * parseInt(jobConfig.taskRoles[i].taskNumber);

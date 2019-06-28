@@ -17,7 +17,6 @@
 
 'use strict';
 
-
 const unirest = require('unirest');
 
 class Hdfs {
@@ -146,21 +145,22 @@ class Hdfs {
 
   _readFile(targetUrl, next) {
     // Ref: http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/WebHDFS.html#Open_and_Read_a_File
-    unirest.get(targetUrl)
-      .end(response => {
-        if (response.status === 200) {
-          next(null, { status: 'succeeded', content: response.body });
-        } else if (response.status === 307) {
-          this._readFile(
-            response.headers['x-location'] // X-Location header is created in unit test only.
-              ? response.headers['x-location']
-              : response.headers.location,
-            next
-          );
-        } else {
-          next(this._constructErrorObject(response));
-        }
-      });
+    const Request = unirest.get(targetUrl);
+    Request.timeout(10 * 1000).end(response => {
+      if (response.status === 200) {
+        next(null, { status: 'succeeded', content: response.body });
+      } else if (response.status === 307) {
+        this._readFile(
+          response.headers['x-location'] // X-Location header is created in unit test only.
+            ? response.headers['x-location']
+            : response.headers.location,
+          next
+        );
+      } else {
+        next(this._constructErrorObject(response));
+      }
+    });
+
   }
 }
 

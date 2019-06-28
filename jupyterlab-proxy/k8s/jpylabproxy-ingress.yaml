@@ -1,0 +1,12 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: jpylabproxy-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /jpylab
+        backend:
+          serviceName: jpylabproxy-service
+          servicePort: 80

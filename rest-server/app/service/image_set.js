@@ -1,50 +1,84 @@
-// Copyright (c) Microsoft Corporation
-// All rights reserved.
-//
-// MIT License
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 'use strict';
+const _ = require('lodash');
 const Service = require('egg').Service;
 const marked = require('marked');
 const LError = require('../error/proto');
 const ECode = require('../error/code');
+const utils = require('../../util');
 
 class ImageSetService extends Service {
   constructor(...args) {
     super(...args);
     this.imageSetModel = this.app.model.ImageSet;
+    this.jobPlatformModel = this.app.model.JobPlatform;
+    this.imageSetJobPlatformRelationModel = this.app.model.ImageSetJobPlatformRelation;
   }
 
   async getImageSetList(condition) {
     let dbImages = [];
-    try {
-      dbImages = await this.imageSetModel.findAll({
-        where: condition,
+    const filter = {};
+    if (condition.platformKey) {
+      const jobPlatform = await this.jobPlatformModel.findOne({
+        raw: true,
+        attributes: [ 'id' ],
+        where: { platformKey: condition.platformKey },
       });
-    } catch (e) {
-      this.logger.error('getAllImageSet error:' + e);
-      throw new LError(ECode.INTERNAL_ERROR, e.message);
+      if (utils.isEmptyObject(jobPlatform)) {
+        return {};
+      }
+      const relations = await this.imageSetJobPlatformRelationModel.findAll({
+        attributes: [ 'imageSetId' ],
+        where: { jobPlatformId: jobPlatform.id },
+      });
+      filter.id = _.map(relations, 'imageSetId');
     }
+
+    dbImages = await this.imageSetModel.findAll({
+      where: filter,
+    });
     const images = {};
     for (const dbImage of dbImages) {
-      dbImage.dataValues.description = marked(dbImage.dataValues.description);
+      try{
+          dbImage.dataValues.description = marked(dbImage.dataValues.description);
+      }catch (e) {
+          this.logger.error("getImageSetList error",e);
+      }
+
       images[dbImage.dataValues.id] = dbImage.dataValues;
     }
     return images;
   }
 
+  async addImage(username,imagePath,bindingGPUTypeArray,imageDescription=""){
+
+      let imageInfo = {
+          name: username,
+          place: imagePath,
+          description: imageDescription,
+          provider:username,
+          createtime: new Date()
+      };
+
+      await this.imageSetModel.upsert(imageInfo);
+
+      let imageIdInfo = await this.imageSetModel.findOne({
+          raw: true,
+          attributes: ['id'],
+          where: { name: username },
+      });
+
+      for(let gpuTypeItem of bindingGPUTypeArray)
+      {
+          let imageSetJobPlatformRelationInfo = {
+              imageSetId: imageIdInfo.id,
+              jobPlatformId: gpuTypeItem.id
+          };
+
+          await this.imageSetJobPlatformRelationModel.upsert(imageSetJobPlatformRelationInfo);
+      }
+
+      return imageIdInfo;
+  }
 }
 
 module.exports = ImageSetService;

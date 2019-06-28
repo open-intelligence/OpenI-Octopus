@@ -1,31 +1,30 @@
-// Copyright (c) Microsoft Corporation
-// All rights reserved.
-//
-// MIT License
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 'use strict';
 
 const Service = require('egg').Service;
 const CryptoUtil = require('../../util/crypto.js');
 const LError = require('../error/proto');
 const ECode = require('../error/code');
+const _ = require('lodash');
 
 class UserService extends Service {
   constructor(...args) {
     super(...args);
     this.userModel = this.app.model.User;
+    this.organizationModel = this.app.model.Organization;
+  }
+
+  async fillData(user) {
+    if (!user) {
+      return;
+    }
+    const data = {};
+    if (!user.uid) {
+      data.uid = '_' + this.app.generateId(31);
+    }
+
+    if (!_.isEmpty(data)) {
+      await this.userModel.update(data, { where: user });
+    }
   }
 
   async check(username, password) {
@@ -65,6 +64,45 @@ class UserService extends Service {
 
     const user = await this.userModel.findOne({ where: condition, raw: true });
     return user;
+  }
+
+  async loadCheckWhiteList() {
+    let whiteList = await this.service.common.getItem(this.app.config.commonKeys.jobConfig.whiteListKey);
+    whiteList = whiteList.split(',');
+    return whiteList;
+  }
+
+  async updateUserInfo(userInfo, condition) {
+    if (userInfo.orgId) {
+      const hasOgz = await this.organizationModel.count({ where: { id: userInfo.orgId } });
+      if (!hasOgz) {
+        throw new LError(ECode.NOT_FOUND, 'not found organization');
+      }
+    }
+
+    this.toggleUserStatus(userInfo);
+    await this.userModel.update(userInfo, { where: condition });
+  }
+
+  toggleUserStatus(userInfo) {
+    if (userInfo.email && userInfo.fullName && userInfo.orgId && userInfo.teacher && userInfo.phone) {
+      userInfo.status = this.userModel.constants.status.ALLOW_ACTIVE;
+    } else {
+      userInfo.status = this.userModel.constants.status.ALLOW_NOT_ACTIVE;
+    }
+  }
+
+  async getUserInfo(condition) {
+    const userInfo = await this.userModel.findOne({
+      attributes: {
+        exclude: [ 'passwordKey' ],
+      },
+      where: condition,
+      include: {
+        model: this.organizationModel,
+      },
+    });
+    return userInfo;
   }
 
   async updatePassword(oldPassword, newPassword, condition) {
@@ -113,12 +151,45 @@ class UserService extends Service {
     });
   }
 
-  async getUserList(condition, pageIndex = 1, pageSize = 20) {
+  async getUserList({ inWhite }, pageIndex = 1, pageSize = 20, searchKey = '') {
+    const condition = {};
+    const whiteList = await this.loadCheckWhiteList();
+    if (inWhite === '0') {
+      condition.username = { $notIn: whiteList };
+    } else if (inWhite === '1') {
+      condition.username = { $in: whiteList };
+    }
+
+    searchKey = searchKey || '';
+
+    if (searchKey && searchKey.trim().length > 0) {
+      searchKey = searchKey + '%';
+      condition.$or = { username: { $like: searchKey }, fullName: { $like: searchKey } };
+    }
+
     const users = await this.userModel.findAndCountAll({
+      include: {
+        model: this.organizationModel,
+        attributes: { exclude: [ 'ids', 'names', 'created_at', 'updated_at' ] },
+      },
+      attributes: { exclude: [ 'passwordKey' ] },
       where: condition,
-      limit: pageSize,
+      limit: parseInt(pageSize),
       offset: (pageIndex - 1) * pageSize,
     });
+
+    const rows = [];
+
+    for (let user of users.rows) {
+      user = user.get ? user.get() : user;
+      if (whiteList.indexOf(user.username) > -1) {
+        user.inWhite = 1;
+      } else {
+        user.inWhite = 0;
+      }
+      rows.push(user);
+    }
+    users.rows = rows;
     return users;
   }
 

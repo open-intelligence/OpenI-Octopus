@@ -1,23 +1,7 @@
-// Copyright (c) Microsoft Corporation
-// All rights reserved.
-//
-// MIT License
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
 'use strict';
 
 const ECode = require('../error/code');
+const LError = require('../error/proto');
 
 module.exports = {
   success(payload, message = 'success', code) {
@@ -25,20 +9,34 @@ module.exports = {
 
     ctx.body = {
       code: code || ECode.SUCCESS.code,
-      message,
+      msg: message,
       payload,
     };
   },
   failure(code, message = '', payload) {
     const ctx = this;
 
+    let body = {};
+    if (code instanceof LError) {
+      body = Object.assign(body, code.toJson());
+    } else {
+      body.code = code || ECode.FAILURE.code;
+    }
+
+    if (message) {
+      body.msg = message;
+    }
+    if (payload) {
+      body.payload = payload;
+    }
     code = code || ECode.FAILURE.code;
-    code = "object" == typeof code ? code.code : code;
-    ctx.body = {
-      code,
-      message,
-      payload,
-    };
+    body.code = typeof body.code === 'object' ? body.code.code : body.code;
+    ctx.body = body;
+  },
+  forbidden() {
+    const ctx = this;
+    ctx.status = 403;
+    return ctx;
   },
   unauthorized() {
     const ctx = this;
@@ -48,6 +46,11 @@ module.exports = {
   created() {
     const ctx = this;
     ctx.status = 201;
+    return ctx;
+  },
+  temporarilyMoved() {
+    const ctx = this;
+    ctx.status = 302;
     return ctx;
   },
   internalServerError() {

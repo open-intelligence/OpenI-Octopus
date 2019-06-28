@@ -98,6 +98,11 @@ class add:
             self.logger.error("Failed to uncompress {0}.tar".format(self.jobname))
             return
 
+        commandline = "chmod +x {0}/*.sh".format(self.jobname)
+        if common.ssh_shell_paramiko(self.node_config, commandline) == False:
+            self.logger.error("Failed to add executable permission to *.sh".format(self.jobname))
+            return
+
         commandline = "sudo ./{0}/hosts-check.sh {1}".format(self.jobname, self.node_config['hostip'])
         if common.ssh_shell_paramiko(self.node_config, commandline) == False:
             self.logger.error("Failed to update the /etc/hosts on {0}".format(self.node_config['hostip']))

@@ -18,9 +18,11 @@ OPENI supports GPU scheduling, a key requirement of deep learning job.
 For better performance, OPENI supports fine-grained topology-aware job placement that can request for the GPU with a specific location (e.g., under the same PCI-E switch).
 
 OPENI embraces a [microservices](https://en.wikipedia.org/wiki/Microservices) architecture: every component runs in a container.
-The system leverages [Kubernetes](https://kubernetes.io/) to deploy and manage static components in the system.
-The more dynamic deep learning jobs are scheduled and managed by [Hadoop](http://hadoop.apache.org/) YARN with our [GPU enhancement](https://issues.apache.org/jira/browse/YARN-7481). 
-The training data and training results are stored in Hadoop HDFS.
+The system leverages [Kubernetes](https://kubernetes.io/) to deploy and manage system service.
+The latest version of OPENI,the scheduling engine of more dynamic deep learning jobs also uses Kubernetes,
+which enables system services and deep learning jobs to be scheduled and managed using Kubernetes. 
+The storage of training data and results can be customized according to platform/equipment requirements.
+Jobs logs are collected by [Filebeat](https://www.elastic.co/cn/products/beats/filebeat) and stored in [Elasticsearch](https://www.elastic.co/cn/products/elasticsearch) cluster.
 
 ## An Open AI Platform for R&D and Education 
 
@@ -44,7 +46,7 @@ OPENI operates in an open model: contributions from academia and industry are al
 ### Prerequisite
 
 The system runs in a cluster of machines each equipped with one or multiple GPUs. 
-Each machine in the cluster runs Ubuntu 16.04 LTS and has a statically assigned IP address.
+Each machine in the cluster runs Ubuntu 18.04 LTS and has a statically assigned IP address.
 To deploy services, the system further relies on a Docker registry service (e.g., [Docker hub](https://docs.docker.com/docker-hub/)) 
 to store the Docker images for the services to be deployed.
 The system also requires a dev machine that runs in the same environment that has full access to the cluster.
@@ -53,11 +55,10 @@ And the system need [NTP](http://www.ntp.org/) service for clock synchronization
 ### Deployment process
 To deploy and use the system, the process consists of the following steps.
 
-1. Build the binary for [Hadoop AI](./hadoop-ai/README.md) and place it in the specified path*
-2. [Deploy kubernetes and system services](./openi-management/README.md)
+1. [Deploy Kubernetes 1.13 and system services](./openi-management/README.md)
+2. User Kubernetes to Deploy [FrameworkController](https://github.com/microsoft/frameworkcontroller)
 3. Access [web portal](./webportal/README.md) for job submission and cluster management
 
-\* If step 1 is skipped, a standard Hadoop 2.9.0 will be installed instead.
 
 #### Kubernetes deployment
 
@@ -72,7 +73,7 @@ Please refer to service deployment [readme](./openi-management/README.md) for de
 #### Job management
 
 After system services have been deployed, user can access the web portal, a Web UI, for cluster management and job management.
-Please refer to this [tutorial](job-tutorial/README.md) for details about job submission.
+Please refer to this [tutorial](./user%20manual.pdf) for details about job submission.
 
 #### Cluster management
 
@@ -88,12 +89,10 @@ The system architecture is illustrated above.
 User submits jobs or monitors cluster status through the [Web Portal](./webportal/README.md), 
 which calls APIs provided by the [REST server](./rest-server/README.md).
 Third party tools can also call REST server directly for job management.
-Upon receiving API calls, the REST server coordinates with [FrameworkLauncher](./frameworklauncher/README.md) (short for Launcher)
-to perform job management.
-The Launcher Server handles requests from the REST Server and submits jobs to Hadoop YARN. 
-The job, scheduled by YARN with [GPU enhancement](https://issues.apache.org/jira/browse/YARN-7481), 
-can leverage GPUs in the cluster for deep learning computation. Other type of CPU based AI workloads or traditional big data job
+Upon receiving API calls, the REST server coordinates with k8s ApiServer, k8s Scheduler will schedule the job to k8s node with CPU,GPU and other resources.
+[FrameworkController](https://github.com/microsoft/frameworkcontroller) will monitor the job life cycle in k8s cluster.
+Restserver retrieve the status of jobs from k8s ApiServer, and its status can display on Web portal.
+Other type of CPU based AI workloads or traditional big data job
 can also run in the platform, coexisted with those GPU-based jobs. 
-The platform leverages HDFS to store data. All jobs are assumed to support HDFS.
-All the static services (blue-lined box) are managed by Kubernetes, while jobs (purple-lined box) are managed by Hadoop YARN. 
+The storage of training data and results can be customized according to platform/equipment requirements.
 

@@ -1,0 +1,67 @@
+FROM cambricon/test/ubuntu:v4.1
+
+WORKDIR /home/Cambricon-Test
+COPY Cambricon-MLU100.tar.gz /home/Cambricon-Test/Cambricon-MLU100.tar.gz
+RUN tar zvxf /home/Cambricon-Test/Cambricon-MLU100.tar.gz -C /home/Cambricon-Test \
+  && rm /home/Cambricon-Test/Cambricon-MLU100.tar.gz \
+  && mv /home/Cambricon-Test/Cambricon-MLU100 ../ \
+  && rm -rf /home/Cambricon-Test \
+  && mv /home/Cambricon-MLU100 /home/Cambricon-Test
+
+# GLOG_minloglevel Set log level which is output to stderr, 0: INFO/WARNING/ERROR/FATAL, 1: WARNING/ERROR/FATAL, 2: ERROR/FATAL, 3: FATAL,
+ENV ROOT_HOME="/home/Cambricon-Test"
+ENV NEUWARE_HOME=${ROOT_HOME} \
+    NEUWARE_PATH=${ROOT_HOME} \
+    CAMBRICON_HOME=${ROOT_HOME} \
+    TENSORFLOW_HOME=${ROOT_HOME}/tensorflow
+ENV TENSORFLOW_MODEL_HOME=${TENSORFLOW_HOME}/models/online \
+    TENSORFLOW_OFFLINE_MODEL_HOME=${TENSORFLOW_HOME}/models/offline \
+    TENSORFLOW_MODELS_MODEL_HOME=${ROOT_HOME}/models/tensorflow_models/ \
+    TENSORFLOW_MODELS_DATA_HOME=${ROOT_HOME}/datasets/tensorflow_models/ \
+    PB_TO_CAMBRICON_PATH=${TENSORFLOW_HOME}/tools/pb_to_cambricon/ \
+    tensorflow=${TENSORFLOW_HOME}/src/tensorflow-v1.10 \
+    TF_SET_ANDROID_WORKSPACE=0 \
+    MXNET_HOME=${ROOT_HOME}/mxnet \
+    CAFFE_HOME=${ROOT_HOME}/caffe \
+    ONNX_HOME=${ROOT_HOME}/onnx \
+    CNRT_HOME=${CAMBRICON_HOME} \
+    CNML_HOME=${CAMBRICON_HOME} \
+    CNPERF_HOME=${CAMBRICON_HOME}/cnperf \
+    CNMON_HOME=${CAMBRICON_HOME}/cnmon
+ENV CNDEV_HOME=${CNMON_HOME}/sdk \
+    CNSTREAM_HOME=${CAMBRICON_HOME}/cnstream \
+    CNCODEC_HOME=${CAMBRICON_HOME}/cncodec \
+    DRV_HOME=${CAMBRICON_HOME}/driver \
+    DATASET_HOME=${ROOT_HOME}/datasets \
+    PYTHONPATH=${PYTHONPATH}:${CAFFE_HOME}/src/caffe/python:${MXNET_HOME}/src/cambricon_mxnet/python \
+    PATH=${PATH}:${CAMBRICON_HOME}/bin
+ENV LD_LIBRARY_PATH=${CNRT_HOME}/lib:${CNML_HOME}/lib:${CNDEV_HOME}/lib:${CAFFE_HOME}/lib:${CNSTREAM_HOME}/lib:${CNCODEC_HOME}/lib:${MXNET_HOME}/lib:${LD_LIBRARY_PATH} \
+    MXNET_ENGINE_TYPE="NaiveEngine" \
+    MXNET_EXEC_FUSE_MLU_OPS=true \
+    GLOG_alsologtostderr=true \
+    GLOG_minloglevel=0 \
+    MXNET_MODELS_DIR=${MXNET_HOME}/models \
+    MXNET_DATA_DIR=${DATASET_HOME} \
+    ONNX_MODELS_DIR=${ONNX_HOME}/models \
+    ONNX_SRC_DIR=${ONNX_HOME}/src/onnx \
+    ONNX_DATA_DIR=${DATASET_HOME}/imagenet \
+    OS_VERSION="ubuntu16.04"
+
+RUN UNAME_V=`cat /etc/issue | head -n 1`
+WORKDIR "${ROOT_HOME}/bin"
+RUN if [ ! -L "${ROOT_HOME}/bin/cnmon" ]; then find ${OS_VERSION} -type f -exec ln -s {} \; ; fi
+
+WORKDIR "${ROOT_HOME}/lib"
+RUN if [ ! -L "${ROOT_HOME}/lib/libcnrt.so" ]; then \
+     find ${OS_VERSION} -name '*.so' -exec ln -s {} \; ; \
+    ln -s ${OS_VERSION}/libcnrt.so* libcnrt.so ; \
+    ln -s ${OS_VERSION}/libcnml.so* libcnml.so ; fi
+
+WORKDIR ${ROOT_HOME}
+RUN if [ ! -L lib64 ]; then ln -s lib lib64; fi
+
+ADD configure.sh ${ROOT_HOME}/configure.sh
+RUN chmod +x ${ROOT_HOME}/configure.sh && ${ROOT_HOME}/configure.sh
+
+WORKDIR /home/Cambricon-Test
+CMD ["/bin/bash"]

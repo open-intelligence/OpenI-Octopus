@@ -1,3 +1,0 @@
-!!com.microsoft.frameworklauncher.common.model.ClusterConfiguration
-nodes:
-  testString: {gpuType: testString}

@@ -25,12 +25,31 @@
 # Management Regulation V1.0", which is provided by The New Generation of 
 # Artificial Intelligence Technology Innovation Strategic Alliance (the AITISA).
 
+function install_dgx2_driver() {
+    DGX2_DRIVER=410.79
+    DRIVER_PATH=/var/drivers/nvidia/${DGX2_DRIVER}
+    CURRENT_DRIVER=/var/drivers/nvidia/current
+    [[ -e ${CURRENT_DRIVER} ]] && return 0
+
+    mkdir -p ${DRIVER_PATH}
+    ln -s ${DRIVER_PATH} ${CURRENT_DRIVER}
+    mkdir ${DRIVER_PATH}/bin ${DRIVER_PATH}/lib ${DRIVER_PATH}/lib64 ${DRIVER_PATH}/share
+    cp /mnt/usr/bin/nvidia-* ${DRIVER_PATH}/bin/ || return 1
+    find /mnt/usr/lib/x86_64-linux-gnu -regextype "posix-egrep" -regex ".*libcuda.*|.*libEGL.*|.*libGL.*|.*libnv.*|.*libOpen.*|.*nvidia.*" -exec cp {} ${DRIVER_PATH}/lib \;
+    find /mnt/usr/lib/x86_64-linux-gnu -regextype "posix-egrep" -regex ".*libcuda.*|.*libEGL.*|.*libGL.*|.*libnv.*|.*libOpen.*|.*nvidia.*" -exec cp {} ${DRIVER_PATH}/lib64 \;
+    return 0
+}
+
 if lspci | grep -qE "[0-9a-fA-F][0-9a-fA-F]:[0-9a-fA-F][0-9a-fA-F].[0-9] (3D|VGA compatible) controller: NVIDIA Corporation.*"; then
-    ./install-nvidia-drivers || exit $?
-    echo NVIDIA gpu detected, drivers installed
-
-    ./enable-nvidia-persistenced-mode.sh || exit $?
-
+    if [[ $HOSTNAME == DGX* ]] ; then
+        echo processing DGX2 NVIDIA driver ...
+        install_dgx2_driver || exit $?
+        echo NVIDIA gpu detected, drivers installed
+    else
+        ./install-nvidia-drivers || exit $?
+        echo NVIDIA gpu detected, drivers installed
+        ./enable-nvidia-persistenced-mode.sh || exit $?
+    fi
 else
     echo NVIDIA gpu not detected, skipping driver installation
 fi

@@ -1,23 +1,15 @@
-// Copyright (c) Microsoft Corporation
-// All rights reserved.
-//
-// MIT License
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
-// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
-// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
-// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 'use strict';
 
 module.exports = app => {
   const { STRING, INTEGER, DATE, BOOLEAN } = app.Sequelize;
+  const constants = {
+    status: {
+      FORBIDDEN: 0, // 禁用
+      ZERO_HOUR: 9, // 零时用户
+      ALLOW_NOT_ACTIVE: 10, // 正常未激活
+      ALLOW_ACTIVE: 11, // 正常激活
+    },
+  };
 
   const User = app.model.define('User', {
     id: {
@@ -31,13 +23,47 @@ module.exports = app => {
       field: 'username',
       type: STRING,
       allowNull: false,
-      primaryKey: true,
+      unique: true,
     },
     passwordKey: {
       field: 'passwordKey',
       type: STRING,
       allowNull: false,
       defaultValue: '',
+    },
+    email: {
+      field: 'email',
+      type: STRING(50),
+      unique: true,
+    },
+    fullName: {
+      field: 'full_name',
+      type: STRING(36),
+    },
+    orgId: {
+      field: 'org_id',
+      type: STRING(32),
+    },
+    status: {
+      field: 'status',
+      type: INTEGER,
+      defaultValue: constants.status.ALLOW_NOT_ACTIVE,
+    },
+    teacher: {
+      field: 'teacher',
+      type: STRING(50),
+    },
+    phone: {
+      field: 'phone',
+      type: STRING(20),
+    },
+    uid: {
+      field: 'uid',
+      type: STRING(32),
+      unique: true,
+      defaultValue() {
+        return `_${app.generateId(31)}`;
+      },
     },
     admin: {
       field: 'admin',
@@ -59,8 +85,23 @@ module.exports = app => {
     },
   }, {
     tableName: 'users',
-    timestamps: false,
+    name: {
+      singular: 'user',
+      plural: 'users',
+    },
+    indexes: [
+      { fields: [ 'full_name' ] },
+      { fields: [ 'org_id' ] },
+      { fields: [ 'teacher' ] },
+    ],
   });
+
+  User.associate = function() {
+    User.belongsTo(app.model.Organization, { foreignKey: 'orgId', constraints: false });
+    User.hasMany(app.model.ThirdUser, { foreignKey: 'userId', constraints: false });
+  };
+
+  User.constants = constants;
 
   return User;
 };

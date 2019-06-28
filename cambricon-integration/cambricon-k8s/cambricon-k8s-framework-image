@@ -1,0 +1,6 @@
+一、部署FrameworkController环境
+1、进入https://github.com/Microsoft/frameworkcontroller网址，然后点击Run Controller
+2、选择Run By Kubernetes StatefulSet，部署frameworkcontroller，具体操作见https://github.com/microsoft/frameworkcontroller/tree/master/example/run。
+二、获取FrameworkController镜像
+1、从这个网址https://hub.docker.com/r/yyrdl/frameworkcontroller，使用docker pull yyrdl/frameworkcontroller获取镜像。
+2、从这个网址https://hub.docker.com/r/frameworkcontroller/frameworkbarrier，使用docker pull获取镜像。
