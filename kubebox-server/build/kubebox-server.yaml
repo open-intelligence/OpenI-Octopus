@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubebox
+  labels:
+    template: kubebox
+spec:
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 43200
+  ports:
+    - name: kubebox
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    name: kubebox
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kubebox
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    kubernetes.io/ingress.allow-http: "true"
+    ingress.kubernetes.io/ssl-redirect: "false"
+    # ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.org/websocket-services: "kubebox"
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: kubebox
+          servicePort: 8080
+        path: /terminal(/|$)(.*)
+    # TO BE UPDATED IF NEEDED
+#    host: box.pcl.ac.cn
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: kubebox
+spec:
+  replicas: 2
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      name: kubebox
+  template:
+    metadata:
+      name: kubebox
+      labels:
+        name: kubebox
+    spec:
+      nodeSelector:
+        noderole: "openiservice"
+      serviceAccountName: kubebox
+      containers:
+      - image: 192.168.202.74:5000/openi/kubebox-server:1.0.1.119
+        imagePullPolicy: Always
+        name: kubebox
+        env:
+        - name: KUBEBOX_CLUSTER_NUM
+          value: "3"
+        - name: KUBEBOX_LOG_LEVEL
+          value: "info"
+        - name: WORK_IN_K8S_CLUSTER
+          value: "YES"
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubebox
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kubebox
+subjects:
+- kind: ServiceAccount
+  name: kubebox
+  # TO BE UPDATED IF NEEDED
+  namespace: default
+roleRef:
+  kind: ClusterRole
+  name: kubebox
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubebox
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - watch
+  - list

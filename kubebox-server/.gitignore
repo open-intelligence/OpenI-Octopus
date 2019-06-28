@@ -1,0 +1,14 @@
+*/
+!/build/
+!/docs/
+!/docs/**/*
+
+!/lib/
+!/lib/**/*
+
+# Logs
+*.log
+
+# Sourcemap
+*.js.map
+yarn.lock

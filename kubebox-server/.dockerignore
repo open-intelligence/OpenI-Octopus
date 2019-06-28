@@ -1,0 +1,11 @@
+*
+
+!docs/
+!lib/
+
+!index.js
+!package.json
+!package-lock.json
+!index.html
+!server.js
+!cluster.js

@@ -1,0 +1,248 @@
+<!doctype html>
+<html>
+
+<head>
+  <link rel="stylesheet" href="libs/xterm.css" />
+  <script src="libs/fontfaceobserver.js"></script>
+  <script src="libs/xterm.js"></script>
+  <script src="libs/fit.js"></script>
+  <script src="kubebox.js"></script>
+
+  <style>
+    @font-face {
+      font-family: 'Hack Braille';
+      src: url('fonts/hack-regular-braille.woff2') format('woff2');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    @font-face {
+      font-family: 'Hack Braille';
+      src: url('fonts/hack-bold-braille.woff2') format('woff2');
+      font-weight: bold;
+      font-style: normal;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    body {
+      height: 100%;
+      margin: 0px;
+      background-color: #2b2b2b;
+    }
+
+    #terminal {
+      height: 100%;
+      width: 100%;
+    }
+
+    .overlay {
+      position: fixed;
+      z-index: 1000;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(43, 43, 43, 0.6);
+      transition: opacity 500ms;
+      visibility: hidden;
+    }
+    .popup {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      padding: 10px;
+      background: #2b2b2b;
+      border:1px solid #fff;
+      font-family: Hack Braille, Courier New, Courier, monospace;
+      font-size: 13px;
+      color: white;
+      box-shadow: 3px 3px 0 0 #aaa;
+    }
+    .popup .cancel {
+      border: 0 none;
+      padding: 0 1em 0 1em;
+      font-family: inherit;
+      border-radius: unset;
+      background-color: unset;
+      color: unset;
+      font-size: unset;
+    }
+    .popup .cancel:hover,
+    .popup .cancel:focus {
+      background-color: grey;
+      outline: none;
+    }
+    .popup .file {
+      width: 0.1px;
+      height: 0.1px;
+      opacity: 0;
+      overflow: hidden;
+      position: absolute;
+      z-index: -1;
+    }
+    .popup .file + label {
+      padding: 0 1em 0 1em;
+    }
+    .popup .file:focus + label,
+    .popup .file + label:hover {
+      background-color: grey;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="terminal"></div>
+
+  <div id="popup" class="overlay">
+    <div class="popup">
+      <div>Select a file to import from:</div>
+      <div style="text-align: right; margin-top: 1em">
+        <input id="file" name="file" type="file" class="file" />
+        <label for="file">Select...</label>
+        <input id="cancel" type="button" value="Cancel" class="cancel">
+      </div>
+    </div>
+  </div>
+
+  <script>
+  var blessed = require('blessed');
+  var Context = require('context');
+  var get     = require('http-then').get;
+  var Kubebox = require('kubebox');
+  var URI     = require('urijs');
+
+  // Should ideally be inherited from require('events').EventEmitter
+  Terminal.prototype.listenerCount = function (type) {
+    return this.listeners(type).length;
+  };
+  Object.defineProperty(Terminal.prototype, 'columns', {
+    get: function () {
+      return this.cols;
+    }
+  });
+  // By-pass Xterm.js event queue as Blessed expect a single event to be sent
+  // to the data handler. This actually happens on iOS with the mouseover and
+  // mouseup events.
+  Terminal.prototype.send = function (data) {
+    this.handler(data);
+  }
+
+  // TODO: add a spinner while loading resources
+  Promise.all([
+    new FontFaceObserver('Hack Braille', { weight: 'normal' }).load(null, 30000),
+    new FontFaceObserver('Hack Braille', { weight: 'bold' }).load(null, 30000),
+    // Checking server mode
+    get('/server')
+      .then(response => new URI().query('').path('/master').toString())
+      .catch(error => {
+        if (!error.response || error.response.statusCode !== 404) {
+          console.log('Error checking Kubebox mode');
+        }
+      })
+  ])
+  .then(([ , , server]) => {
+    Terminal.applyAddon(fit);
+    var term = new Terminal({
+      fontFamily : 'Hack Braille, Courier New, Courier, monospace',
+      fontSize   : 13,
+      theme      : {
+        foreground    : '#d2d2d2',
+        background    : '#2b2b2b',
+        cursor        : '#adadad',
+        black         : '#000000',
+        red           : '#d81e00',
+        green         : '#5ea702',
+        yellow        : '#cfae00',
+        blue          : '#427ab3',
+        magenta       : '#89658e',
+        cyan          : '#00a7aa',
+        white         : '#dbded8',
+        brightBlack   : '#686a66',
+        brightRed     : '#f54235',
+        brightGreen   : '#99e343',
+        brightYellow  : '#fdeb61',
+        brightBlue    : '#84b0d8',
+        brightMagenta : '#bc94b7',
+        brightCyan    : '#37e6e8',
+        brightWhite   : '#f1f1f0',
+      },
+    });
+    term.isTTY = true;
+    term.open(document.getElementById('terminal'));
+    term.focus();
+    term.fit();
+
+    window.onresize = function () {
+      term.fit();
+    };
+
+    var program = blessed.program({ input: term, output: term, tput: false });
+    var screen = blessed.screen({
+      program       : program,
+      terminal      : 'xterm-256color',
+      resizeTimeout : 10,
+      forceUnicode  : true,
+      // smartCSR   : true,
+      dockBorders   : true,
+      autoPadding   : true,
+      warnings      : true,
+    });
+
+    var kubebox = new Kubebox(screen, server ? Context.getBaseMasterApi(server) : null);
+
+    // Kube config import modal popup
+    var popup  = document.getElementById('popup');
+    var file   = document.getElementById('file');
+    var cancel = document.getElementById('cancel');
+    var input  = document.querySelector('input');
+    popup.addEventListener('keydown', function (e) {
+      if (e.which === 27) {
+        e.preventDefault();
+        popup.style.visibility = 'hidden';
+        term.focus();
+      }
+    });
+    cancel.addEventListener('click', function () {
+      popup.style.visibility = 'hidden';
+      term.focus();
+    });
+    // trap focus into the modal
+    cancel.addEventListener('keydown', function (e) {
+      if (e.which === 9) {
+        e.preventDefault();
+        file.focus();
+      } else if (e.which === 38) {
+        file.focus();
+      }
+    });
+    file.addEventListener('keydown', function (e) {
+      if (e.which === 9 && e.shiftKey) {
+        e.preventDefault();
+        cancel.focus();
+      } else if (e.which === 40) {
+        cancel.focus();
+      }
+    });
+    input.addEventListener('change', function () {
+      const file_reader = new FileReader();
+      file_reader.onload = function () {
+        kubebox.loadKubeConfig(file_reader.result);
+        popup.style.visibility = 'hidden';
+        term.focus();
+      }
+      // TODO: support file references in the kube config (certificates for example)
+      file_reader.readAsText(input.files[0], 'utf8');
+    });
+    kubebox.on('kubeConfigImport', function () {
+      popup.style.visibility = 'visible';
+      file.focus();
+    });
+  });
+  </script>
+</body>
+
+</html>
