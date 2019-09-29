@@ -12,5 +12,5 @@ rest-server
 doc
 run
 logs
-
+apidoc/
 deploy.yaml

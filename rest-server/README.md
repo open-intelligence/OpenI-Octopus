@@ -3,8 +3,12 @@
 ## What is REST Server?
 
 REST Server exposes a set of interface that allows you to manage jobs.
-It is a Node.js API service base on Egg.js for cluster that deliver client requests to different upstream services, including FrameworkLauncher, Apache Hadoop YARN and WebHDFS with some request transformation.
+It is a Node.js API service base on Egg.js for cluster that deliver client requests to different upstream services,
 You can see [egg docs][egg] for more detail.
+
+## Runtime Requirements
+
+To run REST Server on system, a [Node.js](https://nodejs.org) 10.15+ runtime is required, with [npm](https://www.npmjs.com/) installed.
 
 ## Architecture
 ```
@@ -19,7 +23,6 @@ You can see [egg docs][egg] for more detail.
         |-- routes                      -- used to define specific routing
         |-- schedule                    -- used to store some schduled tasks
         |-- service                     -- used for business logic layer, optional, recommend to use
-        |-- templates                   -- some sh script when service is starting
         |-- tpl                         -- some file template for response output
         |-- route.js                    -- used to configure URL routing rules,
     |-- config
@@ -33,7 +36,6 @@ You can see [egg docs][egg] for more detail.
     |-- util                            -- common helper function
     |-- agent.js                        -- used to customize the initialization agent at startup
     |-- app.js                          -- used to customize the initialization works at startup
-    |-- initDB.sh                       -- init sql
     |-- package.json
 ```
 
@@ -41,75 +43,71 @@ You can see [egg docs][egg] for more detail.
 
 To start a REST Server service, the following services should be ready and correctly configured.
 
-* FrameworkLauncher
-* Apache Hadoop YARN
-* HDFS
+* obtopus/rest-server-storage
+* obtopus/framework-controller
+* docker
 
 ## QuickStart
 
-### InitDatabase
-
-Before the service startup, must init database in Mysql-5.7.25^. you can find the init sql in ./initDB.sql.
-
 ### Development
 
-If REST Server is need to be deployed as a standalone service, you need modify the configuration information in that config/config.local.js, and Then:
+If REST Server is need to be deployed as a standalone service in local machine, you need modify the configuration information in that config/config.local.js, and Then:
 ```bash
 $ npm i
 $ npm run dev
-$ open http://localhost:9186/
+$ open http://localhost:9185/
+
+# API document
+$ open http://localhost:9185/public/apidoc
 ```
 
 [egg]: https://eggjs.org
 
-## Configuration
-
-If REST Server is deployed by openi-management, configuration is located in
-`restserver` block of service-configuration file in /cluster-configuration, including:
-
-* `SERVER_PORT`: Integer. The network port to access the web portal. The default value is 9186.
-* `OPENI_DB_HOST`: The host of mysql for REST-Server
-* `OPENI_DB_PORT`: The port of mysql for REST-Server
-* `OPENI_DB_USER`: The username of mysql for REST-Server
-* `OPENI_DB_PWD` : The password of mysql for REST-Server
-* `NAT_FILE`: The file path of defining the network NAT.
-* `JWT_SECRET`: A random secret token for user authorization, keep it secret to users.
-
----
-
-If REST Server is deployed manually, the following fields should be configured as environment
-variables:
-
-* `LAUNCHER_WEBSERVICE_URI`: URI endpoint of Framework Launcher.
-* `HDFS_URI`: URI endpoint of HDFS.
-* `WEBHDFS_URI`: URI endpoint of WebHDFS.
-* `YARN_URI`: URI endpoint of Apache Hadoop YARN.
-* `PROMETHEUS_URI`: URI endpoint of Prometheus.
-* `K8S_API_SERVER_URI`: URI endpoint of K8S api server.
-* `JWT_SECRET`: A random secret token for user authorization, keep it secret to users.
-
 ## Deployment
 
-The deployment of REST Server goes with the bootstrapping process of the whole Openi cluster.
+### Configurates
+If REST Server is need to be deployed as a standalone service in production, some configuration items are retrieved from system environment variables in that config/config.prod.js, you need to set it up in the system environment:
+
+* `EGG_SERVER_ENV`: set to `prod`
+* `NODE_ENV`: set to `production`
+* `K8S_API_SERVER`: the apiservice address of kubernetes cluster.
+* `K8S_CONFIG`: the path of kubeconfig, like: `/home/XXX/.kube`
+* `IMAGE_FACTORY_URI`: the address of obtopus/image-factory-shield.
+* `IMAGE_FRAMEWORKBARRIER`: set to `frameworkcontroller/frameworkbarrier`
+* `MYSQL_HOST` : The mysql address of obtopus/rest-server-storage.
+* `MYSQL_PORT`: The mysql port of obtopus/rest-server-storage.
+* `MYSQL_USER`: The mysql username of obtopus/rest-server-storage.
+* `MYSQL_PWD`: The mysql passowrd of obtopus/rest-server-storage.
+* `DOCKER_REGISTRY_ADDR`: the address of Docker Registry,like harbor server.
+* `DOCKER_USER`: the username of Docker Registry,like harbor server.
+* `DOCKER_PASSWORD`: the password of Docker Registry,like harbor server.
+* `ENABLED_API_DOC`: `YES` or `NO`.
+
+### Docker Image
+
+Here you need to build the project into a docker image:
 
 ```bash
-$ cd ../openi-management/
-$ sudo ./docker_build.py -p ../cluster-configuration/ -n rest-server
-$ sudo ./deploy.py -p ../cluster-configuration/ -d -s rest-server
+$ docker build -f Dockerfile -t ${image name} .
 ```
-## API document
 
-The api document of REST Server is builded on [apidocjs](http://apidocjs.com/). it need to build:
+And starting requires setting environment variables:
 
 ```bash
-$ npm run doc
-
-## build docker image
-$ sudo docker build -t $host/openi/rest-server-apidoc:$version -f DockerFile.apidoc .
-$ sudo docker push $host/openi/rest-server-apidoc:$version
-$ sudo docker run -p 8081:80 -d $host/openi/rest-server-apidoc:$version
+$ docker run -p 8195:8195 -e EGG_SERVER_ENV=prod ... -d ${image name}
 ```
-After building, you can find the /doc in the rootdirectory of REST-Server.
+
+If you need to run in k8s, configure it in the k8s manifest configuration file.
+
+### k8s
+
+When you need to run the service in k8s, it can be executed according to the manifest file `build/k8s/rest-server.yaml`.
+
+```bash
+# Modify the placeholder `${xxx}` configuration item in the file
+$ kuberctl apply -f build/k8s/rest-server.yaml
+```
+After successful publication, access can be made through http://${ip}/rest-server/
 
 ## Upgrading
 
@@ -118,12 +116,3 @@ REST Server is a stateless service, so it could be upgraded without any extra op
 ## High Availability
 
 REST Server is a stateless service, so it could be extends for high availability without any extra operation.
-
-## Runtime Requirements
-
-To run REST Server on system, a [Node.js](https://nodejs.org) 10.15+ runtime is required, with [npm](https://www.npmjs.com/) installed.
-
-
-
-[pai-management]: ../pai-management
-[service-configuration]: ../../examples/cluster-configuration/services-configuration.yaml

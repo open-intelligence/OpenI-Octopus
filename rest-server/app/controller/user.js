@@ -71,7 +71,7 @@ class UserController extends Controller {
     const admin = userInfo ? userInfo.admin : false;
 
     await service.user.upsertUser(username, password, admin);
-     
+
     ctx.logger.info('Add user successfully');
 
     ctx.created().success();

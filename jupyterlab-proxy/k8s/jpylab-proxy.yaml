@@ -14,13 +14,15 @@ spec:
    labels:
     app: jpylabproxy
   spec:
+   nodeSelector:
+     openinode: "worker"
    containers:
    - name: jpylabproxy
-     image: zhangshuiyong/jpylabproxy:latest
+     image: openi/jpylabproxy:1.6
      env:
      - name: SERVER_PORT
        value: '8080'
      - name: DefaultTarget
-       value: '192.168.202.71'
+       value: '127.0.0.1'
      ports:
      - containerPort: 8080

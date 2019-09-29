@@ -15,7 +15,7 @@ module.exports = appInfo => {
       port: 9186,
     },
   };
-  
+
   config.jwt = {
     secret: process.env.JWT_SECRET || 'Hello OPENI PCL!',
   };
@@ -31,6 +31,7 @@ module.exports = appInfo => {
     database: 'restserver',
     benchmark: true,
     timezone: '+08:00',
+    logging: () => {},
     define: {
       charset: 'utf8',
       collate: 'utf8_general_ci',
@@ -49,6 +50,20 @@ module.exports = appInfo => {
     },
   };
 
+  config.static = {
+    prefix: '/public/',
+    dir: [ path.join(appInfo.baseDir, 'app/public') ],
+    // support lazy load
+    dynamic: true,
+    preload: false,
+    buffer: false,
+    maxFiles: 1000,
+  };
+
+  if(process.env.ENABLED_API_DOC === "YES"){
+    config.static.dir.push(path.join(appInfo.baseDir, 'app/apidoc'));
+  }
+
   config.proxyDB = {
     fileDB: {
       filePath: path.join(__dirname, '../rest-server'),
@@ -57,16 +72,16 @@ module.exports = appInfo => {
   };
 
   config.jobConfigDB = {
-      debugJobDurationMsec: 2*60*60*1000,
-      fileDB: {
-          filePath: path.join(__dirname, '../rest-server'),
-          fileName: 'config_db.json',
-      },
+    debugJobDurationMsec:  2 * 60 * 60 * 1000,
+    fileDB: {
+      filePath: path.join(__dirname, '../rest-server'),
+      fileName: 'config_db.json',
+    },
   };
 
   config.jobTypes = {
-      gpuTypeMap:{"dgx":true,"debug":true},
-      cpuTypeMap:{"debug_cpu":true}
+    gpuTypeMap: { dgx: true, debug: true },
+    cpuTypeMap: { debug_cpu: true },
   };
 
 
@@ -75,7 +90,7 @@ module.exports = appInfo => {
     middleware: [ 'validateHandler', 'jwtHandler', 'compressHandler', 'checkUserStatus', 'checkUserIsAdmin', 'notfoundHandler' ],
     jwtHandler: {
       secret: config.jwt.secret,
-      ignore: [ '/api/v1/token', '/api/v1/third/oauth' ],
+      ignore: [ '/public','/api/v1/token', '/api/v2/token', '/api/v2/user/register', '/api/v2/user/existed', '/api/v1/third/oauth' ],
     },
     compressHandler: {
       threshold: 2048,
@@ -84,9 +99,8 @@ module.exports = appInfo => {
       match: /^\/api\/v1\/(acl|hardwares|services)/,
     },
   };
-  
 
-  
+
   config.onerror = {
     accepts(ctx) {
       if (ctx.acceptJSON) return 'json';

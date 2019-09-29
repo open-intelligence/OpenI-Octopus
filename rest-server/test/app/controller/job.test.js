@@ -1,6 +1,7 @@
 'use strict';
 
 const { app, assert, assertFn, getToken } = require('../common');
+
 const job = {
   jobName: 'test-bu241r',
   image: '10.11.3.8:5000/pai-images/pai.run.deepo:v1.1',

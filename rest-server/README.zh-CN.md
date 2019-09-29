@@ -1,39 +1,115 @@
-# rest-server说明
+# REST Server
 
-the rest-server of openi
+## REST Server 是什么?
 
-## 背景说明
+rest服务器公开了一组允许您管理作业的接口。
+它是一个基于egg.js的node.js API服务，用于将客户端请求传递到不同的上游服务，
+您可以查看[egg docs][egg]了解更多详细信息。
 
-**Rest-Server项目是openi开源平台项目中的提供开放操作与管理训练任务的API服务。Rest-Server项目采用nodejs为开发语言，来提供高效可靠的服务能力。随着nodejs语言以及开源社区的不断发展更强，以往的Rest-Server项目的一些问题也逐步显现出来。主要可以总结为一下几点：**
-- 安全防御能力不足；
-- 单进程运行，无稳定可靠的集群能力，无法发挥性能；
-- 代码规范性不足，弱约定性；
-- 基于比较老旧的js语法，开发效率低；
-- 模块与模块之间依赖关系不清晰，容易造成业务代码冗余现象；
+## 运行时要求
 
+要在系统上运行rest服务器，需要安装[node.js](https://nodejs.org) 10.15+运行时，并安装[npm](https://www.npmjs.com/)。
 
-## 需求分析
-**针对Rest-Server项目中的问题，现阶段Rest-Server在原有基础上做一次系统性的增加，主要围绕以下几点：**
-- 基于强安全能力的底层，让对常见的WEB攻击手段的防御作为基础设施提供；
-- 提供稳定可靠的进程以及服务的集群能力，包括进程之间服务之间可靠安全的信号，rpc等通讯能力；
-- 强约定性，保持清晰的项目结构，低耦合的业务模块与功能模块关系；
-- 代码量少，开发效率高，基于高版本nodejs提供精简语法；
-- 标准统一高效的组件插件分离组装能力，避免重复开发；
+## 结构
+```
+|-- rest-server
+    |-- app
+        |-- controller                  -- 控制层
+        |-- controllerSchema            -- 控制规格
+        |-- error                       -- 异常错误定义
+        |-- extend                      -- 扩展
+        |-- middleware                  -- 中间件层
+        |-- model                       -- 数据访问层
+        |-- routes                      -- 路由绑定
+        |-- schedule                    -- 定时任务
+        |-- service                     -- 服务层
+        |-- tpl                         -- 模板
+        |-- route.js                    -- 路由规则
+    |-- config
+        |-- config.default.js           -- 默认配置
+        |-- config.local.js             -- 本地开发配置
+        |-- config.prod.js              -- 正式环境配置
+        |-- config.unitest.js           -- 单元测试配置
+        |-- plugin.js                   -- 插件配置
+    |-- run                             -- 运行时上下文
+    |-- test                            -- 单元测试
+    |-- util                            -- 工具代码
+    |-- agent.js                        -- agent启动入口
+    |-- app.js                          -- app启动入口
+    |-- package.json
+```
 
-## 解决方案
+## 依赖项
 
-### 运行时升级
-Nodejs运行时至版本升级至Node[10.15.0.LTS](https://github.com/nodejs/node/blob/master/doc/changelogs/CHANGELOG_V10.md#10.15.0)版本
+要启动rest-server服务器服务，应准备好并正确配置启动以下服务。
 
-### 框架升级
-阿里巴巴开源的[egg](https://eggjs.org/zh-cn/intro/)企业级NodeJs框架是一款遵循【约定大于配置】原则的web框架，基于egg框架搭建Rest-Server服务，将带来主要以下几点的增强：
-- 基于主从模块的进程服务[集群调度方案](https://eggjs.org/zh-cn/advanced/cluster-client.html),提供稳定的服务高可用能力；
-- 从底层基本上提供的[安全防御能力](https://eggjs.org/zh-cn/core/security.html)了，保证更专注于业务能力的扩展；
-- [插件式开发](https://eggjs.org/zh-cn/advanced/view-plugin.html)，解耦功能模块，更好的团队技术沉淀能力
+* obtopus/rest-server-storage
+* obtopus/framework-controller
+* docker
 
-### 代码升级
-针对代码进行部分的翻新升级，实施原则为：
-- 业务代码与功能代码分离解耦；
-- 基于async/await新语法执行函数调用，保持精简；
-- 使用强声明变量，防止作用域污染
+## 快速开发
 
+### 开发模式
+
+如果rest-server服务需要作为独立服务部署在本地计算机中，则需要修改config/config.local.js中的配置信息，然后：
+```bash
+$ npm i
+$ npm run dev
+$ open http://localhost:9185/
+
+# API 文档
+$ open http://localhost:9185/public/apidoc
+```
+
+[egg]: https://eggjs.org
+
+## 部署模式
+
+### 配置
+如果rest-server服务需要作为独立服务部署到生产环境中，则需要从config/config.prod.js中的系统环境变量中检索一些配置项，您需要在系统环境中进行设置：
+
+* `EGG_SERVER_ENV`: 设置为 `prod`
+* `NODE_ENV`: 设置为 `production`
+* `K8S_API_SERVER`: k8s集群的apiservice地址
+* `K8S_CONFIG`: kubeconfig路径, 例如: `/home/XXX/.kube`
+* `IMAGE_FACTORY_URI`: obtopus/image-factory-shield地址+端口.
+* `IMAGE_FRAMEWORKBARRIER`: 设置为 `frameworkcontroller/frameworkbarrier`
+* `MYSQL_HOST` : obtopus/rest-server-storage的mysql地址.
+* `MYSQL_PORT`: obtopus/rest-server-storage的mysql端口.
+* `MYSQL_USER`: obtopus/rest-server-storage的mysql用户名.
+* `MYSQL_PWD`: obtopus/rest-server-storage的mysql密码.
+* `DOCKER_REGISTRY_ADDR`: Docker仓库地址,例如 harbor server..
+* `DOCKER_USER`: Docker仓库用户名。
+* `DOCKER_PASSWORD`: Docker仓库密码.
+* `ENABLED_API_DOC`: `YES` 或者 `NO`.
+
+### Docker镜像
+
+通过以下构建镜像:
+
+```bash
+$ docker build -f Dockerfile -t ${image name} .
+```
+
+设置镜像运行的系统环境变量:
+
+```bash
+$ docker run -p 8195:8195 -e EGG_SERVER_ENV=prod ... -d ${image name}
+```
+
+如果需要在k8s中运行，请在k8s清单配置文件中配置它。
+
+### k8s
+
+当您需要在k8s中运行服务时，可以根据清单文件`build/k8s/rest server.yaml`来执行它。
+
+```bash
+# Modify the placeholder `${xxx}` configuration item in the file
+$ kuberctl apply -f build/k8s/rest-server.yaml
+```
+
+发布成功后可以通过 http://${ip}/rest-server/ 访问
+
+## 高可用
+
+rest-server是一个无状态服务，因此可以扩展它以获得高可用性，而无需任何额外操作。

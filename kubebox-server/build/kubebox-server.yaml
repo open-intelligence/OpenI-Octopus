@@ -56,11 +56,9 @@ spec:
       labels:
         name: kubebox
     spec:
-      nodeSelector:
-        noderole: "openiservice"
       serviceAccountName: kubebox
       containers:
-      - image: 192.168.202.74:5000/openi/kubebox-server:1.0.1.119
+      - image: openi/kubebox-server:1.6
         imagePullPolicy: Always
         name: kubebox
         env:

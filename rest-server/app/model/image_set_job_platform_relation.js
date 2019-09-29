@@ -25,11 +25,11 @@ module.exports = app => {
     comment: '镜像平台关系表',
     tableName: 'image_set_job_platform_r_t',
     indexes: [
-        {
-          unique: true,
-          fields: [ 'image_set_id','job_platform_id' ]
-        },
-    ]
+      {
+        unique: true,
+        fields: [ 'image_set_id', 'job_platform_id' ],
+      },
+    ],
   });
 
   return ImageSetJobPlatformRelation;

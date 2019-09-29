@@ -1,0 +1,61 @@
+# rest-server-storage
+
+用来初始化restserver数据库，构建具有初始化数据的mysql镜像。mysql镜像使用官方版本5.7
+
+## Dockerfile构建初始化数据库镜像
+
+请参考[dockerhub mysql](https://hub.docker.com/_/mysql)中[Initializing a fresh instance]段落。
+
+sql脚本存在一些执行规则：
+
+- 多脚本会按照拼音顺序执行
+- 当有挂载宿主机中的数据持久化目录，只有当该目录为空，初始化脚本才会执行。
+
+## 快速部署
+
+
+1.给服务目标部署节点node加上label
+
+```
+# kubectl label nodes <node-name> openinode=worker
+```
+
+2. k8s集群中执行yaml部署
+
+```
+# kubectl apply -f ./k8s
+```
+
+## 源码编译部署
+
+
+### 1.编译镜像
+
+```
+# cd rest-server-storage
+# docker build -t $dockerRegistry/openi/restserver-mysql:latest .
+# docker push $dockerRegistry/openi/restserver-mysql:latest
+```
+
+
+### 2. 配置yaml文件
+
+```
+# cd k8s
+# vim mysql-db.yaml
+# 配置image的具体地址
+```
+
+### 3. k8s部署
+
+1.给服务目标部署节点node加上label
+
+```
+# kubectl label nodes <node-name> openinode=worker
+```
+
+2. k8s集群中执行yaml部署
+
+```
+# kubectl apply -f ./k8s
+```

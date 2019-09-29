@@ -1,152 +1,191 @@
+'use strict';
 
-function Container (){
-    this.name = "";
-     
-    this._gpu = 0;
-    this._cpu = 0;
-    this._memory = 0;
-   
-    this._command = "";
-    this._image = "";
+const utils = require('./utils');
+
+
+class Container {
+  constructor() {
+    this._name = '';
+
+    this._resource = {
+      cpu: 0,
+      memory: 0,
+    };
+
+    this._command = '';
+
+    this._image = '';
 
     this._mounts = [];
-
-    this._ports = [];
-}
-
-Container.prototype.Name = function(name){
+  }
+  /**
+     * @param {String} name  name of this container
+     * @return {Container} this
+     * @api public
+     */
+  SetName(name) {
     this._name = name;
-}
-
-Container.prototype.Gpu = function(amount){
-    this._gpu = amount;
     return this;
-}
+  }
+  /**
+     * @return {String} name
+     * @api public
+     */
+  GetName() {
+    return this._name;
+  }
+  /**
+     * @return {JSON} resource
+     * @api public
+     */
+  GetResourceUsage() {
+    return JSON.parse(JSON.stringify(this._resource));
+  }
 
-Container.prototype.Cpu = function(amount){
-    this._cpu = amount;
+  /**
+   *
+   * @param {String} name custome resource name
+   * @param {*} amount  amount of this kind of resource
+   * @return {Container} this;
+   * @api public
+   */
+  SetCustomResource(name, amount) {
+    this._resource[name] = amount;
     return this;
-}
+  }
 
-Container.prototype.Memory  =function(amount){
-    this._memory = amount;
+  /**
+   *
+   * @param {String} name custom resource name
+   * @return {*} resource
+   * @api private
+   */
+  GetCustomResouce(name) {
+    return this._resource[name];
+  }
+
+  /**
+     *
+     * @param {Number} amount  the cpu amount of this container
+     * @return {Container} this
+     * @api public
+     */
+  SetCpu(amount) {
+    this._resource.cpu = amount;
     return this;
-}
+  }
+  /**
+     * @return {Number} cpu
+     * @api public
+     */
+  GetCpu() {
+    return this._resource.cpu;
+  }
 
-Container.prototype.Mount = function (from,to,opt){
-    var it = {
-        "name":"mount-"+this._mounts.length,
-        "from":from,
-        "to":to,
-        "opt":opt
-    };
+  /**
+     * @param {Number} memory  the memory (MB) usage of this container
+     * @return {Container} this;
+     * @api public
+     */
+  SetMemoryMb(memory) {
 
-    this._mounts.push(it);
+    if (!Number.isInteger(memory)) {
+      memory = parseInt(memory);
+    }
+
+    if (!Number.isInteger(memory) || Number.isNaN(memory) || memory < 1024) {
+      memory = 1024;
+    }
+
+    this._resource.memory = memory + 'Mi';
+
     return this;
-}
+  }
 
-Container.prototype.Port = function(){
-     var self = this;
-     function add(port){
-        port.name = "port-"+self._ports.length;
-        self._ports.push(port);
-        return this;
-     }
-     return {
-         "_store":{
+  /**
+     * @return {Number} memory
+     * @api public
+     */
+  GetMemoryMb() {
+    return this._resource.memory;
+  }
 
-         },
-         "ContainerPort":function(port){
-            this._store.container_port = port;
-            return this;
-         },
-         "HostPort":function(port){
-            this._store.host_port = port;
-            return this;
-         },
-         "Add":function(){
-             return  add(this._store)
-         }
-     }
-}
-
-Container.prototype.Image = function(image){
+  /**
+     * @param {String} image   docker image
+     * @return {Container} this
+     * @api public
+     */
+  SetImage(image) {
     this._image = image;
     return this;
-}
+  }
 
-Container.prototype.Command = function(cmd){
-    this._command = cmd;
+  /**
+     * @return {String} image
+     * @api public
+     */
+  GetImage() {
+    return this._image;
+  }
+
+  /**
+     * @param {String} command  The command that will be executed when the container start
+     * @return {Container} this
+     * @api public
+     */
+  SetCommand(command) {
+    this._command = command;
     return this;
-}
+  }
 
-Container.prototype.toJson = function(){
-    var container = {
-        "name":this._name,
-        "image":this._image,
-        "command":["sh", "-c"],
-        "ports": [],
-        "volumeMounts": [
-            {
-                "mountPath": "/mnt/frameworkbarrier",
-                "name": "frameworkbarrier-volume"
-            }
-        ]
+  /**
+     * @return {String} command
+     * @api public
+     */
+  GetCommand() {
+    return this._command;
+  }
+
+  /**
+     *
+     * @param {Volume} volume  The volume that you mount to this container
+     * @return {Container} this
+     * @api public
+     */
+  Mount(volume) {
+    this._mounts.push(volume);
+    return this;
+  }
+
+  /**
+   * @return {Array} mounts  The volume list that you mount to this container
+   * @api public
+   */
+  GetMountList() {
+    return this._mounts;
+  }
+
+  /**
+     * @return {JSON} container the k8s json format of container
+     * @api public
+     */
+  toJson() {
+
+    const container = {
+      name: this._name,
+      image: this._image,
     };
 
-    var command = "/mnt/frameworkbarrier/injector.sh & "+this._command;
-    container.command.push(command);
+    utils.assign_command_to_json_container(container, this.GetCommand());
 
-    if(this._gpu > 0 || this._cpu > 0 || this._memory > 0){
-        container.resources = {"limits":{}}
-    }   
+    utils.assign_resource_to_json_container(container, this.GetResourceUsage());
 
-    if(this._gpu > 0 ){
-        container.resources.limits["nvidia.com/gpu"] = this._gpu;
-    }
-    if(this._cpu > 0 ){
-        container.resources.limits["cpu"] = this._cpu;
-    }
-
-    if(this._memory > 0 ){
-        container.resources.limits["memory"] = this._memory +"Mi";
-    }
-
-    for(var i= 0;i< this._ports.length;i++){
-        if(!this._ports[i].container_port){
-            continue;
-        }
-        var port = {
-            "name":this._ports[i].name,
-            "containerPort":this._ports[i].container_port
-        };
-
-        if (this._ports[i].hostPort ){
-            port.hostPort = this._ports[i].hostPort ;
-        }
-        
-        container.ports.push(port);
-    }
-
-    for(var i=0;i< this._mounts.length;i++){
-        var ori = this._mounts[i];
-        if(!ori.from || !ori.to){
-            continue;
-        }
-        var mount = {
-            "name":ori.name,
-            "mountPath":ori.to
-        };
-        if(ori.opt){
-            if(true == ori.readOnly){
-                mount.readOnly = true;
-            }
-        }
-        container.volumeMounts.push(mount);
-    }
+    utils.assign_volumes_to_json_container(container, this.GetMountList());
 
     return container;
+  }
 
 }
+
 
 module.exports = Container;

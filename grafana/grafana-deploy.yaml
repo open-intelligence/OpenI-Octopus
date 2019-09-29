@@ -15,7 +15,7 @@ spec:
         component: core
     spec:
       nodeSelector:
-        hardware-type: NVIDIAGPU
+        openinode: "worker"
       containers:
       - image: grafana/grafana:6.2.0
         name: grafana

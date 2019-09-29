@@ -1,7 +1,7 @@
 'use strict';
 
 module.exports = app => {
-  const {TEXT, STRING, INTEGER,ENUM } = app.Sequelize;
+  const { TEXT, STRING, INTEGER, ENUM } = app.Sequelize;
 
   const JobPlatform = app.model.define('JobPlatform', {
     id: {
@@ -41,9 +41,9 @@ module.exports = app => {
       defaultValue: '',
     },
     action: {
-        field: 'action',
-        type: ENUM('debug', 'no_debug', 'ssh', 'no_ssh'),
-        allowNull: false,
+      field: 'action',
+      type: ENUM('debug', 'no_debug', 'ssh', 'no_ssh'),
+      allowNull: false,
     },
   }, {
     comment: '任务平台表',

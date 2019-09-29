@@ -17,6 +17,7 @@ class CommonController extends Controller {
     const { itemKey, itemValue, itemName, typeKey, description } = ctx.request.body;
 
     const commonItem = await service.common.createCommonTypeItem(typeKey, { itemKey, itemValue, itemName, description });
+
     ctx.success(commonItem);
   }
 

@@ -8,7 +8,19 @@
 
 # Logs
 *.log
+logs
 
 # Sourcemap
 *.js.map
 yarn.lock
+
+npm-debug.log
+yarn-error.log
+node_modules/
+coverage/
+.idea/
+run/
+.DS_Store
+*.sw*
+*.un~
+run

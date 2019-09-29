@@ -1,8 +1,0 @@
-FROM mysql:5.7.25
-
-ENV RUN_DIR /docker-entrypoint-initdb.d
-
-HEALTHCHECK CMD mysqladmin -uroot -proot ping
-
-COPY copied_file/mysql-db/installdb/ $RUN_DIR/
-

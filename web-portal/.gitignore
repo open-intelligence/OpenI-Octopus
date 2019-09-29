@@ -1,0 +1,20 @@
+#build
+dist
+
+#node modules
+
+node_modules
+
+# .umi
+
+.umi
+
+src/pages/.umi
+
+.umi_production
+.idea/
+run/
+.DS_Store
+*.sw*
+*.un~
+logs

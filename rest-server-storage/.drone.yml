@@ -1,0 +1,33 @@
+kind: pipeline
+name: pipeline-octopus-rest-server-storage
+platform:
+  os: linux
+  arch: amd64
+steps:
+- name: containerize
+  image: docker
+  volumes:
+#  - name: dockerlib
+#    path: /var/lib/docker
+  - name: dockersock
+    path: /var/run/docker.sock
+  - name: drone
+    path: /etc/drone
+  commands:
+  - . /etc/drone/env.sh
+  - . /etc/drone/docker_build.sh
+
+trigger:
+  event:
+  - tag
+
+volumes:
+- name: dockerlib
+  host:
+    path: /var/lib/docker
+- name: dockersock
+  host:
+    path: /var/run/docker.sock
+- name: drone
+  host:
+    path: /etc/drone

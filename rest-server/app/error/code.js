@@ -106,9 +106,43 @@ exports.INCOMPLETE_INFO = {
  *     }
  */
 exports.OVER_MAX_SIZE = {
-    code: 'S204',
-    msg: 'OVER MAX SIZE',
+  code: 'S204',
+  msg: 'OVER MAX SIZE',
 };
+
+
+/**
+ * @apiDefine UserExistedError
+ * @apiError (Errors) UserExistedError format error.
+ * @apiErrorExample {json} UserExistedError-Response:
+ *     HTTP/1.1 200
+ *     {
+ *       "code": "S205",
+ *       "msg": "USERNAME IS EXISTED"
+ *     }
+ */
+
+exports.USERNAME_EXISTED = {
+  code: 'S205',
+  msg: 'USERNAME IS EXISTED',
+};
+
+
+/**
+ * @apiDefine EmailExistedError
+ * @apiError (Errors) EmailExistedError format error.
+ * @apiErrorExample {json} EmailExistedError-Response:
+ *     HTTP/1.1 200
+ *     {
+ *       "code": "S206",
+ *       "msg": "EMAIL IS EXISTED"
+ *     }
+ */
+exports.EMAIL_EXISTED = {
+  code: 'S206',
+  msg: 'EMAIL IS EXISTED',
+};
+
 
 /**
  * @apiDefine ResourceOverloadError

@@ -1,8 +1,0 @@
-#!/bin/bash
-
-
-{% for host in machinelist %}
-    {% if 'mysql-db' in machinelist[ host ] and machinelist[ host ][ 'mysql-db' ] == 'true' %}
-kubectl label nodes {{ machinelist[ host ][ 'nodename' ] }} mysql-db=true
-    {% endif %}
-{% endfor %}

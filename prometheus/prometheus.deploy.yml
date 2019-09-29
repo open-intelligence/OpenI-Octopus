@@ -17,7 +17,7 @@ spec:
         app: prometheus
     spec:
       nodeSelector:
-        hardware-type: NVIDIAGPU
+        openinode: "worker"
       containers:
       - image: prom/prometheus:v2.0.0
         name: prometheus

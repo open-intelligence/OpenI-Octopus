@@ -1,6 +1,5 @@
 'use strict';
 
-
 const ECode = require('../error/code');
 const WHITE_PATHS = /^\/api\/v1\/(user|token|ogz|third)/;
 
@@ -12,15 +11,25 @@ module.exports = () => {
     }
 
     const userModel = ctx.app.model.User;
+
     const UserStatus = userModel.constants.status;
-    let { user } = ctx.state;
-    if (user) {
-      user = await ctx.service.user.getUserInfoByIdOrUserName(user.username);
+
+    let { user:{username} } = ctx.state;
+
+    let userInfo = null
+    
+    if (username) {
+        userInfo = await ctx.service.user.getUserInfoByIdOrUserName(username);
     }
 
-    if (user && UserStatus.ALLOW_ACTIVE !== user.status) {
-      return ctx.failure(ECode.INCOMPLETE_INFO.code, ECode.INCOMPLETE_INFO.msg, { userStatus: user.status });
+    if("default" == ctx.state.user.org_id && userInfo && userInfo.orgId){
+        ctx.state.user.org_id =  userInfo.orgId;
     }
+
+    if (userInfo && UserStatus.ALLOW_ACTIVE !== userInfo.status) {
+      return ctx.failure(ECode.INCOMPLETE_INFO.code, ECode.INCOMPLETE_INFO.msg, { userStatus: userInfo.status });
+    }
+
     await next();
   };
 };

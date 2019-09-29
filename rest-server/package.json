@@ -30,7 +30,8 @@
     "mysql2": "^1.6.4",
     "nanoid": "^2.0.1",
     "request": "^2.88.0",
-    "unirest": "^0.6.0"
+    "unirest": "^0.6.0",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "autod": "^3.0.1",
@@ -46,17 +47,17 @@
     "node": ">=8.9.0"
   },
   "scripts": {
-    "start": "egg-scripts start --workers=3 --title=egg-server-rest-server",
+    "start": "npm run doc && egg-scripts start --workers=3 --title=egg-server-rest-server",
     "stop": "egg-scripts stop --title=egg-server-rest-server",
-    "dev": "egg-bin dev",
+    "dev": "npm run doc && egg-bin dev",
     "debug": "egg-bin debug",
-    "test": "npm run lint -- --fix && npm run test-local",
+    "test": "echo 'go testing' || $(npm run lint -- --fix && npm run test-local)",
     "test-local": "egg-bin test",
     "cov": "egg-bin cov",
     "lint": "eslint .",
     "ci": "npm run lint && npm run cov",
     "autod": "autod",
-    "doc": "apidoc -i app/ -o doc/"
+    "doc": "apidoc -i app/routes -i app/error/ -o app/apidoc/"
   },
   "ci": {
     "version": "8"

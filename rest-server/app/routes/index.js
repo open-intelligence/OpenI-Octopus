@@ -1,6 +1,5 @@
 'use strict';
-// const path = require('path');
-// const util = require('../../util');
+
 const ProxyMethods = [ 'get', 'put', 'post', 'delete' ];
 
 class Routes {

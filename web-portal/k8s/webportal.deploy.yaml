@@ -1,0 +1,65 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: web-portal
+  namespace: kube-system
+  labels:
+    app: web-portal
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: web-portal
+    spec:
+      nodeSelector:
+        openinode: "worker"
+      containers:
+        - image: openi/webportal:1.6
+          imagePullPolicy: Always
+          name: web-portal
+          # env:
+          resources:
+            # keep request = limit to keep this container in guaranteed class
+            limits:
+              cpu: 2
+              memory: 2Gi
+            requests:
+              cpu: 2
+              memory: 2Gi
+          ports:
+            - name: web-portal
+              containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-portal-svc
+  namespace: kube-system
+  labels:
+    app: web-portal
+spec:
+  type: NodePort
+  ports:
+  - port: 8080
+    targetPort: 8080
+  selector:
+    app: web-portal
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: web-portal-ingress
+  namespace: kube-system
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /openi
+        backend:
+          serviceName: web-portal-svc
+          servicePort: 8080
+      - path: /
+        backend:
+          serviceName: web-portal-svc
+          servicePort: 8080

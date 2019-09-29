@@ -98,7 +98,6 @@ module.exports = app => {
 
   User.associate = function() {
     User.belongsTo(app.model.Organization, { foreignKey: 'orgId', constraints: false });
-    User.hasMany(app.model.ThirdUser, { foreignKey: 'userId', constraints: false });
   };
 
   User.constants = constants;

@@ -48,12 +48,6 @@ module.exports = app => {
       singular: 'organization',
       plural: 'organizations',
     },
-    indexes: [
-      { fields: [ 'names' ] },
-      { fields: [ 'ids' ] },
-      { fields: [ 'pid' ] },
-      { fields: [ 'name' ] },
-    ],
   });
 
   Organization.associate = function() {

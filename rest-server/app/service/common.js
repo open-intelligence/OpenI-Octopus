@@ -3,7 +3,7 @@
 const Service = require('egg').Service;
 const LError = require('../error/proto');
 const ECode = require('../error/code');
-const utils = require('../../util');
+const utils = require('../utils');
 
 class CommonService extends Service {
   constructor(...args) {

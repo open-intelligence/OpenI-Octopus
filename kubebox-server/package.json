@@ -15,7 +15,8 @@
     "browserify-debug": "browserify --debug -r ./lib/config/context.js:context -r ./lib/http-then.js:http-then -r ./lib/kubebox.js:kubebox -r blessed -r urijs -i pty.js | exorcist docs/kubebox.js.map > docs/kubebox.js",
     "bundle": "browserify index.js -o bundle.js -i pty.js --bare",
     "executable": "nexe package.json",
-    "server": "node ./docs/server.js"
+    "server": "node ./docs/server.js",
+    "test":"echo 'test null'"
   },
   "pkg": {
     "scripts": "node_modules/blessed/lib/widgets/*.js",

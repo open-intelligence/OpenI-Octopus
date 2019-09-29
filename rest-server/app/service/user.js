@@ -1,7 +1,24 @@
+// Copyright (c) Microsoft Corporation
+// All rights reserved.
+//
+// MIT License
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+// documentation files (the "Software"), to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and
+// to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED *AS IS*, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING
+// BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 'use strict';
 
 const Service = require('egg').Service;
-const CryptoUtil = require('../../util/crypto.js');
+const CryptoUtil = require('../utils/crypto');
 const LError = require('../error/proto');
 const ECode = require('../error/code');
 const _ = require('lodash');
@@ -49,6 +66,7 @@ class UserService extends Service {
     }
 
     user.admin = !!user.admin;
+
     return user;
   }
 
@@ -85,6 +103,9 @@ class UserService extends Service {
   }
 
   toggleUserStatus(userInfo) {
+    
+    userInfo.orgId = userInfo.orgId || "default";
+
     if (userInfo.email && userInfo.fullName && userInfo.orgId && userInfo.teacher && userInfo.phone) {
       userInfo.status = this.userModel.constants.status.ALLOW_ACTIVE;
     } else {
@@ -151,7 +172,7 @@ class UserService extends Service {
     });
   }
 
-  async getUserList({ inWhite }, pageIndex = 1, pageSize = 20, searchKey = '') {
+  async getUserList({ inWhite }, pageIndex = 1, pageSize = 20,searchKey = "") {
     const condition = {};
     const whiteList = await this.loadCheckWhiteList();
     if (inWhite === '0') {
@@ -160,11 +181,11 @@ class UserService extends Service {
       condition.username = { $in: whiteList };
     }
 
-    searchKey = searchKey || '';
+    searchKey = searchKey || "";
 
-    if (searchKey && searchKey.trim().length > 0) {
-      searchKey = searchKey + '%';
-      condition.$or = { username: { $like: searchKey }, fullName: { $like: searchKey } };
+    if(searchKey && searchKey.trim().length > 0){
+       searchKey =searchKey+"%";
+       condition['$or'] = {username:{$like:searchKey},fullName:{$like:searchKey}}
     }
 
     const users = await this.userModel.findAndCountAll({
@@ -179,7 +200,7 @@ class UserService extends Service {
     });
 
     const rows = [];
-
+    
     for (let user of users.rows) {
       user = user.get ? user.get() : user;
       if (whiteList.indexOf(user.username) > -1) {
@@ -263,6 +284,9 @@ class UserService extends Service {
 
     return false;
   }
+
+
+
 }
 
 module.exports = UserService;

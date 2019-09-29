@@ -15,7 +15,7 @@ class OrganizationController extends Controller {
   async listOrganizations() {
     const { ctx, service } = this;
     let organizations = await service.organization.listOrganizations();
-    organizations = await service.organization.formatOgzs(organizations)
+    organizations = await service.organization.formatOgzs(organizations);
     ctx.success(organizations);
   }
 }

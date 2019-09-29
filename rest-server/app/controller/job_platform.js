@@ -22,7 +22,7 @@ class JobPlatformController extends Controller {
 
   async listJobPlatformWithImageSets() {
     const { ctx, service } = this;
-      const { user } = ctx.state;
+    const { user } = ctx.state;
     const jobPlatform = await service.jobPlatform.listJobPlatformWithImageSets(user);
     ctx.success(jobPlatform);
   }

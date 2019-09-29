@@ -1,9 +1,8 @@
 'use strict';
 
 module.exports = (app, router) => {
-  /** Load job when API with jobName route parameter is hit */
-  const convertJobNameHandler = app.middleware.convertJobNameHandler();
-  const checkUserIsAdmin = app.middleware.checkUserIsAdmin();
+
+  // const checkUserIsAdmin = app.middleware.checkUserIsAdmin();
   // const checkUserWhiteList = app.middleware.checkUserWhiteList();
 
   /**
@@ -56,9 +55,11 @@ module.exports = (app, router) => {
    */
   router.get('/', 'job.list');
 
+
   /**/
-  router.post('/:jobName/commitImage', 'job.commitImage');
-  router.get('/:jobName/queryImage', 'job.queryImageStatus');
+  router.post('/:jobId/commitImage', 'job.commitImage');
+  router.get('/:jobId/queryImage', 'job.queryImageStatus');
+
 
   /**
    * @api {POST} /api/v1/jobs CreateJob
@@ -121,7 +122,7 @@ module.exports = (app, router) => {
    * @apiUse OperationForbiddenError
    * @apiUse InvalidParameterError
    */
-  router.post('/', convertJobNameHandler, 'job.excute');
+  router.post('/', 'job.excute');
 
   /**
    * @api {GET} /api/v1/jobs/limit GetJobLimit
@@ -170,7 +171,7 @@ module.exports = (app, router) => {
   router.get('/limit', 'job.getCheckLimit');
 
   /**
-   * @api {GET} /api/v1/jobs/:jobName GetJobInfo
+   * @api {GET} /api/v1/jobs/:jobId GetJobInfo
    * @apiSampleRequest off
    * @apiName GetJobInfo
    * @apiDescription get the info of a job. <code>Administrator Only</code>
@@ -183,7 +184,7 @@ module.exports = (app, router) => {
    *  "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
    * }
    *
-   * @apiParam {String} jobName The name of job. <code>required</code>
+   * @apiParam {String} jobId The id of job. <code>required</code>
    * @apiParamExample {json} Request-Example:
    *  GET /api/v1/jobs/job-11111
    *
@@ -249,7 +250,7 @@ module.exports = (app, router) => {
    *
    * @apiUse OperationForbiddenError
    */
-  router.get('/:jobName', 'job.get');
+  router.get('/:jobId', 'job.get');
 
   /**
    * @api {PUT} /api/v1/jobs/:jobName CreateJob_v2
@@ -316,7 +317,7 @@ module.exports = (app, router) => {
   router.put('/:jobName', 'job.excute');
 
   /**
-   * @api {DELETE} /api/v1/jobs/:jobName DeleteJob
+   * @api {DELETE} /api/v1/jobs/:jobId DeleteJob
    * @apiSampleRequest off
    * @apiName DeleteJob
    * @apiDescription delete a job. <code>Administrator Only</code>
@@ -329,7 +330,7 @@ module.exports = (app, router) => {
    *  "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
    * }
    *
-   * @apiParam {String} jobName The name of Job. <code>required</code>
+   * @apiParam {String} jobId The id of Job. <code>required</code>
    * @apiParamExample {json} Request-Example:
    *  DELETE /api/v1/jobs/job-1111
    *
@@ -344,46 +345,47 @@ module.exports = (app, router) => {
    *
    * @apiUse OperationForbiddenError
    */
-  router.delete('/:jobName', 'job.stop');
+  router.delete('/:jobId', 'job.stop');
 
-  // /**
-  //  * @api {PUT} /api/v1/jobs/:jobName/executionType ExecJob
-  //  * @apiSampleRequest off
-  //  * @apiName ExecJob
-  //  * @apiDescription send a executionType to Job
-  //  * @apiVersion 1.0.0
-  //  * @apiGroup Job
-  //  *
-  //  * @apiHeader {String} Authorization Bearer {token} <code>required</code>
-  //  * @apiHeaderExample {json} Header-Example:
-  //  * {
-  //  *  "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  //  * }
-  //  *
-  //  * @apiParam {String} jobName The name of Job. <code>required</code>
-  //  * @apiParam {String="START","STOP"} value The value of execution. <code>required</code>
-  //  * @apiParamExample {json} Request-Example:
-  //  * PUT /api/v1/jobs/job-1111/executionType
-  //  * {
-  //  *  value: "STOP"
-  //  * }
-  //  *
-  //  * @apiSuccess {String} code Equal to 'S000' when successfully.
-  //  * @apiSuccess {String} msg Equal to 'success' when successfully.
-  //  * @apiSuccessExample Success-Response:
-  //  *  HTTP/1.1 200 OK
-  //  *  {
-  //  *   "code": "S000",
-  //  *   "msg": "success",
-  //  *  }
-  //  *
-  //  * @apiUse LackParameterError
-  //  * @apiUse OperationForbiddenError
-  //  */
+  /**
+   * @apiDeprecated
+   * @api {PUT} /api/v1/jobs/:jobName/executionType ExecJob
+   * @apiSampleRequest off
+   * @apiName ExecJob
+   * @apiDescription send a executionType to Job
+   * @apiVersion 1.0.0
+   * @apiGroup Job
+   *
+   * @apiHeader {String} Authorization Bearer {token} <code>required</code>
+   * @apiHeaderExample {json} Header-Example:
+   * {
+   *  "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+   * }
+   *
+   * @apiParam {String} jobName The name of Job. <code>required</code>
+   * @apiParam {String="START","STOP"} value The value of execution. <code>required</code>
+   * @apiParamExample {json} Request-Example:
+   * PUT /api/v1/jobs/job-1111/executionType
+   * {
+   *  value: "STOP"
+   * }
+   *
+   * @apiSuccess {String} code Equal to 'S000' when successfully.
+   * @apiSuccess {String} msg Equal to 'success' when successfully.
+   * @apiSuccessExample Success-Response:
+   *  HTTP/1.1 200 OK
+   *  {
+   *   "code": "S000",
+   *   "msg": "success",
+   *  }
+   *
+   * @apiUse LackParameterError
+   * @apiUse OperationForbiddenError
+   */
   // router.put('/:jobName/executionType', 'job.execute');
 
   /**
-   * @api {GET} /api/v1/jobs/:jobName/config GetJobConfig
+   * @api {GET} /api/v1/jobs/:jobId/config GetJobConfig
    * @apiSampleRequest off
    * @apiName GetJobConfig
    * @apiDescription get the config of Job.
@@ -396,7 +398,7 @@ module.exports = (app, router) => {
    *  "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
    * }
    *
-   * @apiParam {String} jobName The username of User Account. <code>required</code>
+   * @apiParam {String} jobId The jobId of  job. <code>required</code>
    * @apiParamExample {json} Request-Example:
    * GET /api/v1/jobs/job-1111/config
    *
@@ -444,90 +446,92 @@ module.exports = (app, router) => {
    * @apiUse LackParameterError
    * @apiUse OperationForbiddenError
    */
-  router.get('/:jobName/config', 'job.getConfig');
+  router.get('/:jobId/config', 'job.getConfig');
 
-  // /**
-  //  * @api {GET} /api/v1/jobs/:jobName/ssh GetJobSshInfo
-  //  * @apiSampleRequest off
-  //  * @apiName GetJobSshInfo
-  //  * @apiDescription get the ssh info of Job.
-  //  * @apiVersion 1.0.0
-  //  * @apiGroup Job
-  //  *
-  //  * @apiHeader {String} Authorization Bearer {token} <code>required</code>
-  //  * @apiHeaderExample {json} Header-Example:
-  //  * {
-  //  *  "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  //  * }
-  //  *
-  //  * @apiParam {String} jobName The username of User Account. <code>required</code>
-  //  * @apiParamExample {json} Request-Example:
-  //  * GET /api/v1/jobs/job-1111/ssh
-  //  *
-  //  * @apiSuccess {String} code Equal to 'S000' when successfully.
-  //  * @apiSuccess {String} msg Equal to 'success' when successfully.
-  //  * @apiSuccess {Object} payload. The ssh info of Job.
-  //  * @apiSuccess {Object[]} payload.containers The containers of Job running.
-  //  * @apiSuccess {String} payload.containers.id Container id.
-  //  * @apiSuccess {String} payload.containers.sshIp Container ip.
-  //  * @apiSuccess {Number} payload.containers.sshPort Container port.
-  //  * @apiSuccess {Object} payload.keyPair The RSA Key.
-  //  * @apiSuccess {String} payload.keyPair.privateKey Key Value.
-  //  * @apiSuccess {String} payload.keyPair.privateKeyFileName Key FileName.
-  //  * @apiSuccessExample Success-Response:
-  //  *  HTTP/1.1 200 OK
-  //  *  {
-  //  *   "code": "S000",
-  //  *   "msg": "success",
-  //  *   "payload":{
-  //  *    "containers":[{
-  //  *     "id":"container_e14_111111",
-  //  *     "sshIp":"192.168.1.1",
-  //  *     "sshPort":10000
-  //  *    }],
-  //  *    "keyPair":{
-  //  *     "privateKey":"-----BEGIN RSA PRIVATE KEY-----...-----END RSA PRIVATE KEY-----",
-  //  *     "privateKeyFileName":"application_111111"}
-  //  *    }
-  //  *   }
-  //  *  }
-  //  *
-  //  * @apiUse NotFoundError
-  //  * @apiUse LackParameterError
-  //  * @apiUse OperationForbiddenError
-  //  */
+  /**
+   * @apiDeprecated
+   * @api {GET} /api/v1/jobs/:jobName/ssh GetJobSshInfo
+   * @apiSampleRequest off
+   * @apiName GetJobSshInfo
+   * @apiDescription get the ssh info of Job.
+   * @apiVersion 1.0.0
+   * @apiGroup Job
+   *
+   * @apiHeader {String} Authorization Bearer {token} <code>required</code>
+   * @apiHeaderExample {json} Header-Example:
+   * {
+   *  "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+   * }
+   *
+   * @apiParam {String} jobName The username of User Account. <code>required</code>
+   * @apiParamExample {json} Request-Example:
+   * GET /api/v1/jobs/job-1111/ssh
+   *
+   * @apiSuccess {String} code Equal to 'S000' when successfully.
+   * @apiSuccess {String} msg Equal to 'success' when successfully.
+   * @apiSuccess {Object} payload. The ssh info of Job.
+   * @apiSuccess {Object[]} payload.containers The containers of Job running.
+   * @apiSuccess {String} payload.containers.id Container id.
+   * @apiSuccess {String} payload.containers.sshIp Container ip.
+   * @apiSuccess {Number} payload.containers.sshPort Container port.
+   * @apiSuccess {Object} payload.keyPair The RSA Key.
+   * @apiSuccess {String} payload.keyPair.privateKey Key Value.
+   * @apiSuccess {String} payload.keyPair.privateKeyFileName Key FileName.
+   * @apiSuccessExample Success-Response:
+   *  HTTP/1.1 200 OK
+   *  {
+   *   "code": "S000",
+   *   "msg": "success",
+   *   "payload":{
+   *    "containers":[{
+   *     "id":"container_e14_111111",
+   *     "sshIp":"192.168.1.1",
+   *     "sshPort":10000
+   *    }],
+   *    "keyPair":{
+   *     "privateKey":"-----BEGIN RSA PRIVATE KEY-----...-----END RSA PRIVATE KEY-----",
+   *     "privateKeyFileName":"application_111111"}
+   *    }
+   *   }
+   *  }
+   *
+   * @apiUse NotFoundError
+   * @apiUse LackParameterError
+   * @apiUse OperationForbiddenError
+   */
   // router.get('/:jobName/ssh', 'job.getSshInfo');
 
-  // /**
-  //  * @api {GET} /api/v1/jobs/:jobName/:containerId/ssh/file DownloadJobSshFile
-  //  * @apiSampleRequest off
-  //  * @apiName DownloadJobSshFile
-  //  * @apiDescription download the ssh file of Job.
-  //  * @apiVersion 1.0.0
-  //  * @apiGroup Job
-  //  *
-  //  * @apiHeader {String} Authorization Bearer {token} <code>required</code>
-  //  * @apiHeaderExample {json} Header-Example:
-  //  * {
-  //  *  "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-  //  * }
-  //  *
-  //  * @apiParam {String} jobName The name of job. <code>required</code>
-  //  * @apiParam {String} containerId The containerId of sub job. <code>required</code>
-  //  * @apiParam {String="bat","sh"} e The suffix name of file.
-  //  * @apiParamExample {json} Request-Example:
-  //  * GET /api/v1/jobs/job-1111/container_e15_1552463696557_3187_01_000005/ssh/file?e=bat
-  //  *
-  //  * @apiSuccessExample Success-Response:
-  //  *  HTTP/1.1 200 OK
-  //  *  Content-Disposition:attachment; filename="application_111111.bat"
-  //  *  Content-Type:application/octet-stream
-  //  *
-  //  * @apiUse NotFoundError
-  //  * @apiUse LackParameterError
-  //  * @apiUse OperationForbiddenError
-  //  */
+  /**
+   * @apiDeprecated
+   * @api {GET} /api/v1/jobs/:jobName/:containerId/ssh/file DownloadJobSshFile
+   * @apiSampleRequest off
+   * @apiName DownloadJobSshFile
+   * @apiDescription download the ssh file of Job.
+   * @apiVersion 1.0.0
+   * @apiGroup Job
+   *
+   * @apiHeader {String} Authorization Bearer {token} <code>required</code>
+   * @apiHeaderExample {json} Header-Example:
+   * {
+   *  "Authorization":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+   * }
+   *
+   * @apiParam {String} jobName The name of job. <code>required</code>
+   * @apiParam {String} containerId The containerId of sub job. <code>required</code>
+   * @apiParam {String="bat","sh"} e The suffix name of file.
+   * @apiParamExample {json} Request-Example:
+   * GET /api/v1/jobs/job-1111/container_e15_1552463696557_3187_01_000005/ssh/file?e=bat
+   *
+   * @apiSuccessExample Success-Response:
+   *  HTTP/1.1 200 OK
+   *  Content-Disposition:attachment; filename="application_111111.bat"
+   *  Content-Type:application/octet-stream
+   *
+   * @apiUse NotFoundError
+   * @apiUse LackParameterError
+   * @apiUse OperationForbiddenError
+   */
   // router.get('/:jobName/:containerId/ssh/file', 'job.getSshFile');
 
-  router.param('jobName', convertJobNameHandler);
+  router.get('/status/summary', 'job.getSummaryStatus');
 };

@@ -2,9 +2,7 @@
 const _ = require('lodash');
 const Service = require('egg').Service;
 const marked = require('marked');
-const LError = require('../error/proto');
-const ECode = require('../error/code');
-const utils = require('../../util');
+const utils = require('../utils');
 
 class ImageSetService extends Service {
   constructor(...args) {
@@ -38,10 +36,10 @@ class ImageSetService extends Service {
     });
     const images = {};
     for (const dbImage of dbImages) {
-      try{
-          dbImage.dataValues.description = marked(dbImage.dataValues.description);
-      }catch (e) {
-          this.logger.error("getImageSetList error",e);
+      try {
+        dbImage.dataValues.description = marked(dbImage.dataValues.description);
+      } catch (e) {
+        this.logger.error('getImageSetList error', e);
       }
 
       images[dbImage.dataValues.id] = dbImage.dataValues;
@@ -49,35 +47,34 @@ class ImageSetService extends Service {
     return images;
   }
 
-  async addImage(username,imagePath,bindingGPUTypeArray,imageDescription=""){
+  async addImage(username, imagePath, bindingGPUTypeArray, imageDescription = '') {
 
-      let imageInfo = {
-          name: username,
-          place: imagePath,
-          description: imageDescription,
-          provider:username,
-          createtime: new Date()
+    const imageInfo = {
+      name: username,
+      place: imagePath,
+      description: imageDescription,
+      provider: username,
+      createtime: new Date(),
+    };
+
+    await this.imageSetModel.upsert(imageInfo);
+
+    const imageIdInfo = await this.imageSetModel.findOne({
+      raw: true,
+      attributes: [ 'id' ],
+      where: { name: username },
+    });
+
+    for (const gpuTypeItem of bindingGPUTypeArray) {
+      const imageSetJobPlatformRelationInfo = {
+        imageSetId: imageIdInfo.id,
+        jobPlatformId: gpuTypeItem.id,
       };
 
-      await this.imageSetModel.upsert(imageInfo);
+      await this.imageSetJobPlatformRelationModel.upsert(imageSetJobPlatformRelationInfo);
+    }
 
-      let imageIdInfo = await this.imageSetModel.findOne({
-          raw: true,
-          attributes: ['id'],
-          where: { name: username },
-      });
-
-      for(let gpuTypeItem of bindingGPUTypeArray)
-      {
-          let imageSetJobPlatformRelationInfo = {
-              imageSetId: imageIdInfo.id,
-              jobPlatformId: gpuTypeItem.id
-          };
-
-          await this.imageSetJobPlatformRelationModel.upsert(imageSetJobPlatformRelationInfo);
-      }
-
-      return imageIdInfo;
+    return imageIdInfo;
   }
 }
 

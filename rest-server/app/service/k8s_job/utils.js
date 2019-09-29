@@ -1,83 +1,101 @@
+'use strict';
+
+const LError = require('../../error/proto');
+const ECode = require('../../error/code');
+
+const Constants = require('./constants');
 
 
-function computeJobResource(job,limits){
-  
-    const jobTasks = job.taskRoles;
-  
-    const limitKeys = Object.keys(limits);
-  
-    const jobResource = {};
-  
-    if (limitKeys.length < 1) {
-      return jobResource;
-    }
-  
-    jobTasks instanceof Array && jobTasks.forEach(jobTask => {
-      limitKeys.forEach(k => {
-        if (!jobResource[k]) {
-          jobResource[k] = 0;
-        }
-        if (!jobTask[k]) {
-          return;
-        }
-        if (k === 'taskNumber') {
-          jobResource[k] += parseInt(jobTask[k]);
-          return;
-        }
-        jobResource[k] += parseInt(jobTask[k]) * parseInt(jobTask.taskNumber);
-      });
-    });
-  
-    return jobResource;
+/**
+ * @param {String} next_state state of job
+ * @return {Array} valid state list
+ * @api private
+ */
+
+function current_valid_state(next_state) {
+
+  if (Constants.FRAMEWORK_STATUS.UNKNOWN === next_state) {
+    return [
+      Constants.FRAMEWORK_STATUS.WAITING,
+      Constants.FRAMEWORK_STATUS.RUNNING,
+      Constants.FRAMEWORK_STATUS.FAILED,
+      Constants.FRAMEWORK_STATUS.STOPPED,
+      Constants.FRAMEWORK_STATUS.SUCCEEDED,
+      Constants.FRAMEWORK_STATUS.UNKNOWN,
+    ];
   }
 
-function caculate_resource(job,resources){
-    let count = {};
-
-    resources = resources || [];
-
-    resources.forEach(it=>{
-      count[it] = 0;
-    })
-
-    let tasks = job.taskRoles || [];
-
-    tasks.forEach(item=>{
-      resources.forEach(resource=>{
-        count[resource] += parseInt(item[resource]) * parseInt(item["taskNumber"] || 0)
-       })
-    });
-
-    return count;
+  if (Constants.FRAMEWORK_STATUS.RUNNING === next_state) {
+    return [
+      Constants.FRAMEWORK_STATUS.WAITING,
+      Constants.FRAMEWORK_STATUS.UNKNOWN,
+      next_state,
+    ];
   }
 
-function promisefy(func){
-    return function(){
-       let args = [].slice.call(arguments);
-       return new Promise(function(resolve,reject){
-         args.push(function(){
-           let ress = [].slice.call(arguments);
-           if(ress[0]){
-              reject(ress[0]);
-           }else{
-             ress.shift();
-             resolve(ress);
-           }
-        });
-        func.apply(null,args);
-       });
+  if (Constants.FRAMEWORK_STATUS.WAITING === next_state) {
+    return [
+      Constants.FRAMEWORK_STATUS.UNKNOWN,
+      next_state,
+    ];
+  }
+
+
+  const exited_state = [
+    Constants.FRAMEWORK_STATUS.FAILED,
+    Constants.FRAMEWORK_STATUS.STOPPED,
+    Constants.FRAMEWORK_STATUS.SUCCEEDED,
+  ];
+
+  if (exited_state.includes(next_state)) {
+    return [
+      Constants.FRAMEWORK_STATUS.UNKNOWN,
+      Constants.FRAMEWORK_STATUS.WAITING,
+      Constants.FRAMEWORK_STATUS.RUNNING,
+      next_state,
+    ];
+  }
+
+  return [];
+}
+
+
+/**
+ *
+ * @param {JSON} job_config config of the job
+ * @api public
+ */
+function checkMinTaskNumber(job_config) {
+
+  let ok = true;
+
+  for (let i = 0; i < job_config.taskRoles.length; i++) {
+
+    const role = job_config.taskRoles[i];
+
+    if ((role.minFailedTaskCount || 0) > role.taskNumber) {
+      ok = false;
     }
+
+    if ((role.minSucceededTaskCount || 0) > role.taskNumber) {
+      ok = false;
+    }
+
+    if (ok === false) {
+      break;
+    }
+
+  }
+
+  if (ok === true) {
+    return;
+  }
+
+  throw new LError(ECode.INVALID_PARAM, 'minFailedTaskCount or minSucceededTaskCount should not be greater than tasks number.');
+
 }
 
-function format_framework_name(name){
 
-   return　(name || "").split("-").join("00");
-}
+exports.current_valid_state = current_valid_state;
 
-exports.promisefy = promisefy;
-
-exports.computeJobResource = computeJobResource;
-
-exports.caculate_resource = caculate_resource;
-
-exports.format_framework_name = format_framework_name;
+exports.checkMinTaskNumber = checkMinTaskNumber;

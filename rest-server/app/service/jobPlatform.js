@@ -41,56 +41,50 @@ class JobPlatformService extends Service {
       },
     });
 
-    if(!user.admin){
-        let username = user.username;
+    if (!user.admin) {
+      const username = user.username;
 
-        const typeBlackWhiteList = await this.typeBlackWhiteListModel.findAll({
-            attributes: [ 'type', 'local_limit', 'local_users', 'global_limit' ],
-        });
+      const typeBlackWhiteList = await this.typeBlackWhiteListModel.findAll({
+        attributes: [ 'type', 'local_limit', 'local_users', 'global_limit' ],
+      });
 
-        let typeBlackWhiteMap = {};
-        for(let typeBlackWhiteItem of typeBlackWhiteList)
-        {
-            typeBlackWhiteMap[typeBlackWhiteItem.dataValues.type] = typeBlackWhiteItem.dataValues;
-        }
+      const typeBlackWhiteMap = {};
+      for (const typeBlackWhiteItem of typeBlackWhiteList) {
+        typeBlackWhiteMap[typeBlackWhiteItem.dataValues.type] = typeBlackWhiteItem.dataValues;
+      }
 
-        jobPlatforms = jobPlatforms.filter((jobPlatformInfo)=>{
+      jobPlatforms = jobPlatforms.filter(jobPlatformInfo => {
 
-              let typeBlackWhiteLimitInfo = typeBlackWhiteMap[jobPlatformInfo.platformKey];
+        const typeBlackWhiteLimitInfo = typeBlackWhiteMap[jobPlatformInfo.platformKey];
 
-              if(typeBlackWhiteLimitInfo)
-              {
-                //shouled return job platform info to webportal?
-                if(typeBlackWhiteLimitInfo.global_limit === 'black')
-                {
-                    let whiteLocalUsers = typeBlackWhiteLimitInfo.local_users.split(",");
+        if (typeBlackWhiteLimitInfo) {
+          // shouled return job platform info to webportal?
+          if (typeBlackWhiteLimitInfo.global_limit === 'black') {
+            const whiteLocalUsers = typeBlackWhiteLimitInfo.local_users.split(',');
 
-                    for(let whiteUser of whiteLocalUsers)
-                    {
-                        if(typeBlackWhiteLimitInfo.local_limit === 'white' && whiteUser === username)
-                        {
-                            return true;
-                        }
-                    }
+            for (const whiteUser of whiteLocalUsers) {
+              if (typeBlackWhiteLimitInfo.local_limit === 'white' && whiteUser === username) {
+                return true;
+              }
+            }
 
-                    return false;
-                }else if(typeBlackWhiteLimitInfo.global_limit === 'white'){
-                    let blackLocalUsers = typeBlackWhiteLimitInfo.local_users.split(",");
+            return false;
+          } else if (typeBlackWhiteLimitInfo.global_limit === 'white') {
+            const blackLocalUsers = typeBlackWhiteLimitInfo.local_users.split(',');
 
-                    for(let blackUser of blackLocalUsers)
-                    {
-                        if(typeBlackWhiteLimitInfo.local_limit === 'black' && blackUser === username)
-                        {
-                            return false;
-                        }
-                    }
-
-                    return true;
-                }
-              }else{
+            for (const blackUser of blackLocalUsers) {
+              if (typeBlackWhiteLimitInfo.local_limit === 'black' && blackUser === username) {
                 return false;
               }
-        });
+            }
+
+            return true;
+          }
+        }
+
+        return false;
+
+      });
     }
     return jobPlatforms;
   }

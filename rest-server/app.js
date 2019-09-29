@@ -1,9 +1,11 @@
 'use strict';
 
 const fse = require('fs-extra');
+
 require.extensions['.mustache'] = (module, filename) => {
   module.exports = fse.readFileSync(filename, 'utf8');
 };
+
 global.Promise = require('bluebird').Promise;
 
 module.exports = app => {
@@ -12,9 +14,7 @@ module.exports = app => {
     app.proxyDB = proxyDB;
     const jobConfigDB = await app.initJobConifgDB();
     app.jobConfigDB = jobConfigDB;
-    // init job default data
-    const ctx = await app.createAnonymousContext();
-    await ctx.service.jobProxy.initDefaultData();
+
   });
 };
 

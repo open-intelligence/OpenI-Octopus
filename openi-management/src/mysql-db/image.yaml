@@ -1,7 +1,0 @@
-copy:
-  - ../mysql-db/installdb
-
-templatelist:
-  - None
-
-prerequisite: None

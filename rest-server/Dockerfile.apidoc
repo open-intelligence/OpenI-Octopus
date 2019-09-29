@@ -1,8 +1,0 @@
-FROM node:10.15-alpine as builder
-COPY . /app
-WORKDIR /app
-RUN ["npm","install","apidoc"]
-RUN ["npm","run","doc"]
-
-FROM nginx:1.14-alpine
-COPY --from=0 /app/doc /usr/share/nginx/html

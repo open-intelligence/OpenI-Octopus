@@ -1,0 +1,38 @@
+kind: pipeline
+name: pipeline-octopus-frameworkcontroller
+platform:
+  os: linux
+  arch: amd64
+steps:
+- name: containerize
+  image: ubuntu
+  volumes:
+  - name: dockerbin
+    path: /usr/local/bin/docker
+  - name: dockersock
+    path: /var/run/docker.sock
+  - name: droneenv
+    path: /etc/drone/env.sh
+  commands:
+  - . /etc/drone/env.sh
+  - echo $DRONE_DOCKER_REGISTER_PASSWORD | docker login $DRONE_DOCKER_REGISTER_HOST -u $DRONE_DOCKER_REGISTER_USERNAME --password-stdin
+  - bash build/frameworkcontroller/docker-build.sh
+  - docker tag frameworkcontroller:latest $DRONE_DOCKER_REGISTER_HOST/${DRONE_REPO}:${DRONE_TAG}
+  - docker tag frameworkcontroller:latest $DRONE_DOCKER_REGISTER_HOST/${DRONE_REPO}:latest
+  - docker push $DRONE_DOCKER_REGISTER_HOST/${DRONE_REPO}:${DRONE_TAG}
+  - docker push $DRONE_DOCKER_REGISTER_HOST/${DRONE_REPO}:latest
+
+trigger:
+  event:
+  - tag
+
+volumes:
+- name: dockerbin
+  host:
+    path: /usr/bin/docker
+- name: dockersock
+  host:
+    path: /var/run/docker.sock
+- name: droneenv
+  host:
+    path: /etc/drone/env.sh
