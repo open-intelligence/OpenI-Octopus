@@ -51,19 +51,9 @@ OPENI以开源的模式运营：来自学术和工业界的贡献我们都非常
 
 执行以下几个步骤来部署和使用本系统。
 
-1. [部署kubernetes 1.13和系统服务](./openi-management/README.md)
-2. 使用kubernetes部署[FrameworkController服务](https://github.com/microsoft/frameworkcontroller)
-3. 访问[web门户页面](./webportal/README.md) 进行任务提交和集群管理
-
-#### Kubernetes部署
-
-平台使用Kubernetes(k8s)来部署和管理系统服务。
-想要在集群中部署k8s，请参阅k8s的部署文件[指南](./openi-management/README.md)以获取详细信息。
-
-#### 服务部署
-
-部署Kubernetes后，系统将使用其内置的k8s功能（例如configmap）来部署系统服务。
-有关详细内容，请参阅系统部署文件[指南](./openi-management/README.md)。
+1. [部署适配OpenI章鱼系统的kubernetes 1.13](https://www.processon.com/view/link/5d157ebae4b0a916e8f6bcc5)
+2. [部署OpenI章鱼系统服务](./install_openi_octopus_zh.md)
+3. 访问[web门户页面](https://github.com/open-intelligence/OpenI-Octopus/tree/k8s/web-portal) 进行任务提交和集群管理
 
 #### 作业管理
 
@@ -81,8 +71,8 @@ Web门户上也提供了Web UI进行集群的管理。
 </p>
 
 系统的整体结构如上图所示。
-用户通过[Web门户](./webportal/README.md)提交了任务作业或集群状态监视的申请，该操作会调用[Restserver服务](./rest-server/README.md)提供的API。
+用户通过Web门户提交了任务作业或集群状态监视的申请，该操作会调用[Restserver服务](https://github.com/open-intelligence/OpenI-Octopus/tree/k8s/rest-server)提供的API。
 第三方工具也可以直接调用Restserver服务进行作业管理。收到API调用后，Restserver服务会将任务作业提交到k8s ApiServer，k8s的调度引擎负责对任务作业进行调度，调度完成后任务就可以使用集群节点中的GPU资源进行深度学习运算。
-[FrameworkController服务](https://github.com/microsoft/frameworkcontroller)负责监控任务作业在K8s集群中的生命周期。Restserver服务向k8s ApiServer获取任务的状态，并且Web网页可以展示在界面上。
+[FrameworkController服务](https://github.com/open-intelligence/OpenI-Octopus/tree/k8s/frameworkcontroller)负责监控任务作业在K8s集群中的生命周期。Restserver服务向k8s ApiServer获取任务的状态，并且Web网页可以展示在界面上。
 其他基于CPU的AI工作或者传统的大数据任务作业也可以在平台上运行，与那些基于GPU的作业共存。平台训练数据和训练结果储存可根据平台/设备需求自定义。
 

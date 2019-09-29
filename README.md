@@ -55,20 +55,9 @@ And the system need [NTP](http://www.ntp.org/) service for clock synchronization
 ### Deployment process
 To deploy and use the system, the process consists of the following steps.
 
-1. [Deploy Kubernetes 1.13 and system services](./openi-management/README.md)
-2. User Kubernetes to Deploy [FrameworkController](https://github.com/microsoft/frameworkcontroller)
-3. Access [web portal](./webportal/README.md) for job submission and cluster management
-
-
-#### Kubernetes deployment
-
-The platform leverages Kubernetes (k8s) to deploy and manage system services.
-To deploy k8s in the cluster, please refer to k8s deployment [readme](./openi-management/README.md) for details.
-
-#### Service deployment
-
-After Kubernetes is deployed, the system will leverage built-in k8s features (e.g., configmap) to deploy system services.
-Please refer to service deployment [readme](./openi-management/README.md) for details.
+1. [Deploy Kubernetes 1.13 for OPENI-octopus system](https://www.processon.com/view/link/5d157ebae4b0a916e8f6bcc5)
+2. [Deploy OPENI-octopus system services](./install_openi_octopus.md)
+3. Access [web portal](https://github.com/open-intelligence/OpenI-Octopus/tree/k8s/web-portal) for job submission and cluster management
 
 #### Job management
 
@@ -86,11 +75,11 @@ The web portal also provides Web UI for cluster management.
 </p>
 
 The system architecture is illustrated above. 
-User submits jobs or monitors cluster status through the [Web Portal](./webportal/README.md), 
-which calls APIs provided by the [REST server](./rest-server/README.md).
+User submits jobs or monitors cluster status through the Web Portal, 
+which calls APIs provided by the [REST server](https://github.com/open-intelligence/OpenI-Octopus/tree/k8s/rest-server).
 Third party tools can also call REST server directly for job management.
 Upon receiving API calls, the REST server coordinates with k8s ApiServer, k8s Scheduler will schedule the job to k8s node with CPU,GPU and other resources.
-[FrameworkController](https://github.com/microsoft/frameworkcontroller) will monitor the job life cycle in k8s cluster.
+[FrameworkController](https://github.com/open-intelligence/OpenI-Octopus/tree/k8s/frameworkcontroller) will monitor the job life cycle in k8s cluster.
 Restserver retrieve the status of jobs from k8s ApiServer, and its status can display on Web portal.
 Other type of CPU based AI workloads or traditional big data job
 can also run in the platform, coexisted with those GPU-based jobs. 
