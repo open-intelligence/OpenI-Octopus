@@ -1,0 +1,140 @@
+# Source: rest-server/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: octopus-rest-server
+  labels:
+    app.kubernetes.io/name: rest-server
+    app.kubernetes.io/instance: rest-server
+    app.kubernetes.io/part-of: octopus
+    helm.sh/chart: rest-server-0.1.0
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 9186
+      targetPort: 9186
+  selector:
+    app.kubernetes.io/name: rest-server
+    app.kubernetes.io/instance: rest-server
+    app.kubernetes.io/part-of: octopus
+---
+# Source: rest-server/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: octopus-rest-server
+  labels:
+    app.kubernetes.io/name: rest-server
+    app.kubernetes.io/instance: rest-server
+    app.kubernetes.io/part-of: octopus
+    helm.sh/chart: rest-server-0.1.0
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: rest-server
+      app.kubernetes.io/instance: rest-server
+      app.kubernetes.io/part-of: octopus
+  template:
+    metadata:
+      name: rest-server
+      labels:
+        app.kubernetes.io/name: rest-server
+        app.kubernetes.io/instance: rest-server
+        app.kubernetes.io/part-of: octopus
+        helm.sh/chart: rest-server-0.1.0
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      hostNetwork: false
+      hostPID: false
+      containers:
+        - name: rest-server
+          image: openi/rest-server:1.6
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - mountPath: /kube
+              name: kube
+            - mountPath: /ghome
+              name: ghome
+            - mountPath: /gmodel
+              name: gmodel
+          env:
+            - name: DOCKER_REGISTRY_ADDR
+              value: "${DOCKER_REGISTRY_ADDR}"
+            - name: DOCKER_USER
+              value: "${DOCKER_USER}"
+            - name: DOCKER_PASSWORD
+              value: "${DOCKER_PASSWORD}"
+            - name: EGG_SERVER_ENV
+              value: prod
+            - name: NODE_ENV
+              value: production
+            - name: SERVER_PORT
+              value: "9186"
+            - name: JWT_SECRET
+              value: "M1qTVRVNRMBFn0oC"
+            - name: MYSQL_HOST
+              value: "${MYSQL_HOST}"
+            - name: MYSQL_PORT
+              value: "${MYSQL_PORT}"
+            - name: MYSQL_USER
+              value: "${MYSQL_USER}"
+            - name: MYSQL_PWD
+              value: "${MYSQL_PWD}"
+            - name: K8S_API_SERVER
+              value: "${K8S_API_SERVER}"
+            - name: K8S_CONFIG
+              value: /kube/config
+            - name: IMAGE_FACTORY_URI
+              value: "${IMAGE_FACTORY_URI}"
+            - name: IMAGE_FRAMEWORKBARRIER
+              value: "frameworkcontroller/frameworkbarrier"
+            - name: ENABLED_API_DOC
+              value: "NO"
+          ports:
+            - name: rest-server
+              containerPort: 9186
+              hostPort: 9186
+      volumes:
+        - name: kube
+          hostPath:
+            path: ${K8S_CONFIG}
+        - name: ghome
+          hostPath:
+            path: /ghome
+        - name: gmodel
+          hostPath:
+            path: /gmodel
+---
+# Source: rest-server/templates/ingress.yaml
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: octopus-rest-server
+  labels:
+    app.kubernetes.io/name: rest-server
+    app.kubernetes.io/instance: rest-server
+    app.kubernetes.io/part-of: octopus
+    helm.sh/chart: rest-server-0.1.0
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    kubernetes.io/ingress.allow-http: "true"
+    ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+    - http:
+        paths:
+          - backend:
+              serviceName: octopus-rest-server
+              servicePort: 9186
+            path: /rest-server(/|$)(.*)
