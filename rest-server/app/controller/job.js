@@ -1,8 +1,6 @@
 'use strict';
 
-const LError = require('../error/proto');
-const ECode = require('../error/code');
-const job_utils = require('../utils/job');
+const { ECode, LError } = require('../../lib');
 const Controller = require('egg').Controller;
 
 class JobController extends Controller {
@@ -126,9 +124,9 @@ class JobController extends Controller {
 
     const job_default_limits = await this.service.common.getItem(this.app.config.commonKeys.jobConfig.limitKey);
 
-    const job_resource = job_utils.computeJobResource(job_config, job_default_limits);
+    const job_resource = this.app.component.Utils.job.computeJobResource(job_config, job_default_limits);
 
-    const errors = job_utils.checkJobResourceLimit(job_resource, job_default_limits) || [];
+    const errors = this.app.component.Utils.job.checkJobResourceLimit(job_resource, job_default_limits) || [];
 
     if (errors.length > 0) {
       throw new LError(ECode.INVALID_PARAM, `${errors.join(',')}`);

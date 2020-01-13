@@ -18,9 +18,7 @@
 'use strict';
 
 const Service = require('egg').Service;
-const CryptoUtil = require('../utils/crypto');
-const LError = require('../error/proto');
-const ECode = require('../error/code');
+const { ECode, LError } = require('../../lib');
 const _ = require('lodash');
 
 class UserService extends Service {
@@ -28,6 +26,7 @@ class UserService extends Service {
     super(...args);
     this.userModel = this.app.model.User;
     this.organizationModel = this.app.model.Organization;
+    this.cryptoUtil = this.app.component.Utils.crypto;
   }
 
   async fillData(user) {
@@ -57,7 +56,7 @@ class UserService extends Service {
     if (!user) {
       throw new LError(ECode.NOT_FOUND, username);
     }
-    const passwordKey = CryptoUtil.encryptWithSalt(password, username);
+    const passwordKey = this.cryptoUtil.encryptWithSalt(password, username);
 
     if (passwordKey !== user.passwordKey) {
 
@@ -127,14 +126,14 @@ class UserService extends Service {
   }
 
   async updatePassword(oldPassword, newPassword, condition) {
-    const passwordKey = CryptoUtil.encryptWithSalt(oldPassword, condition.username);
+    const passwordKey = this.cryptoUtil.encryptWithSalt(oldPassword, condition.username);
     if (condition.passwordKey !== passwordKey) {
 
       throw new LError(ECode.WRONG_PASSWORD, 'Old password is wrong');
 
     }
 
-    const newPasswordKey = CryptoUtil.encryptWithSalt(newPassword, condition.username),
+    const newPasswordKey = this.cryptoUtil.encryptWithSalt(newPassword, condition.username),
       newItem = {
         passwordKey: newPasswordKey,
         modifyTime: new Date(),
@@ -144,7 +143,7 @@ class UserService extends Service {
   }
 
   async upsertUser(username, password, admin) {
-    const derivedKey = CryptoUtil.encryptWithSalt(password, username);
+    const derivedKey = this.cryptoUtil.encryptWithSalt(password, username);
     const userInfo = {
       username,
       passwordKey: derivedKey,

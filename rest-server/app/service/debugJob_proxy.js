@@ -6,13 +6,11 @@ const JobConfig_DB = Symbol('JobProxy#jobConfig_db');
 const JobConfig_Types = Symbol('JobProxy#types');
 const DebugJobRunning_Times = Symbol('JobProxy#debugJobRunningTimes');
 
-const Constants = require('./k8s_job/constants');
-const k8s_job_convert = require('./k8s_job/convert');
-
 class DebugJobProxyService extends Service {
   constructor(...args) {
     super(...args);
     this[JobConfig_DB] = this.app.jobConfigDB;
+    this.K8sJobComponent = this.app.component.K8sJob;
   }
 
   get [JobConfig_Types]() {
@@ -38,10 +36,11 @@ class DebugJobProxyService extends Service {
   async syncJobList() {
     
     const { service } = this;
+    const Constants = this.K8sJobComponent.Constants
 
-    const condition = { where: { job_type: 'debug' ,job_state: Constants.FRAMEWORK_STATUS.RUNNING} };
+    const condition = { where: { job_type: 'debug' ,job_state: Constants.TASK_STATUS.RUNNING} };
 
-    const jobList = await service.baseJobService._get_framework_list_from_database(condition);
+    const jobList = await service.v1JobService._get_framework_list_from_database(condition);
 
     let lastJobConfigTypes = await this.getJobConfigTypes();
 
@@ -94,7 +93,7 @@ class DebugJobProxyService extends Service {
 
 
   async processDebugJob(job, jobConfigTypes, debugJobRunningTimes) {
-
+    const Constants = this.K8sJobComponent.Constants
     const jobId = job.job_id;
 
     const jobState = job.job_state;
@@ -110,7 +109,7 @@ class DebugJobProxyService extends Service {
       jobConfigTypes[jobId] = jobConfigType;
     }
 
-    if(jobConfigType !== "debug" || jobState !== Constants.FRAMEWORK_STATUS.RUNNING){
+    if(jobConfigType !== "debug" || jobState !== Constants.TASK_STATUS.RUNNING){
       return ;
     }
 
@@ -127,7 +126,7 @@ class DebugJobProxyService extends Service {
   async syncJobRunningTime(job,debugJobRunningTimes){
     const jobId = job.job_id;
     
-    const jobDetail = k8s_job_convert.to_web_format(job.job_detail);
+    const jobDetail = this.K8sJobComponent.convert.to_web_format(job.job_detail);
     // watch the running debug job when it have a docker
     const tokenLogsUrl = this.config.esService + '/_search';
 
@@ -199,7 +198,7 @@ class DebugJobProxyService extends Service {
     const debugJobDuration = this.config.jobConfigDB.debugJobDurationMsec;
     if (span > debugJobDuration) {
       const condition = { where: { job_id: jobId } };
-      await this.service.baseJobService._stop_framework(condition,"stop debug job because of timeout");
+      await this.service.v1JobService._stop_taskset(condition,"stop debug job because of timeout");
     }
   }
 }

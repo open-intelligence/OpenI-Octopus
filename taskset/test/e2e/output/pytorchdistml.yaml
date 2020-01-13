@@ -1,0 +1,289 @@
+typemeta:
+  kind: ""
+  apiversion: ""
+objectmeta:
+  name: pytorchdistml
+  generatename: ""
+  namespace: test
+  selflink: /apis/octopus.openi.pcl.cn/v1alpha1/namespaces/test/tasksets/pytorchdistml
+  uid: 84fc4103-31d0-4fa4-a557-f2dc7913d083
+  resourceversion: "1496233"
+  generation: 10
+  creationtimestamp: "2019-11-04T14:47:40+08:00"
+  deletiontimestamp: null
+  deletiongraceperiodseconds: null
+  labels: {}
+  annotations: {}
+  ownerreferences: []
+  finalizers: []
+  clustername: ""
+  managedfields: []
+spec:
+  priority: 0
+  retrypolicy:
+    retry: false
+    maxretrycount: 0
+  scheduler:
+    name: kube-batch
+    policies:
+    - name: gang
+      policy: '[{"role":"ps","minAvailable":1},{"role":"worker","minAvailable":1}]'
+  queue: default
+  roles:
+  - name: ps
+    replicas: 1
+    completionpolicy:
+      minfailed: 1
+      minsucceeded: 1
+    retrypolicy:
+      retry: true
+      maxretrycount: 1
+    eventpolicies: []
+    pod:
+      objectmeta:
+        name: ""
+        generatename: ""
+        namespace: ""
+        selflink: ""
+        uid: ""
+        resourceversion: ""
+        generation: 0
+        creationtimestamp: "0001-01-01T00:00:00Z"
+        deletiontimestamp: null
+        deletiongraceperiodseconds: null
+        labels: {}
+        annotations: {}
+        ownerreferences: []
+        finalizers: []
+        clustername: ""
+        managedfields: []
+      spec:
+        volumes: []
+        initcontainers: []
+        containers:
+        - name: ps
+          image: ufoym/deepo:all-py36-cu100
+          command:
+          - sh
+          - -c
+          - wget https://raw.githubusercontent.com/ruanxingbaozi/ml/master/mnist/ml-multi-small-test.py
+            && sleep 1d &&python ml-multi-small-test.py --backend nccl --init-method
+            tcp://pytorchdistml-ps-0-0-0:23456 --world-size 2 --rank 0
+          args: []
+          workingdir: ""
+          ports: []
+          envfrom: []
+          env: []
+          resources:
+            limits:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+            requests: {}
+          volumemounts: []
+          volumedevices: []
+          livenessprobe: null
+          readinessprobe: null
+          startupprobe: null
+          lifecycle: null
+          terminationmessagepath: ""
+          terminationmessagepolicy: ""
+          imagepullpolicy: ""
+          securitycontext: null
+          stdin: false
+          stdinonce: false
+          tty: false
+        ephemeralcontainers: []
+        restartpolicy: Never
+        terminationgraceperiodseconds: null
+        activedeadlineseconds: null
+        dnspolicy: ""
+        nodeselector: {}
+        serviceaccountname: ""
+        deprecatedserviceaccount: ""
+        automountserviceaccounttoken: null
+        nodename: ""
+        hostnetwork: false
+        hostpid: false
+        hostipc: false
+        shareprocessnamespace: null
+        securitycontext: null
+        imagepullsecrets: []
+        hostname: ""
+        subdomain: ""
+        affinity: null
+        schedulername: ""
+        tolerations: []
+        hostaliases: []
+        priorityclassname: ""
+        priority: null
+        dnsconfig: null
+        readinessgates: []
+        runtimeclassname: null
+        enableservicelinks: null
+        preemptionpolicy: null
+        overhead: {}
+        topologyspreadconstraints: []
+  - name: worker
+    replicas: 2
+    completionpolicy:
+      minfailed: 0
+      minsucceeded: 0
+    retrypolicy:
+      retry: false
+      maxretrycount: 0
+    eventpolicies: []
+    pod:
+      objectmeta:
+        name: ""
+        generatename: ""
+        namespace: ""
+        selflink: ""
+        uid: ""
+        resourceversion: ""
+        generation: 0
+        creationtimestamp: "0001-01-01T00:00:00Z"
+        deletiontimestamp: null
+        deletiongraceperiodseconds: null
+        labels: {}
+        annotations: {}
+        ownerreferences: []
+        finalizers: []
+        clustername: ""
+        managedfields: []
+      spec:
+        volumes: []
+        initcontainers: []
+        containers:
+        - name: worker
+          image: ufoym/deepo:all-py36-cu100
+          command:
+          - sh
+          - -c
+          - wget https://raw.githubusercontent.com/ruanxingbaozi/ml/master/mnist/ml-multi-small-test.py
+            && sleep 1d &&python ml-multi-small-test.py --backend nccl --init-method
+            tcp://pytorchdistml-ps-0-0-0:23456 --world-size 2 --rank 1
+          args: []
+          workingdir: ""
+          ports: []
+          envfrom: []
+          env: []
+          resources:
+            limits:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+            requests: {}
+          volumemounts: []
+          volumedevices: []
+          livenessprobe: null
+          readinessprobe: null
+          startupprobe: null
+          lifecycle: null
+          terminationmessagepath: ""
+          terminationmessagepolicy: ""
+          imagepullpolicy: ""
+          securitycontext: null
+          stdin: false
+          stdinonce: false
+          tty: false
+        ephemeralcontainers: []
+        restartpolicy: Never
+        terminationgraceperiodseconds: null
+        activedeadlineseconds: null
+        dnspolicy: ""
+        nodeselector: {}
+        serviceaccountname: ""
+        deprecatedserviceaccount: ""
+        automountserviceaccounttoken: null
+        nodename: ""
+        hostnetwork: false
+        hostpid: false
+        hostipc: false
+        shareprocessnamespace: null
+        securitycontext: null
+        imagepullsecrets: []
+        hostname: ""
+        subdomain: ""
+        affinity: null
+        schedulername: ""
+        tolerations: []
+        hostaliases: []
+        priorityclassname: ""
+        priority: null
+        dnsconfig: null
+        readinessgates: []
+        runtimeclassname: null
+        enableservicelinks: null
+        preemptionpolicy: null
+        overhead: {}
+        topologyspreadconstraints: []
+status:
+  version: 9
+  phase: TaskSetCompleted
+  phasemessage: This attempt is completed,but no need to retry
+  transitiontime: "2019-11-04T14:47:40+08:00"
+  state: Failed
+  statemessage: TaskSet completed beacause taskrole(worker) is failed
+  controlunituid: fb2c0166-25fb-4d64-8976-cff6e3b98ba4
+  createdat: "2019-11-04T14:47:40+08:00"
+  startat: null
+  finishat: "2019-11-04T14:47:40+08:00"
+  totalretriedcount: 0
+  preemptcount: 0
+  taskrolestatus:
+  - name: ps
+    state: Waiting
+    statemessage: TaskRole is waiting
+    replicastatuses:
+    - index: 0
+      name: ps
+      phase: TaskRoleReplicaAttemptCreationRequested
+      phasemessage: TaskRole replica is going to start
+      transitiontime: "2019-11-04T14:47:40+08:00"
+      startat: null
+      finishat: null
+      totalretriedcount: 0
+      podname: pytorchdistml-ps-0-0-0
+      poduid: a530c5cd-39b0-4b4e-bf46-60071bb98c29
+      podip: ""
+      podhostip: ""
+      containername: ""
+      containerid: ""
+      terminatedinfo: null
+  - name: worker
+    state: Failed
+    statemessage: TaskRole Failed
+    replicastatuses:
+    - index: 0
+      name: worker
+      phase: TaskRoleReplicaAttemptCreationRequested
+      phasemessage: TaskRole replica is going to start
+      transitiontime: "2019-11-04T14:47:40+08:00"
+      startat: null
+      finishat: null
+      totalretriedcount: 0
+      podname: pytorchdistml-worker-0-0-0
+      poduid: c30fee29-ae30-4d15-ac02-a0b733693972
+      podip: ""
+      podhostip: ""
+      containername: ""
+      containerid: ""
+      terminatedinfo: null
+    - index: 1
+      name: worker
+      phase: TaskRoleReplicaAttemptCreationRequested
+      phasemessage: TaskRole replica is going to start
+      transitiontime: "2019-11-04T14:47:40+08:00"
+      startat: null
+      finishat: null
+      totalretriedcount: 0
+      podname: pytorchdistml-worker-0-0-1
+      poduid: 36053d46-745b-4f00-bbb4-370b507601dc
+      podip: ""
+      podhostip: ""
+      containername: ""
+      containerid: ""
+      terminatedinfo: null

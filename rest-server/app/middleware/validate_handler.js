@@ -1,11 +1,14 @@
 'use strict';
 const path = require('path');
 const Joi = require('joi');
-const LError = require('../error/proto');
-const ECode = require('../error/code');
+const { ECode, LError } = require('../../lib');
+
+const defaultOptions = {
+  override: true,
+};
 
 module.exports = (options, app) => {
-  loadSchema(app, options);
+  loadSchema(app, Object.assign(defaultOptions, options));
   return async function validateHandler(ctx, next) {
     const requestSchema = ctx.requestSchema;
     if (!requestSchema) {
@@ -24,7 +27,9 @@ module.exports = (options, app) => {
 };
 
 function loadSchema(app, options) {
-  const directory = path.join(app.config.baseDir, 'app/controllerSchema');
-  app.loader.loadToApp(directory, 'controllerSchema', options);
+  const directorys = app.loader
+    .getLoadUnitsWithoutPlugins()
+    .map(unit => path.join(unit.path, 'app/controllerSchema'));
+  app.loader.loadToApp(directorys, 'controllerSchema', options);
   return app.controllerSchema;
 }

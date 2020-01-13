@@ -1,0 +1,180 @@
+typemeta:
+  kind: ""
+  apiversion: ""
+objectmeta:
+  name: onerolefailedretrytaskset
+  generatename: ""
+  namespace: test
+  selflink: /apis/octopus.openi.pcl.cn/v1alpha1/namespaces/test/tasksets/onerolefailedretrytaskset
+  uid: 1efd2c71-ffa1-11e9-852b-080027b98d5b
+  resourceversion: "4078968"
+  generation: 2
+  creationtimestamp: "2019-11-05T15:51:48+08:00"
+  deletiontimestamp: null
+  deletiongraceperiodseconds: null
+  labels: {}
+  annotations: {}
+  ownerreferences: []
+  finalizers: []
+  clustername: ""
+  managedfields: []
+spec:
+  priority: 10000
+  retrypolicy:
+    retry: false
+    maxretrycount: 0
+  scheduler:
+    name: kube-batch
+    policies:
+    - name: gang
+      policy: '[{"role":"ps","minAvailable":1},{"role":"worker","minAvailable":1}]'
+  queue: default
+  roles:
+  - name: wroker
+    replicas: 2
+    completionpolicy:
+      minfailed: 4
+      minsucceeded: 2
+    retrypolicy:
+      retry: true
+      maxretrycount: 2
+    eventpolicies: []
+    pod:
+      objectmeta:
+        name: ""
+        generatename: ""
+        namespace: ""
+        selflink: ""
+        uid: ""
+        resourceversion: ""
+        generation: 0
+        creationtimestamp: "0001-01-01T00:00:00Z"
+        deletiontimestamp: null
+        deletiongraceperiodseconds: null
+        labels: {}
+        annotations: {}
+        ownerreferences: []
+        finalizers: []
+        clustername: ""
+        managedfields: []
+      spec:
+        volumes: []
+        initcontainers: []
+        containers:
+        - name: workercontainer
+          image: busybox:latest
+          command:
+          - sh
+          - -c
+          - sleep 10 && exit 1
+          args: []
+          workingdir: ""
+          ports: []
+          envfrom: []
+          env: []
+          resources:
+            limits:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+            requests:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+          volumemounts: []
+          volumedevices: []
+          livenessprobe: null
+          readinessprobe: null
+          startupprobe: null
+          lifecycle: null
+          terminationmessagepath: ""
+          terminationmessagepolicy: ""
+          imagepullpolicy: ""
+          securitycontext: null
+          stdin: false
+          stdinonce: false
+          tty: false
+        ephemeralcontainers: []
+        restartpolicy: Never
+        terminationgraceperiodseconds: null
+        activedeadlineseconds: null
+        dnspolicy: ""
+        nodeselector: {}
+        serviceaccountname: ""
+        deprecatedserviceaccount: ""
+        automountserviceaccounttoken: null
+        nodename: ""
+        hostnetwork: false
+        hostpid: false
+        hostipc: false
+        shareprocessnamespace: null
+        securitycontext: null
+        imagepullsecrets: []
+        hostname: ""
+        subdomain: ""
+        affinity: null
+        schedulername: ""
+        tolerations: []
+        hostaliases: []
+        priorityclassname: ""
+        priority: null
+        dnsconfig: null
+        readinessgates: []
+        runtimeclassname: null
+        enableservicelinks: null
+        preemptionpolicy: null
+        overhead: {}
+        topologyspreadconstraints: []
+status:
+  version: 1
+  phase: TaskSetCompleted
+  phasemessage: MinFailed cannot be bigger than replica setting for TaskRole:wroker
+  transitiontime: "2019-11-05T15:51:48+08:00"
+  state: Failed
+  statemessage: MinFailed cannot be bigger than replica setting for TaskRole:wroker
+  controlunituid: null
+  createdat: "2019-11-05T15:51:48+08:00"
+  startat: null
+  finishat: "2019-11-05T15:51:48+08:00"
+  totalretriedcount: 0
+  preemptcount: 0
+  taskrolestatus:
+  - name: wroker
+    phase: TaskRoleWaiting
+    phasemessage: TaskRole is waiting
+    transitiontime: "2019-11-05T15:51:48+08:00"
+    state: Waiting
+    statemessage: TaskRole is waiting
+    replicastatuses:
+    - index: 0
+      name: wroker
+      phase: TaskRoleReplicaAttemptPending
+      phasemessage: TaskRole replica is pending
+      transitiontime: "2019-11-05T15:51:48+08:00"
+      startat: null
+      finishat: null
+      totalretriedcount: 0
+      podname: ""
+      poduid: null
+      podip: ""
+      podhostip: ""
+      containername: ""
+      containerid: ""
+      terminatedinfo: null
+    - index: 1
+      name: wroker
+      phase: TaskRoleReplicaAttemptPending
+      phasemessage: TaskRole replica is pending
+      transitiontime: "2019-11-05T15:51:48+08:00"
+      startat: null
+      finishat: null
+      totalretriedcount: 0
+      podname: ""
+      poduid: null
+      podip: ""
+      podhostip: ""
+      containername: ""
+      containerid: ""
+      terminatedinfo: null

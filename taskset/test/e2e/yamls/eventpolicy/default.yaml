@@ -1,0 +1,59 @@
+#两个role ,未声明eventPolicy,使用默认的policy
+#role2失败，应该导致整体结束，State为Failed
+
+apiVersion: octopus.openi.pcl.cn/v1alpha1
+kind: TaskSet
+metadata:
+  name: defaulteventpolicy
+spec:
+  retryPolicy:
+    retry: false
+    maxRetryCount: 1
+  roles:
+    - name: role1
+      replicas: 1
+      eventPolicy: []
+      completionPolicy:
+        maxFailed: 1
+        minSucceeded: 1
+      retryPolicy:
+        retry: false
+        maxRetryCount: 1
+      template:
+        metadata:
+          annotations:
+            scheduling.k8s.io/group-name: e2e-2
+        spec:
+          schedulerName: kube-batch
+          restartPolicy: Never
+          containers:
+            - name: worker
+              image: busybox
+              command: ["sh","-c","sleep 40"]
+    - name: role2
+      replicas: 1
+      eventPolicy: []
+      completionPolicy:
+        maxFailed: 1
+        minSucceeded: 1
+      retryPolicy:
+        retry: false
+        maxRetryCount: 1
+      template:
+        metadata:
+          annotations:
+            scheduling.k8s.io/group-name: e2e-2
+        spec:
+          schedulerName: kube-batch
+          restartPolicy: Never
+          containers:
+            - name: worker
+              image: busybox
+              command: ["sh","-c","sleep 10;exit 1"]
+---
+apiVersion: scheduling.incubator.k8s.io/v1alpha1
+kind: PodGroup
+metadata:
+  name: e2e-2
+spec:
+  minMember: 2

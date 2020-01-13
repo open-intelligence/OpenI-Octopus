@@ -1,0 +1,39 @@
+# 验证completion合法性,minFailed 和　minSucceeded 都大于副本数，
+# 直接终止任务，State为Failed,这里只验证流程
+
+apiVersion: octopus.openi.pcl.cn/v1alpha1
+kind: TaskSet
+metadata:
+  name: completionpolicyvalidation
+spec:
+  retryPolicy:
+    retry: false
+    maxRetryCount: 1
+  roles:
+    - name: role1
+      replicas: 1
+      eventPolicy: []
+      completionPolicy:
+        maxFailed: 2
+        minSucceeded: 2
+      retryPolicy:
+        retry: false
+        maxRetryCount: 1
+      template:
+        metadata:
+          annotations:
+            scheduling.k8s.io/group-name: e2e-10
+        spec:
+          schedulerName: kube-batch
+          restartPolicy: Never
+          containers:
+            - name: worker
+              image: busybox
+              command: ["sh","-c","sleep 10;exit 0"]
+---
+apiVersion: scheduling.incubator.k8s.io/v1alpha1
+kind: PodGroup
+metadata:
+  name: e2e-10
+spec:
+  minMember: 1

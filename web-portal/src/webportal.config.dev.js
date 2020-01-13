@@ -19,13 +19,17 @@
   * */
 
 let config = {
-  helpDocUri: 'https://github.com/open-intelligence/OpenI-Octopus/tree/k8s',
+  helpDocUri: 'https://github.com/open-intelligence/openi',
   restServerUri: '/rest-server',
   logServiceUri: "http://192.168.202.71",
   grafanaUri: "http://192.168.202.71/grafana",
   terminalUri: "http://192.168.202.71/terminal",
   jupyterLabProxyUri: "http://192.168.202.71",
+  ascendUri: "http://192.168.202.73",
   clusterName: "default",
+  tucao:{
+    productId: 94774
+  }
 };
 
 // module exports

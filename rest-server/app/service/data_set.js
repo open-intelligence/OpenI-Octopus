@@ -2,9 +2,7 @@
 const _ = require('lodash');
 const Service = require('egg').Service;
 const marked = require('marked');
-// const LError = require('../error/proto');
 // const ECode = require('../error/code');
-// const utils = require('../../util');
 
 class DataSetService extends Service {
   constructor(...args) {

@@ -1,7 +1,6 @@
 'use strict';
 
-const ECode = require('../error/code');
-const LError = require('../error/proto');
+const { ECode, LError } = require('../../lib');
 
 module.exports = {
   success(payload, message = 'success', code) {

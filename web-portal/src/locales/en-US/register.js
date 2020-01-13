@@ -9,5 +9,6 @@ export default {
     'register.model.title':'Registration tips',
     'register.model.success.message':'Successful registration, do you enter the login page?',
     'register.model.button.cancel.text':'Stay',
-    'register.model.button.ok.text':'Return'
+    'register.model.button.ok.text':'Return',
+    'register.token.error':"Need admin authority to regiter user.",
 }

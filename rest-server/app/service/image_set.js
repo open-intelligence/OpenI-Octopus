@@ -2,7 +2,6 @@
 const _ = require('lodash');
 const Service = require('egg').Service;
 const marked = require('marked');
-const utils = require('../utils');
 
 class ImageSetService extends Service {
   constructor(...args) {
@@ -21,7 +20,7 @@ class ImageSetService extends Service {
         attributes: [ 'id' ],
         where: { platformKey: condition.platformKey },
       });
-      if (utils.isEmptyObject(jobPlatform)) {
+      if (this.app.component.Utils.isEmptyObject(jobPlatform)) {
         return {};
       }
       const relations = await this.imageSetJobPlatformRelationModel.findAll({

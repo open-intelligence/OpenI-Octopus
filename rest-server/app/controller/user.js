@@ -1,7 +1,7 @@
 'use strict';
 
 const Controller = require('egg').Controller;
-const ECode = require('../error/code');
+const { ECode, LError } = require('../../lib');
 
 class UserController extends Controller {
 

@@ -5,11 +5,14 @@ import { getPageQuery } from '@/utils/utils';
 
 const initState = {
         //loading:true,
-        fullName:'',
-        teacher:'',
+        realName:'',
+        tutor:'',
         email:'',
-        phonePrefix:'',
-        phoneNum:'',
+        phonePrefix:'+86',
+        phone:'',
+        innerAccount:'',
+        orgInfoArray:[],
+        orgInfo : []
 };
 
 export default {
@@ -25,33 +28,71 @@ export default {
                 payload: initState,
             });
 
-            const currentUser= getAuthority();
-            const userInfoRes = yield call(apiService.getUserInfo,currentUser.username);
 
-            let userInfo = {};
-            if(userInfoRes.success)
-            {
-                userInfo.email = userInfoRes.userInfo.email?userInfoRes.userInfo.email:'';
-                userInfo.fullName = userInfoRes.userInfo.fullName?userInfoRes.userInfo.fullName:'';
-                userInfo.teacher = userInfoRes.userInfo.teacher?userInfoRes.userInfo.teacher:'';
+            const orgInfoRes = yield call(apiService.getOrgInfo);
 
-                let phoneInfoArray = userInfoRes.userInfo.phone?userInfoRes.userInfo.phone.split('-'):[];
 
-                userInfo.phonePrefix = phoneInfoArray[0]?phoneInfoArray[0]:'+86';
-                userInfo.phoneNum = phoneInfoArray[1]?phoneInfoArray[1]:'';
+            let orgInfo =[];
+            if(orgInfoRes.success){
+                for(let org of orgInfoRes.orgInfo){
+                    let rootOrg = {
+                        label:org.name,
+                        value:org.organizationId,
+                        children:[]
+                    };
 
-                yield put({
-                    type: 'updateUserInfo',
-                    payload: {
-                        ...userInfo,
-                    },
-                });
+                    if(org.children){
+                        for(let secOrg of org.children){
+                            let childOrg ={
+                                label:secOrg.name,
+                                value:secOrg.organizationId
+                            };
 
-                return;
+                            if(secOrg.name === '其它'){
+                                rootOrg.children.push(childOrg);
+                            }else{
+                                rootOrg.children.unshift(childOrg);
+                            }
+                        }
+                    }
+
+                    orgInfo.push(rootOrg);
+                }
+
+
+                const currentUser= getAuthority();
+                const userInfoRes = yield call(apiService.getUserInfo,currentUser.username);
+
+                let userInfo = {};
+                if(userInfoRes.success)
+                {
+                    userInfo.email = userInfoRes.userInfo.email?userInfoRes.userInfo.email:'';
+                    userInfo.realName = userInfoRes.userInfo.realName?userInfoRes.userInfo.realName:'';
+                    userInfo.tutor = userInfoRes.userInfo.tutor?userInfoRes.userInfo.tutor:'';
+                    userInfo.innerAccount = userInfoRes.userInfo.innerAccount?userInfoRes.userInfo.innerAccount:'';
+
+                    let phoneInfoArray = userInfoRes.userInfo.phone?userInfoRes.userInfo.phone.split('-'):[];
+
+                    userInfo.phonePrefix = phoneInfoArray[0]?phoneInfoArray[0]:'+86';
+                    userInfo.phone = phoneInfoArray[1]?phoneInfoArray[1]:'';
+
+                    userInfo.orgInfoArray = userInfoRes.userInfo.organizations?
+                        userInfoRes.userInfo.organizations[0].ids.split(','):[];
+
+                    yield put({
+                        type: 'updateUserInfo',
+                        payload: {
+                            ...userInfo,
+                            orgInfo
+                        },
+                    });
+
+                    return;
+                }
             }
 
-
             onFailed && onFailed();
+
         },
         *saveUserInfo({ payload }, { call, put }){
 
@@ -59,13 +100,15 @@ export default {
             const onFailed = payload&&payload.onFailed?payload.onFailed:function onFailed(){};
             const onSuccessed = payload&&payload.onSuccessed?payload.onSuccessed:function onSuccessed(){};
 
-            const params = payload&&payload.params?payload.params:{};
+            const accountInfo = payload&&payload.params?payload.params:{};
 
             let newUserInfo = {
-                email:params.email,
-                fullName:params.fullName,
-                teacher:params.teacher,
-                phone:params.phonePrefix+"-"+params.phoneNum
+                email:accountInfo.email,
+                realName:accountInfo.realName,
+                sex:1,
+                tutor:accountInfo.tutor,
+                phone:accountInfo.phonePrefix+"-"+accountInfo.phone,
+                organizationId:accountInfo.orgInfoArray[1],
             };
 
             //console.log("Update newUserInfo",newUserInfo);

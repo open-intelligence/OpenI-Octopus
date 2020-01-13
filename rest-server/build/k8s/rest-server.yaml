@@ -96,6 +96,8 @@ spec:
               value: "${IMAGE_FACTORY_URI}"
             - name: IMAGE_FRAMEWORKBARRIER
               value: "frameworkcontroller/frameworkbarrier"
+            - name: IMAGE_POD_DISCOVERY
+              value: "yyrdl/poddiscovery:latest"
             - name: ENABLED_API_DOC
               value: "NO"
           ports:

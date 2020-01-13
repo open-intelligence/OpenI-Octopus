@@ -1,8 +1,0 @@
-# Put it directly under frameworkcontroller's current working directory.
-# For the full config setting and usage, see ./pkg/apis/frameworkcontroller/v1/config.go
-
-# This is the default config for frameworkcontroller, so all settings are commented out.
-
-#kubeApiServerAddress: http://10.10.10.10:8080
-#kubeConfigFilePath: ""
-#workerNumber: 20

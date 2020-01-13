@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'dva';
 import {
-    Spin,Row,Col,message,Form, Input, Button,Select,
+    Spin,Row,Col,message,Form, Icon, Input, Button,Cascader,Select,
 } from 'antd';
 
 import {formatMessage } from 'umi/locale';
@@ -46,22 +46,28 @@ class UserInfo extends Component {
             newFormInfo.phonePrefix = nextProps.phonePrefix;
         }
 
-        if (nextProps.phoneNum !== this.props.phoneNum) {
-            newFormInfo.phoneNum = nextProps.phoneNum;
+        if (nextProps.phone !== this.props.phone) {
+            newFormInfo.phone = nextProps.phone;
         }
 
         if (nextProps.email !== this.props.email) {
             newFormInfo.email = nextProps.email;
         }
 
-        if (nextProps.fullName !== this.props.fullName)
+        if (nextProps.realName !== this.props.realName)
         {
-            newFormInfo.fullName = nextProps.fullName;
+            newFormInfo.realName = nextProps.realName;
         }
 
-        if (nextProps.teacher !== this.props.teacher)
+        if (nextProps.tutor !== this.props.tutor)
         {
-            newFormInfo.teacher = nextProps.teacher;
+            newFormInfo.tutor = nextProps.tutor;
+        }
+
+
+        if (nextProps.orgInfoArray.toString() !== this.props.orgInfoArray.toString())
+        {
+            newFormInfo.orgInfoArray = nextProps.orgInfoArray;
         }
 
         if(Object.keys(newFormInfo).length !== 0){
@@ -140,12 +146,26 @@ class UserInfo extends Component {
                 <Row type="flex" justify="center">
                     <Col span={12}>
                         <Form onSubmit={this.handleSubmit}>
+                            <Form.Item
+                                {...formItemLayout}
+                                label={formatMessage({id:'userInfo.realName.label'})}
+                            >
+                                {getFieldDecorator('realName', {
+                                    rules: [{
+                                        required: true,
+                                        message: formatMessage({id:'userInfo.realName.error'}),
+                                        whitespace: true
+                                    }],
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
 
                             <Form.Item
                                 {...formItemLayout}
                                 label={formatMessage({id:'userInfo.phone.label'})}
                             >
-                                {getFieldDecorator('phoneNum', {
+                                {getFieldDecorator('phone', {
                                     rules: [{
                                         required: true,
                                         pattern:/^1(3|4|5|7|8)\d{9}$/,
@@ -169,30 +189,32 @@ class UserInfo extends Component {
                                     <Input />
                                 )}
                             </Form.Item>
+
                             <Form.Item
                                 {...formItemLayout}
-                                label={formatMessage({id:'userInfo.fullName.label'})}
+                                label={formatMessage({id:'userInfo.tutor.label'})}
                             >
-                                {getFieldDecorator('fullName', {
+                                {getFieldDecorator('tutor', {
+                                    rules: [{ required: true, message: formatMessage({id:'userInfo.tutor.error'}), whitespace: true }],
+                                })(
+                                    <Input />
+                                )}
+                            </Form.Item>
+
+                            <Form.Item
+                                {...formItemLayout}
+                                label={formatMessage({id:'userInfo.center.project.label'})}
+                            >
+                                {getFieldDecorator('orgInfoArray', {
                                     rules: [{
+                                        type: 'array',
                                         required: true,
-                                        message: formatMessage({id:'userInfo.fullName.error'}),
-                                        whitespace: true
-                                    }],
+                                        message: formatMessage({id:'userInfo.center.project.error'}) }],
                                 })(
-                                    <Input />
+                                    <Cascader placeholder={''} options={this.props.orgInfo} />
                                 )}
                             </Form.Item>
-                            <Form.Item
-                                {...formItemLayout}
-                                label={formatMessage({id:'userInfo.teacher.label'})}
-                            >
-                                {getFieldDecorator('teacher', {
-                                    rules: [{ required: true, message: formatMessage({id:'userInfo.teacher.error'}), whitespace: true }],
-                                })(
-                                    <Input />
-                                )}
-                            </Form.Item>
+
                             <Form.Item
                                 {...tailFormItemLayout}
                             >

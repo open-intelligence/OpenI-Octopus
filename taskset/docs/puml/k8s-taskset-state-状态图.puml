@@ -1,0 +1,44 @@
+@startuml
+'skinparam backgroundColor LightYellow
+'skinparam state {
+'  StartColor MediumBlue
+'  EndColor Red
+'  BackgroundColor Peru
+'  BackgroundColor<<Warning>> Olive
+'  BorderColor Gray
+'  FontName Impact
+'}
+
+[*] --> AttemptCreationPending: Create Framework
+AttemptCreationPending --> AttemptCreationRequested
+AttemptCreationRequested --> AttemptPreparing
+AttemptPreparing --> AttemptRunning
+AttemptRunning --> AttemptDeletionPending
+AttemptDeletionPending --> AttemptDeletionRequested
+AttemptDeletionRequested --> AttemptCompleted
+AttemptCompleted --> Completed
+
+' External
+AttemptDeletionPending --> AttemptCompleted
+AttemptCreationPending --> AttemptCompleted
+AttemptCreationRequested --> AttemptDeletionRequested
+AttemptCreationRequested --> AttemptCompleted
+AttemptRunning --> AttemptDeletionRequested
+AttemptRunning --> AttemptCompleted
+
+
+AttemptPreparing --> AttemptDeletionRequested
+AttemptPreparing --> AttemptCompleted
+
+'Retry
+AttemptCompleted --> AttemptCreationPending:retry
+AttemptPreparing --> AttemptDeletionPending
+
+
+
+Completed --> [*]
+
+@enduml
+
+
+

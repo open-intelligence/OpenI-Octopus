@@ -7,7 +7,7 @@ import styles from './index.less';
 class Exception extends React.PureComponent {
   static defaultProps = {
     backText: 'back to home',
-    redirect: '/openi/overview',
+    redirect: '/openi/v2/home',
   };
 
   constructor(props) {

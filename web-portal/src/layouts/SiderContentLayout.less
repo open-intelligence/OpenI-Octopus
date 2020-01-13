@@ -1,0 +1,66 @@
+@import '~antd/lib/style/themes/default.less';
+
+.content{
+  margin: 5px 5px 0;
+
+  min-height: 900px;
+}
+
+.logo {
+  color: white;
+  font-family: Avenir, 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.sidercontent {
+  minHeight: 360;
+}
+
+:global {
+
+  .ant-menu-light {
+
+    background: #EEF1F4;
+  }
+
+  .ant-menu-inline, .ant-menu-vertical, .ant-menu-vertical-left{
+    border-right: 0px solid #e8e8e8;
+  }
+
+  .ant-menu:not(.ant-menu-horizontal) .ant-menu-item-selected {
+    background-color: #fff;
+  }
+
+  .ant-menu-vertical > .ant-menu-item,
+  .ant-menu-vertical-left > .ant-menu-item,
+  .ant-menu-vertical-right > .ant-menu-item,
+  .ant-menu-inline > .ant-menu-item,
+  .ant-menu-vertical > .ant-menu-submenu > .ant-menu-submenu-title,
+  .ant-menu-vertical-left > .ant-menu-submenu > .ant-menu-submenu-title,
+  .ant-menu-vertical-right > .ant-menu-submenu > .ant-menu-submenu-title,
+  .ant-menu-inline > .ant-menu-submenu > .ant-menu-submenu-title {
+    height: 60px;
+    line-height: 60px;
+  }
+
+  .ant-menu-item > a {
+    color: #999;
+  }
+
+}
+
+
+@media (max-width: @screen-sm) {
+
+  .sidercontent {
+    minHeight: 360;
+    margin: 0px 30px;
+  }
+}
+
+.footer{
+  background: #ffffff;
+  text-align: center;
+}
+

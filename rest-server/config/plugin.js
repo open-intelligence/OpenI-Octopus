@@ -1,10 +1,14 @@
 'use strict';
-// const path = require('path');
+const path = require('path');
 
 module.exports = {
+  component: {
+    enable: true,
+    path: path.resolve(__dirname,'../plugins/egg-component'),
+  },
   sequelize: {
     enable: true,
-    package: 'egg-sequelize',
+    path: path.resolve(__dirname,'../plugins/egg-sequelize'),
   },
   cors: {
     enable: true,

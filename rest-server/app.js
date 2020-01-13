@@ -11,10 +11,17 @@ global.Promise = require('bluebird').Promise;
 module.exports = app => {
   app.beforeStart(async () => {
     const proxyDB = await app.initProxyDB();
-    app.proxyDB = proxyDB;
     const jobConfigDB = await app.initJobConifgDB();
-    app.jobConfigDB = jobConfigDB;
 
+    app.proxyDB = proxyDB;
+    app.jobConfigDB = jobConfigDB;
+  });
+
+  app.ready(err => {
+    if (err) throw err;
+    if (app.config.logger.disableFileAfterReady){
+      app.disableFileLoggers();
+    }
   });
 };
 

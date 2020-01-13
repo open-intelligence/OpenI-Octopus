@@ -1,0 +1,179 @@
+typemeta:
+  kind: ""
+  apiversion: ""
+objectmeta:
+  name: failedretrytaskset
+  generatename: ""
+  namespace: test
+  selflink: /apis/octopus.openi.pcl.cn/v1alpha1/namespaces/test/tasksets/failedretrytaskset
+  uid: b9d8b484-b04a-44af-a608-38c28b81de16
+  resourceversion: "1477504"
+  generation: 29
+  creationtimestamp: "2019-11-04T11:16:11+08:00"
+  deletiontimestamp: null
+  deletiongraceperiodseconds: null
+  labels: {}
+  annotations: {}
+  ownerreferences: []
+  finalizers: []
+  clustername: ""
+  managedfields: []
+spec:
+  priority: 10000
+  retrypolicy:
+    retry: false
+    maxretrycount: 0
+  scheduler:
+    name: kube-batch
+    policies:
+    - name: gang
+      policy: '[{"role":"ps","minAvailable":1},{"role":"worker","minAvailable":1}]'
+  queue: default
+  roles:
+  - name: wroker
+    replicas: 2
+    completionpolicy:
+      minfailed: 4
+      minsucceeded: 2
+    retrypolicy:
+      retry: true
+      maxretrycount: 2
+    eventpolicies: []
+    pod:
+      objectmeta:
+        name: ""
+        generatename: ""
+        namespace: ""
+        selflink: ""
+        uid: ""
+        resourceversion: ""
+        generation: 0
+        creationtimestamp: "0001-01-01T00:00:00Z"
+        deletiontimestamp: null
+        deletiongraceperiodseconds: null
+        labels: {}
+        annotations: {}
+        ownerreferences: []
+        finalizers: []
+        clustername: ""
+        managedfields: []
+      spec:
+        volumes: []
+        initcontainers: []
+        containers:
+        - name: workercontainer
+          image: busybox:latest
+          command:
+          - sh
+          - -c
+          - exit 1
+          args: []
+          workingdir: ""
+          ports: []
+          envfrom: []
+          env: []
+          resources:
+            limits:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+            requests:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+          volumemounts: []
+          volumedevices: []
+          livenessprobe: null
+          readinessprobe: null
+          startupprobe: null
+          lifecycle: null
+          terminationmessagepath: ""
+          terminationmessagepolicy: ""
+          imagepullpolicy: ""
+          securitycontext: null
+          stdin: false
+          stdinonce: false
+          tty: false
+        ephemeralcontainers: []
+        restartpolicy: Never
+        terminationgraceperiodseconds: null
+        activedeadlineseconds: null
+        dnspolicy: ""
+        nodeselector: {}
+        serviceaccountname: ""
+        deprecatedserviceaccount: ""
+        automountserviceaccounttoken: null
+        nodename: ""
+        hostnetwork: false
+        hostpid: false
+        hostipc: false
+        shareprocessnamespace: null
+        securitycontext: null
+        imagepullsecrets: []
+        hostname: ""
+        subdomain: ""
+        affinity: null
+        schedulername: ""
+        tolerations: []
+        hostaliases: []
+        priorityclassname: ""
+        priority: null
+        dnsconfig: null
+        readinessgates: []
+        runtimeclassname: null
+        enableservicelinks: null
+        preemptionpolicy: null
+        overhead: {}
+        topologyspreadconstraints: []
+status:
+  version: 28
+  phase: TaskSetAttemptPreparing
+  phasemessage: Control unit is synced,prepare to launch tasks
+  transitiontime: "2019-11-04T11:16:11+08:00"
+  state: Waiting
+  statemessage: Control unit is synced,prepare to launch tasks
+  controlunituid: f6d07874-d522-4b78-bff2-51c60ab0fa85
+  createdat: "2019-11-04T11:16:11+08:00"
+  startat: null
+  finishat: null
+  totalretriedcount: 0
+  preemptcount: 0
+  taskrolestatus:
+  - name: wroker
+    state: Waiting
+    statemessage: TaskRole is waiting
+    replicastatuses:
+    - index: 0
+      name: wroker
+      phase: TaskRoleReplicaCompleted
+      phasemessage: No need to retry replica,taskrole replica attempt completed
+      transitiontime: "2019-11-04T11:17:05+08:00"
+      startat: "2019-11-04T11:16:46+08:00"
+      finishat: "2019-11-04T11:17:05+08:00"
+      totalretriedcount: 2
+      podname: failedretrytaskset-wroker-0-2-0
+      poduid: c49a0211-0498-4cf6-a126-e57d78469744
+      podip: 10.244.0.152
+      podhostip: 192.168.113.18
+      containername: workercontainer
+      containerid: docker://52c190e7cd81bdc20fca9004b2cbbc6c73f97d3e9fdae3b26569549e90973c6a
+      terminatedinfo:
+        exitcode: 1
+        exitmessage: ""
+    - index: 1
+      name: wroker
+      phase: TaskRoleReplicaAttemptPreparing
+      phasemessage: Pod is synced
+      transitiontime: "2019-11-04T11:17:00+08:00"
+      startat: null
+      finishat: "2019-11-04T11:17:00+08:00"
+      totalretriedcount: 2
+      podname: failedretrytaskset-wroker-0-2-1
+      poduid: 4e659d58-4a29-4bcf-8658-23855e390bf4
+      podip: ""
+      podhostip: ""
+      containername: workercontainer
+      containerid: docker://1ecbb40eb8b48d2b44a8e1ef4638cfb05a5e1fe35ba22930fc11266c52dcb374
+      terminatedinfo: null

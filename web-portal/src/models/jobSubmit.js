@@ -341,7 +341,7 @@ export default {
 
                     yield put(
                         routerRedux.push({
-                            pathname: '/openi/jobs'
+                            pathname: '/openi/v2/brain/jobList'
                         })
                     );
 

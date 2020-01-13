@@ -1,0 +1,292 @@
+typemeta:
+  kind: ""
+  apiversion: ""
+objectmeta:
+  name: successedtaskset
+  generatename: ""
+  namespace: test
+  selflink: /apis/octopus.openi.pcl.cn/v1alpha1/namespaces/test/tasksets/successedtaskset
+  uid: a8b33eef-ffa0-11e9-852b-080027b98d5b
+  resourceversion: "4078397"
+  generation: 17
+  creationtimestamp: "2019-11-05T15:48:30+08:00"
+  deletiontimestamp: null
+  deletiongraceperiodseconds: null
+  labels: {}
+  annotations: {}
+  ownerreferences: []
+  finalizers: []
+  clustername: ""
+  managedfields: []
+spec:
+  priority: 10000
+  retrypolicy:
+    retry: false
+    maxretrycount: 0
+  scheduler:
+    name: kube-batch
+    policies:
+    - name: gang
+      policy: '[{"role":"ps","minAvailable":1},{"role":"worker","minAvailable":1}]'
+  queue: default
+  roles:
+  - name: ps
+    replicas: 1
+    completionpolicy:
+      minfailed: 1
+      minsucceeded: 1
+    retrypolicy:
+      retry: false
+      maxretrycount: 0
+    eventpolicies:
+    - event: RoleFailed
+      action: TaskSetFailed
+    pod:
+      objectmeta:
+        name: ""
+        generatename: ""
+        namespace: ""
+        selflink: ""
+        uid: ""
+        resourceversion: ""
+        generation: 0
+        creationtimestamp: "0001-01-01T00:00:00Z"
+        deletiontimestamp: null
+        deletiongraceperiodseconds: null
+        labels: {}
+        annotations: {}
+        ownerreferences: []
+        finalizers: []
+        clustername: ""
+        managedfields: []
+      spec:
+        volumes: []
+        initcontainers: []
+        containers:
+        - name: workercontainer
+          image: busybox:latest
+          command:
+          - sh
+          - -c
+          - sleep 10
+          args: []
+          workingdir: ""
+          ports: []
+          envfrom: []
+          env: []
+          resources:
+            limits:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+            requests:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+          volumemounts: []
+          volumedevices: []
+          livenessprobe: null
+          readinessprobe: null
+          startupprobe: null
+          lifecycle: null
+          terminationmessagepath: ""
+          terminationmessagepolicy: ""
+          imagepullpolicy: ""
+          securitycontext: null
+          stdin: false
+          stdinonce: false
+          tty: false
+        ephemeralcontainers: []
+        restartpolicy: Never
+        terminationgraceperiodseconds: null
+        activedeadlineseconds: null
+        dnspolicy: ""
+        nodeselector: {}
+        serviceaccountname: ""
+        deprecatedserviceaccount: ""
+        automountserviceaccounttoken: null
+        nodename: ""
+        hostnetwork: false
+        hostpid: false
+        hostipc: false
+        shareprocessnamespace: null
+        securitycontext: null
+        imagepullsecrets: []
+        hostname: ""
+        subdomain: ""
+        affinity: null
+        schedulername: ""
+        tolerations: []
+        hostaliases: []
+        priorityclassname: ""
+        priority: null
+        dnsconfig: null
+        readinessgates: []
+        runtimeclassname: null
+        enableservicelinks: null
+        preemptionpolicy: null
+        overhead: {}
+        topologyspreadconstraints: []
+  - name: wroker
+    replicas: 1
+    completionpolicy:
+      minfailed: 1
+      minsucceeded: 1
+    retrypolicy:
+      retry: false
+      maxretrycount: 0
+    eventpolicies:
+    - event: RoleFailed
+      action: TaskSetFailed
+    pod:
+      objectmeta:
+        name: ""
+        generatename: ""
+        namespace: ""
+        selflink: ""
+        uid: ""
+        resourceversion: ""
+        generation: 0
+        creationtimestamp: "0001-01-01T00:00:00Z"
+        deletiontimestamp: null
+        deletiongraceperiodseconds: null
+        labels: {}
+        annotations: {}
+        ownerreferences: []
+        finalizers: []
+        clustername: ""
+        managedfields: []
+      spec:
+        volumes: []
+        initcontainers: []
+        containers:
+        - name: workercontainer
+          image: busybox:latest
+          command:
+          - sh
+          - -c
+          - sleep 10
+          args: []
+          workingdir: ""
+          ports: []
+          envfrom: []
+          env: []
+          resources:
+            limits:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+            requests:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+          volumemounts: []
+          volumedevices: []
+          livenessprobe: null
+          readinessprobe: null
+          startupprobe: null
+          lifecycle: null
+          terminationmessagepath: ""
+          terminationmessagepolicy: ""
+          imagepullpolicy: ""
+          securitycontext: null
+          stdin: false
+          stdinonce: false
+          tty: false
+        ephemeralcontainers: []
+        restartpolicy: Never
+        terminationgraceperiodseconds: null
+        activedeadlineseconds: null
+        dnspolicy: ""
+        nodeselector: {}
+        serviceaccountname: ""
+        deprecatedserviceaccount: ""
+        automountserviceaccounttoken: null
+        nodename: ""
+        hostnetwork: false
+        hostpid: false
+        hostipc: false
+        shareprocessnamespace: null
+        securitycontext: null
+        imagepullsecrets: []
+        hostname: ""
+        subdomain: ""
+        affinity: null
+        schedulername: ""
+        tolerations: []
+        hostaliases: []
+        priorityclassname: ""
+        priority: null
+        dnsconfig: null
+        readinessgates: []
+        runtimeclassname: null
+        enableservicelinks: null
+        preemptionpolicy: null
+        overhead: {}
+        topologyspreadconstraints: []
+status:
+  version: 16
+  phase: TaskSetCompleted
+  phasemessage: TaskSet completed beacause all taskrole is completed
+  transitiontime: "2019-11-05T15:48:52+08:00"
+  state: Succeeded
+  statemessage: TaskSet completed beacause all taskrole is completed
+  controlunituid: a8b68f7e-ffa0-11e9-852b-080027b98d5b
+  createdat: "2019-11-05T15:48:30+08:00"
+  startat: "2019-11-05T15:48:42+08:00"
+  finishat: "2019-11-05T15:48:52+08:00"
+  totalretriedcount: 0
+  preemptcount: 0
+  taskrolestatus:
+  - name: ps
+    phase: TaskRoleCompleted
+    phasemessage: TaskRole is completed ,because all replica is completed
+    transitiontime: "2019-11-05T15:48:52+08:00"
+    state: Succeeded
+    statemessage: TaskRole Succeeded
+    replicastatuses:
+    - index: 0
+      name: ps
+      phase: TaskRoleReplicaCompleted
+      phasemessage: TaskRole replica is already succeeded
+      transitiontime: "2019-11-05T15:48:52+08:00"
+      startat: "2019-11-05T15:48:30+08:00"
+      finishat: "2019-11-05T15:48:52+08:00"
+      totalretriedcount: 0
+      podname: successedtaskset-ps-0-0-0
+      poduid: a8bbbd15-ffa0-11e9-852b-080027b98d5b
+      podip: 172.17.0.6
+      podhostip: 10.0.2.15
+      containername: workercontainer
+      containerid: docker://36ae3895eb579d7e72b4f9d791800613b047a24dad8505848f94d67c450df0f2
+      terminatedinfo:
+        exitcode: 0
+        exitmessage: ""
+  - name: wroker
+    phase: TaskRoleCompleted
+    phasemessage: TaskRole is completed ,because all replica is completed
+    transitiontime: "2019-11-05T15:48:51+08:00"
+    state: Succeeded
+    statemessage: TaskRole Succeeded
+    replicastatuses:
+    - index: 0
+      name: wroker
+      phase: TaskRoleReplicaCompleted
+      phasemessage: TaskRole replica is already succeeded
+      transitiontime: "2019-11-05T15:48:51+08:00"
+      startat: "2019-11-05T15:48:30+08:00"
+      finishat: "2019-11-05T15:48:51+08:00"
+      totalretriedcount: 0
+      podname: successedtaskset-wroker-0-0-0
+      poduid: a8bdafb7-ffa0-11e9-852b-080027b98d5b
+      podip: 172.17.0.7
+      podhostip: 10.0.2.15
+      containername: workercontainer
+      containerid: docker://50a2ed1210755264ecfc278c9b2dae2e46a27dbef377356d16e295bd2d63353e
+      terminatedinfo:
+        exitcode: 0
+        exitmessage: ""

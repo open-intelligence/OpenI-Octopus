@@ -1,0 +1,67 @@
+@startuml
+
+' Successed
+[*] --> AttemptCreationPending: Create Task
+AttemptCreationPending: Pod does not exist
+AttemptCreationPending: may not have been creation requested successfully and is expected to exist.
+
+AttemptCreationPending --> AttemptCreationRequested: Prepare Create Request Successed
+AttemptCreationRequested: Pod does not exist
+AttemptCreationRequested: must have been creation requested successfully and is expected to exist.
+
+AttemptCreationRequested --> AttemptPreparing: Create Request Successed
+AttemptPreparing: Pod exists and is not deleting
+AttemptPreparing: may not have been deletion requested successfully
+AttemptPreparing: its PodPhase is PodPending or PodUnknown afterwards.
+
+AttemptPreparing --> AttemptRunning: Pod Created And Prepare Done
+AttemptRunning: Pod exists and is not deleting
+AttemptRunning: may not have been deletion requested successfully
+AttemptRunning: its PodPhase is PodRunning or PodUnknown afterwards
+
+AttemptRunning --> AttemptDeletionPending: Running Completed
+AttemptDeletionPending: Pod exists and is not deleting and
+AttemptDeletionPending: may not have been deletion requested successfully and
+AttemptDeletionPending: its PodPhase is PodSucceeded or PodFailed.
+
+AttemptDeletionPending ----> AttemptDeletionRequested: Prepare Deleting Request
+AttemptDeletionRequested: Pod exists and is not deleting and
+AttemptDeletionRequested: must have been deletion requested successfully.
+
+AttemptCompleted: Pod does not exist and
+AttemptCompleted: is not expected to exist and will never exist and
+AttemptCompleted: current attempt is not the last attempt or to be determined.
+
+AttemptDeletionRequested --> AttemptCompleted: Successed Deleted
+
+AttemptCompleted --> Completed: Prepare Complate
+Completed: Pod does not exist and
+Completed: is not expected to exist and will never exist and
+Completed: current attempt is the last attempt.
+
+' Retry
+AttemptCompleted --> AttemptCreationPending: Retry
+AttemptPreparing --> AttemptDeletionPending: Can Not Running
+
+' External
+AttemptPreparing --> AttemptDeletionRequested: [E] Delete
+AttemptDeletionPending --> AttemptDeletionRequested: [E] Delete
+AttemptRunning --> AttemptDeletionRequested: [E] Delete
+AttemptCreationRequested --> AttemptDeletionRequested: [E] Delete
+
+AttemptCreationRequested --> AttemptCompleted: Timeout
+AttemptPreparing --> AttemptCompleted: Timeout
+AttemptCreationPending --> AttemptCompleted: Timeout
+AttemptDeletionPending --> AttemptCompleted: Timeout
+AttemptRunning --> AttemptCompleted: Timeout
+
+
+' Compated
+Completed --> [*]
+
+
+
+@enduml
+
+
+

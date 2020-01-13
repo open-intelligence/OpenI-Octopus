@@ -1,9 +1,12 @@
+/* eslint valid-jsdoc: "off" */
 'use strict';
-const path = require('path');
-const LError = require('../app/error/proto');
-const ECode = require('../app/error/code');
-module.exports = appInfo => {
 
+const path = require('path');
+const pkg = require('../package.json');
+const { ECode, LError } = require('../lib');
+
+module.exports = appInfo => {
+  const isApp = appInfo.name === pkg.name;
   const config = exports = {};
   // use for cookie sign key, should change to your own and keep security
   config.keys = appInfo.name + '_1545288328934_4914';
@@ -60,6 +63,12 @@ module.exports = appInfo => {
     maxFiles: 1000,
   };
 
+  config.security = {
+    csrf: {
+      enable: false,
+    }
+  };
+
   if(process.env.ENABLED_API_DOC === "YES"){
     config.static.dir.push(path.join(appInfo.baseDir, 'app/apidoc'));
   }
@@ -83,7 +92,6 @@ module.exports = appInfo => {
     gpuTypeMap: { dgx: true, debug: true },
     cpuTypeMap: { debug_cpu: true },
   };
-
 
   // define the order of middleware and options,
   const middlewareConfig = {
@@ -122,7 +130,9 @@ module.exports = appInfo => {
     },
   };
 
-  Object.assign(config, middlewareConfig);
+  if(isApp){
+    Object.assign(config, middlewareConfig);
+  }
 
   return config;
 };

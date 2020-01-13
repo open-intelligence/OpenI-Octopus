@@ -1,0 +1,290 @@
+typemeta:
+  kind: ""
+  apiversion: ""
+objectmeta:
+  name: failedtaskset
+  generatename: ""
+  namespace: test
+  selflink: /apis/octopus.openi.pcl.cn/v1alpha1/namespaces/test/tasksets/failedtaskset
+  uid: ba0479d4-ffa0-11e9-852b-080027b98d5b
+  resourceversion: "4078526"
+  generation: 14
+  creationtimestamp: "2019-11-05T15:48:59+08:00"
+  deletiontimestamp: null
+  deletiongraceperiodseconds: null
+  labels: {}
+  annotations: {}
+  ownerreferences: []
+  finalizers: []
+  clustername: ""
+  managedfields: []
+spec:
+  priority: 10000
+  retrypolicy:
+    retry: false
+    maxretrycount: 0
+  scheduler:
+    name: kube-batch
+    policies:
+    - name: gang
+      policy: '[{"role":"ps","minAvailable":1},{"role":"worker","minAvailable":1}]'
+  queue: default
+  roles:
+  - name: ps
+    replicas: 1
+    completionpolicy:
+      minfailed: 1
+      minsucceeded: 1
+    retrypolicy:
+      retry: false
+      maxretrycount: 0
+    eventpolicies:
+    - event: RoleFailed
+      action: TaskSetFailed
+    pod:
+      objectmeta:
+        name: ""
+        generatename: ""
+        namespace: ""
+        selflink: ""
+        uid: ""
+        resourceversion: ""
+        generation: 0
+        creationtimestamp: "0001-01-01T00:00:00Z"
+        deletiontimestamp: null
+        deletiongraceperiodseconds: null
+        labels: {}
+        annotations: {}
+        ownerreferences: []
+        finalizers: []
+        clustername: ""
+        managedfields: []
+      spec:
+        volumes: []
+        initcontainers: []
+        containers:
+        - name: workercontainer
+          image: busybox:latest
+          command:
+          - sh
+          - -c
+          - sleep 10 && exit 1
+          args: []
+          workingdir: ""
+          ports: []
+          envfrom: []
+          env: []
+          resources:
+            limits:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+            requests:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+          volumemounts: []
+          volumedevices: []
+          livenessprobe: null
+          readinessprobe: null
+          startupprobe: null
+          lifecycle: null
+          terminationmessagepath: ""
+          terminationmessagepolicy: ""
+          imagepullpolicy: ""
+          securitycontext: null
+          stdin: false
+          stdinonce: false
+          tty: false
+        ephemeralcontainers: []
+        restartpolicy: Never
+        terminationgraceperiodseconds: null
+        activedeadlineseconds: null
+        dnspolicy: ""
+        nodeselector: {}
+        serviceaccountname: ""
+        deprecatedserviceaccount: ""
+        automountserviceaccounttoken: null
+        nodename: ""
+        hostnetwork: false
+        hostpid: false
+        hostipc: false
+        shareprocessnamespace: null
+        securitycontext: null
+        imagepullsecrets: []
+        hostname: ""
+        subdomain: ""
+        affinity: null
+        schedulername: ""
+        tolerations: []
+        hostaliases: []
+        priorityclassname: ""
+        priority: null
+        dnsconfig: null
+        readinessgates: []
+        runtimeclassname: null
+        enableservicelinks: null
+        preemptionpolicy: null
+        overhead: {}
+        topologyspreadconstraints: []
+  - name: wroker
+    replicas: 1
+    completionpolicy:
+      minfailed: 1
+      minsucceeded: 1
+    retrypolicy:
+      retry: false
+      maxretrycount: 0
+    eventpolicies:
+    - event: RoleFailed
+      action: TaskSetFailed
+    pod:
+      objectmeta:
+        name: ""
+        generatename: ""
+        namespace: ""
+        selflink: ""
+        uid: ""
+        resourceversion: ""
+        generation: 0
+        creationtimestamp: "0001-01-01T00:00:00Z"
+        deletiontimestamp: null
+        deletiongraceperiodseconds: null
+        labels: {}
+        annotations: {}
+        ownerreferences: []
+        finalizers: []
+        clustername: ""
+        managedfields: []
+      spec:
+        volumes: []
+        initcontainers: []
+        containers:
+        - name: workercontainer
+          image: busybox:latest
+          command:
+          - sh
+          - -c
+          - sleep 10 && exit 1
+          args: []
+          workingdir: ""
+          ports: []
+          envfrom: []
+          env: []
+          resources:
+            limits:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+            requests:
+              cpu:
+                format: DecimalSI
+              memory:
+                format: BinarySI
+          volumemounts: []
+          volumedevices: []
+          livenessprobe: null
+          readinessprobe: null
+          startupprobe: null
+          lifecycle: null
+          terminationmessagepath: ""
+          terminationmessagepolicy: ""
+          imagepullpolicy: ""
+          securitycontext: null
+          stdin: false
+          stdinonce: false
+          tty: false
+        ephemeralcontainers: []
+        restartpolicy: Never
+        terminationgraceperiodseconds: null
+        activedeadlineseconds: null
+        dnspolicy: ""
+        nodeselector: {}
+        serviceaccountname: ""
+        deprecatedserviceaccount: ""
+        automountserviceaccounttoken: null
+        nodename: ""
+        hostnetwork: false
+        hostpid: false
+        hostipc: false
+        shareprocessnamespace: null
+        securitycontext: null
+        imagepullsecrets: []
+        hostname: ""
+        subdomain: ""
+        affinity: null
+        schedulername: ""
+        tolerations: []
+        hostaliases: []
+        priorityclassname: ""
+        priority: null
+        dnsconfig: null
+        readinessgates: []
+        runtimeclassname: null
+        enableservicelinks: null
+        preemptionpolicy: null
+        overhead: {}
+        topologyspreadconstraints: []
+status:
+  version: 13
+  phase: TaskSetCompleted
+  phasemessage: Policy.Retry is false
+  transitiontime: "2019-11-05T15:49:20+08:00"
+  state: Failed
+  statemessage: TaskSet completed beacause taskrole(ps) is failed
+  controlunituid: ba06a16d-ffa0-11e9-852b-080027b98d5b
+  createdat: "2019-11-05T15:48:59+08:00"
+  startat: "2019-11-05T15:49:10+08:00"
+  finishat: "2019-11-05T15:49:20+08:00"
+  totalretriedcount: 0
+  preemptcount: 0
+  taskrolestatus:
+  - name: ps
+    phase: TaskRoleCompleted
+    phasemessage: TaskRole is completed ,because all replica is completed
+    transitiontime: "2019-11-05T15:49:20+08:00"
+    state: Failed
+    statemessage: TaskRole Failed
+    replicastatuses:
+    - index: 0
+      name: ps
+      phase: TaskRoleReplicaCompleted
+      phasemessage: Policy.Retry is false
+      transitiontime: "2019-11-05T15:49:20+08:00"
+      startat: "2019-11-05T15:49:00+08:00"
+      finishat: "2019-11-05T15:49:20+08:00"
+      totalretriedcount: 0
+      podname: failedtaskset-ps-0-0-0
+      poduid: baa5eadb-ffa0-11e9-852b-080027b98d5b
+      podip: 172.17.0.6
+      podhostip: 10.0.2.15
+      containername: workercontainer
+      containerid: docker://e73451d52e119c2ad57f236cb832a1c990fcc8894acb421e18e6eae3cf53cc70
+      terminatedinfo:
+        exitcode: 1
+        exitmessage: ""
+  - name: wroker
+    phase: TaskRoleRunning
+    phasemessage: Some replica is running
+    transitiontime: "2019-11-05T15:49:15+08:00"
+    state: Running
+    statemessage: TaskRole is running
+    replicastatuses:
+    - index: 0
+      name: wroker
+      phase: TaskRoleReplicaAttemptRunning
+      phasemessage: Pod is running
+      transitiontime: "2019-11-05T15:49:15+08:00"
+      startat: "2019-11-05T15:49:00+08:00"
+      finishat: null
+      totalretriedcount: 0
+      podname: failedtaskset-wroker-0-0-0
+      poduid: baa91a7f-ffa0-11e9-852b-080027b98d5b
+      podip: 172.17.0.7
+      podhostip: 10.0.2.15
+      containername: workercontainer
+      containerid: docker://48becfb7f2bb1361c2f857f73761ed09be166823d83d7c6e47720e86c5824b15
+      terminatedinfo: null

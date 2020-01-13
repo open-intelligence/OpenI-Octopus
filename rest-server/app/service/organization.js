@@ -1,8 +1,7 @@
 'use strict';
 
 const Service = require('egg').Service;
-const LError = require('../error/proto');
-const ECode = require('../error/code');
+const { ECode, LError } = require('../../lib');
 
 class OrganizationService extends Service {
   constructor(...args) {

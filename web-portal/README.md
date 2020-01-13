@@ -1,6 +1,6 @@
 # Webportal
 
-The web font end of OpenI-Octopus Platform
+The web font end of OPENI Platform
 
 ## Font-End Architecture
 
@@ -9,40 +9,40 @@ Please learn [Antd-Design](https://ant.design) and [Antd-Design Course](https://
 ## Development
 
 ```bash
-$ npm install
+$ yarn install
 $ npm run dev
 $ open the web browser and access http://localhost:9286/
 ```
 
-## Quick Deploy
+## Deploy
+
+##### 1.Configure docker insecure-registries
 
 ```
-kubectl label node $node openinode=worker
-kubectl apply -f ./k8s
-```
+# vim /etc/docker/daemon.json
 
-## Deploy form building source code
+{
+"insecure-registries":["192.168.202.74:5000"],
+"live-restore":true
+}
+``` 
 
 
-##### 1.Build webportal image
+##### 2.restart docker
+
+``systemctl restart docker``
+
+##### 3.Build webportal
 
 ```
 # cd webportal
 # npm install
 # npm run build:prod
-# docker build -t $dockerRegistry/openi/webportal:latest .
-# docker push $dockerRegistry/openi/webportal:latest
+# docker build -t 192.168.202.74:5000/openi/webportal .
+# docker push 192.168.202.74:5000/openi/webportal
 ```
 
-##### 2. modified yaml file before deploy
-
-```
-# cd k8s
-# vim webportal.deploy.yaml
-# configure image address
-```
-
-##### 3. deploy
+### 4. deploy
 ```
 # kubectl label node $node openinode=worker
 # kubectl apply -f ./k8s

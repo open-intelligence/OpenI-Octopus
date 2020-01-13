@@ -2,7 +2,6 @@
 
 const Controller = require('egg').Controller;
 
-
 class JobPlatformController extends Controller {
   async listJobPlatforms() {
     const { ctx, service } = this;

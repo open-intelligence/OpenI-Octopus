@@ -2,7 +2,6 @@
 
 const Controller = require('egg').Controller;
 
-
 class AclController extends Controller {
   async addUserWhiteList() {
     const { ctx, service } = this;

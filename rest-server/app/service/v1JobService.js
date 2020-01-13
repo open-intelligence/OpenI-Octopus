@@ -3,100 +3,120 @@
 const fs = require('fs');
 const utils = require('util');
 const uuidv1 = require('uuid/v1');
-const LError = require('../error/proto');
-const ECode = require('../error/code');
-const libFramework = require('../lib/framework');
+const { BaseJobService, ECode, LError } = require('../../lib');
 
-const BaseJobService = require('./baseJobService');
-const k8s_job_convert = require('./k8s_job/convert');
-const k8s_job_utils = require('./k8s_job/utils');
-
-
-const Constants = require('./k8s_job/constants');
 
 class V1JobService extends BaseJobService {
 
   constructor(...args) {
     super(...args);
+    this.K8sJobComponent = this.app.component.K8sJob;
+    this.LibTaskSet = this.app.component.LibTaskSet;
     this.jobPlatformModel = this.app.model.JobPlatform;
-    this.images = {};
-
-    this.images.framenameworkBarrier = this.config.dockerImages.framenameworkBarrier;
-
+    this.images = {
+      poddiscovery:this.config.dockerImages.poddiscovery
+    };
   }
 
   async runFramework(user_info, job) {
+    const libTaskSet = this.LibTaskSet
+    , Constants = this.K8sJobComponent.Constants;
 
-    k8s_job_utils.checkMinTaskNumber(job);
+    const clusterId = this.config.clusterId || 'default';
 
+    this.K8sJobComponent.utils.checkMinTaskNumber(job);
 
-    await this._initFrameworkFolders(user_info.username, job.jobName);
+    await this._initFolders(clusterId, user_info.username, job.jobName);
 
     const job_id = uuidv1();
 
-    const framework = libFramework.NewFrameWork();
+    const podgroup = libTaskSet.NewPodGroup();
 
-    framework.SetName(job_id);
+    const taskset = libTaskSet.NewTaskSet();
 
-    framework.SetConfig(job);
+    taskset.SetName(job_id);
 
-    framework.SetLabel(Constants.K8S_ORG_ID_LABEL_KEY, user_info.org_id);
-    framework.SetLabel(Constants.K8S_USER_LABEL_KEY, user_info.user_id);
-    framework.SetLabel(Constants.K8S_JOB_TYPE_LABEL_KEY, job.gpuType);
-    framework.SetLabel(Constants.K8S_JOB_NAME_LABEL_KEY, job.jobName);
+    taskset.SetConfig(job);
 
-    framework.SetRetryAmount(job.retryCount || 0);
+    taskset.SetLabel(Constants.K8S_ORG_ID_LABEL_KEY, user_info.org_id);
+    taskset.SetLabel(Constants.K8S_USER_LABEL_KEY, user_info.user_id);
+    taskset.SetLabel(Constants.K8S_JOB_TYPE_LABEL_KEY, job.gpuType);
+    taskset.SetLabel(Constants.K8S_JOB_NAME_LABEL_KEY, job.jobName);
+
+    taskset.SetRetryAmount(job.retryCount || 0);
+
+    podgroup.SetName(taskset.GetName());
 
     const task_roles = job.taskRoles || [];
 
+    let minMember = 0;
+
     for (let i = 0; i < task_roles.length; i++) {
+
       const role = task_roles[i];
 
-      const task = libFramework.NewTaskRole();
+      const task = libTaskSet.NewRole();
 
       task.SetName(role.name);
-      task.SetMinFailed(role.minFailedTaskCount);
+      task.SetAnnotation("scheduling.k8s.io/group-name",podgroup.GetName());
+      task.SetSchedulerName("kube-batch");
+      task.SetMaxFailed(role.minFailedTaskCount);
       task.SetMinSucceeded(role.minSucceededTaskCount);
-      task.SetTaskNumber(role.taskNumber);
-      task.SetNodeSelector('resourceType', job.gpuType);
+      task.SetReplicaAmount(role.taskNumber);
 
-      const container = libFramework.NewContainer();
+      minMember += role.taskNumber;
+
+      let gpuType = (job.gpuType+"").toLowerCase();
+
+      if(gpuType == "debug_cpu"){
+        gpuType = "debug";
+      }
+
+      task.SetNodeSelector('resourceType', gpuType);
+
+      const container = libTaskSet.NewContainer();
 
       container.SetCustomResource('nvidia.com/gpu', role.gpuNumber);
       container.SetCpu(role.cpuNumber);
       container.SetMemoryMb(role.memoryMB);
-      container.SetCommand('/mnt/frameworkbarrier/injector.sh;sleep 10;' + role.command);
+      container.SetCommand('sleep 10;' + role.command);
       container.SetImage(job.image);
 
-      container.Mount(libFramework.NewHostPathVolume().SetMountFrom(`/ghome/${user_info.username}`).SetMountTo('/userhome'));
-      container.Mount(libFramework.NewHostPathVolume().SetMountFrom(`/gmodel/${user_info.username}`).SetMountTo('/model-hub'));
-      container.Mount(libFramework.NewHostPathVolume().SetMountFrom('/gdata').SetMountTo('/gdata')
+      container.Mount(libTaskSet.NewHostPathVolume().SetMountFrom(`/ghome/${user_info.username}`).SetMountTo('/userhome'));
+      container.Mount(libTaskSet.NewHostPathVolume().SetMountFrom(`/gmodel/${user_info.username}`).SetMountTo('/model-hub'));
+      
+      container.Mount(libTaskSet.NewHostPathVolume().SetMountFrom('/gdata').SetMountTo('/gdata')
         .SetReadOnly(true));
 
+      const share_hosts_from = `/ghome/${user_info.username}/share_hosts/${job_id}`;
+      const share_hosts_temp_from = `/ghome/${user_info.username}/share_hosts/${job_id}.json`;
 
-      const init_container = libFramework.NewContainer();
-      init_container.SetName('framenameworkbarrier');
-      init_container.SetImage(this.images.framenameworkBarrier);
-      init_container.Mount(libFramework.NewEmptyDirVolume().SetName('frameworkbarrier-volume').SetMountTo('/mnt/frameworkbarrier'));
+      container.Mount(libTaskSet.NewHostPathVolume().SetMountFrom(share_hosts_from).SetMountTo("/etc/hosts").SetReadOnly(true).SetType("FileOrCreate"));
 
-      container.Mount(libFramework.NewEmptyDirVolume().SetName('frameworkbarrier-volume').SetMountTo('/mnt/frameworkbarrier'));
+      const initcontainer_sharehosts = libTaskSet.NewContainer();
+      initcontainer_sharehosts.SetCommand("/app/poddiscovery");
+      initcontainer_sharehosts.Mount(libTaskSet.NewHostPathVolume().SetMountFrom(share_hosts_from).SetMountTo("/etc/hosts").SetType("FileOrCreate"));
+      initcontainer_sharehosts.Mount(libTaskSet.NewHostPathVolume().SetMountFrom(share_hosts_temp_from).SetMountTo("/etc/hosts_json.json").SetType("FileOrCreate"));
+      initcontainer_sharehosts.SetImage(this.images.poddiscovery);
 
+      task.AddInitContainer(initcontainer_sharehosts);
+     　　
       task.SetContainer(container);
-      task.AddInitContainer(init_container);
-
-      framework.AddTask(task);
+     　
+      taskset.AddRole(task);
     }
 
+    podgroup.SetMinMember(minMember);
 
-    return await this._invoke_framework(framework);
+    return await this._invoke_taskset(taskset,podgroup);
 
   }
 
-  async _initFrameworkFolders(userName) {
+  async _initFolders(clusterId, userName) {
 
-    // ghome 已经挂载到各个机器上了,包括运行该项目的机器节点
+    // ghome 已经挂载到各个机器上了
 
-    await utils.promisify(fs.mkdir)(`/ghome/${userName}`, { recursive: true });
+    await utils.promisify(fs.mkdir)(`/ghome/${userName}/share_hosts`, { recursive: true });
 
     await utils.promisify(fs.mkdir)(`/gmodel/${userName}`, { recursive: true });
 
@@ -110,7 +130,7 @@ class V1JobService extends BaseJobService {
       condition.where.user_id = user_id;
     }
 
-    return await this._stop_framework(condition);
+    return await this._stop_taskset(condition);
 
   }
 
@@ -122,13 +142,13 @@ class V1JobService extends BaseJobService {
       condition.where.user_id = user_id;
     }
 
-    const record = await this._get_framework(condition);
+    const record = await this._get_taskset(condition);
 
     if (!record) {
       return null;
     }
 
-    const job_detail = k8s_job_convert.to_web_format(record.job_detail);
+    const job_detail = this.K8sJobComponent.convert.to_web_format(record.job_detail);
 
     job_detail.jobStatus.state = record.job_state || job_detail.jobStatus.state;
 
@@ -153,13 +173,13 @@ class V1JobService extends BaseJobService {
     condition.where = cond;
     total_size_condition.where = cond;
 
-    const framework_list = await this._get_framework_list(condition);
+    const framework_list = await this._get_taskset_list(condition);
 
     const total_size = await this._query_total_size_from_database(total_size_condition)
 
     return {
       total_size:total_size,
-      jobs:framework_list.map(k8s_job_convert.record_to_list_item)
+      jobs:framework_list.map(this.K8sJobComponent.convert.record_to_list_item)
     }
   }
 
@@ -171,9 +191,9 @@ class V1JobService extends BaseJobService {
           condition.where.user_id = user_id;
       }
 
-      const framework_list = await this._get_framework_list(condition);
+      const framework_list = await this._get_taskset_list(condition);
 
-      return framework_list.map(k8s_job_convert.resourceInfo_to_list_item);
+      return framework_list.map(this.K8sJobComponent.convert.resourceInfo_to_list_item);
   }
 
   async getFrameworkConfig(job_id, user_id) {
@@ -190,7 +210,7 @@ class V1JobService extends BaseJobService {
 
     try {
 
-      const job = await this._get_framework_from_database(condition);
+      const job = await this._get_taskset_from_database(condition);
 
       if (!job) {
         return result;
@@ -224,7 +244,7 @@ class V1JobService extends BaseJobService {
       raw:true
     });
     let summaryFrameworkStatus = {};
-    Object.keys(Constants.FRAMEWORK_STATUS).forEach((statusKey)=>{
+    Object.keys(this.K8sJobComponent.Constants.TASK_STATUS).forEach((statusKey)=>{
       frameworkStatuses.forEach((frameworkStatus)=>{
         if(frameworkStatus.job_state === statusKey){
           summaryFrameworkStatus[statusKey] = frameworkStatus.count;

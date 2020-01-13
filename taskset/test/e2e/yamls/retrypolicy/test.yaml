@@ -1,0 +1,41 @@
+#任务退出，状态为failed,replica的重试次数为１,且整个任务的重试次数为１
+ 
+
+apiVersion: octopus.openi.pcl.cn/v1alpha1
+kind: TaskSet
+metadata:
+  name: retrytest
+spec:
+  retryPolicy:
+    retry: true
+    delay: 60
+    maxRetryCount: 1
+  roles:
+    - name: role1
+      replicas: 1
+      eventPolicy: []
+      completionPolicy:
+        maxFailed: 1
+        minSucceeded: 1
+      retryPolicy:
+        retry: true
+        delay: 20
+        maxRetryCount: 1
+      template:
+        metadata:
+          annotations:
+            scheduling.k8s.io/group-name: e2e-9
+        spec:
+          schedulerName: kube-batch
+          restartPolicy: Never
+          containers:
+            - name: worker
+              image: busybox
+              command: ["sh","-c","sleep 10;exit 1"]
+---
+apiVersion: scheduling.incubator.k8s.io/v1alpha1
+kind: PodGroup
+metadata:
+  name: e2e-9
+spec:
+  minMember: 1

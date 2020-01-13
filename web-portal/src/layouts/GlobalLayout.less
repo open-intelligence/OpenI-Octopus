@@ -1,0 +1,100 @@
+@import '~antd/lib/style/themes/default.less';
+
+@pro-header-hover-bg: rgba(0, 0, 0, 0.025);
+
+.head{
+  background: #1890ff;
+}
+
+.center{
+  text-align:center;
+}
+
+.marginRight10{
+  margin-right: 10px;
+}
+
+.content {
+  minHeight: 360;
+}
+
+.right{
+  text-align: right;
+  padding-right: 20px;
+  color: white;
+  font-size: 14px;
+
+  .action:hover{
+    color: #1890ff;
+  }
+
+  .action {
+    cursor: pointer;
+    padding: 0 12px;
+    display: inline-block;
+    transition: all 0.3s;
+    height: 100%;
+    > i {
+      font-size: 16px;
+      vertical-align: middle;
+      color: @text-color;
+    }
+    &:hover,
+    &:global(.ant-popover-open) {
+      background: white;
+    }
+  }
+
+  .account {
+    .avatar {
+      margin: 20px 8px 20px 0;
+      vertical-align: middle;
+    }
+  }
+}
+
+:global {
+  .ant-layout-header {
+    padding: 0 25px;
+  }
+
+
+  .ant-layout{
+    background: #fff;
+  }
+
+
+  .ant-menu-dark {
+
+    background: #1890ff;
+
+    .ant-menu-item-selected > a, .ant-menu-item-selected > a:hover{
+      color: #1890ff;
+    }
+
+  }
+
+  .ant-menu-vertical .ant-menu-item::after,
+  .ant-menu-vertical-left .ant-menu-item::after,
+  .ant-menu-vertical-right .ant-menu-item::after,
+  .ant-menu-inline .ant-menu-item::after {
+    border-left: 3px solid #1890ff;
+    border-right: 0px solid #1890ff;
+    left:0;
+  }
+}
+
+.logo {
+  color: white;
+  font-family: Avenir, 'Helvetica Neue', Arial, Helvetica, sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+@media (max-width: @screen-sm) {
+
+  .content {
+    minHeight: 360;
+  }
+}
+

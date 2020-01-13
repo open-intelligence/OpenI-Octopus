@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: poddiscovery
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+
+kubectl create serviceaccount poddiscovery --namespace default
+
+kubectl create clusterrolebinding poddiscovery --clusterrole=cluster-admin --user=system:serviceaccount:default:poddiscovery

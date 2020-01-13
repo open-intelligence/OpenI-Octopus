@@ -1,0 +1,41 @@
+#只有一个Role,设置成Succeeded -> NoAction,
+#但是应该TaskCompleted，因为已经没有Role在运行了,State 为Succeeded
+
+apiVersion: octopus.openi.pcl.cn/v1alpha1
+kind: TaskSet
+metadata:
+  name: sucnobsuc
+spec:
+  retryPolicy:
+    retry: false
+    maxRetryCount: 1
+  roles:
+    - name: role1
+      replicas: 1
+      eventPolicy:
+        - event: RoleSucceeded
+          action: TaskSetSucceeded
+      completionPolicy:
+        maxFailed: 1
+        minSucceeded: 1
+      retryPolicy:
+        retry: false
+        maxRetryCount: 1
+      template:
+        metadata:
+          annotations:
+            scheduling.k8s.io/group-name: e2e-6
+        spec:
+          schedulerName: kube-batch
+          restartPolicy: Never
+          containers:
+            - name: worker
+              image: busybox
+              command: ["sh","-c","sleep 10;exit 0"]
+---
+apiVersion: scheduling.incubator.k8s.io/v1alpha1
+kind: PodGroup
+metadata:
+  name: e2e-6
+spec:
+  minMember: 1

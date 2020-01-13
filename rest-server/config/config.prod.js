@@ -4,12 +4,6 @@ module.exports = () => {
 
   const config = exports = {};
 
-  config.selfApp = {
-    domain: 'http://',
-    rootPath: '/rest-server',
-  };
-
-
   const server_port = process.env.SERVER_PORT || 9186;
 
   config.cluster = {
@@ -18,6 +12,10 @@ module.exports = () => {
     },
   };
 
+  config.logger = {
+    disableConsoleAfterReady: false,
+    disableFileAfterReady:true
+  };
 
   config.sequelize = {
     host: process.env.MYSQL_HOST,
@@ -26,13 +24,7 @@ module.exports = () => {
     password: process.env.MYSQL_PWD,
   };
 
-  config.esService = 'http://es-external-service.kube-system:9200';
-
-  config.k8sConfigPath = process.env.K8S_CONFIG;
-
-  config.userhomeBasePath = '/ghome/';
-
-  config.usermodelBasePath = '/gmodel/';
+  config.esService = process.env.ES_SERVICE_ROOT_PATH;
 
   config.imageFactory = process.env.IMAGE_FACTORY_URI;
 
@@ -44,17 +36,14 @@ module.exports = () => {
   };
 
   config.security = {
-    csrf: {
-      enable: false,
-    },
     domainWhiteList: [ `http://localhost:${server_port}`, `http://127.0.0.1:${server_port}` ],
   };
 
   config.dockerImages = {
     framenameworkBarrier: process.env.IMAGE_FRAMEWORKBARRIER, // 包含 framenameworkbarrier 的镜像
     ubuntugit: process.env.IMAGE_UBUNTU_GIT, // 包含git工具的镜像
+    poddiscovery: process.env.IMAGE_POD_DISCOVERY,
   };
-
 
   config.git = {
     server: process.env.GIT_SERVER,

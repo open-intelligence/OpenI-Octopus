@@ -1,8 +1,10 @@
 import React, {Component} from 'react';
-import {Form, Icon, Input, Button,message,Spin} from 'antd';
+import {Form, Icon, Input, Button,Tooltip,Spin} from 'antd';
 
 import {formatMessage } from 'umi/locale';
 import styles from './index.less';
+
+import openiLogo from '@/assets/img/openi-logo.png';
 
 import {connect} from 'dva';
 
@@ -13,13 +15,20 @@ function mapStateToProps(state) {
         ...state.login
     };
 }
+
 const mapDispatchToProps=(dispatch)=>{
     return {
-        login: (params,onFailed)=>{
-            dispatch({type:`${namespace}/login`,payload:{params:params,onFailed:onFailed}});
+        login: (params,onFailed,onSuccessed)=>{
+            dispatch({type:`${namespace}/login`,payload:{params,onFailed,onSuccessed}});
         },
         shouldAutoLogin:()=>{
             dispatch({type:`${namespace}/shouldAutoLogin`});
+        },
+        loginSuccess:() =>{
+            dispatch({type:`login/loginSuccess`});
+        },
+        loginFail:(errMsg) =>{
+            dispatch({type:`login/loginFail`,payload:{errMsg}});
         }
     }
 };
@@ -32,26 +41,39 @@ class NormalLoginForm extends Component {
     }
 
     handleSubmit = (e) => {
+        let loginForm = this;
         e.preventDefault();
         this.props.form.validateFields((err, values) => {
-            if (!err) {
-                this.login(values)
+            if (err) {
+                loginForm.props.loginFail(formatMessage({id: "changePwd.password.length.errMsg"}))
+                return
             }
+
+            this.login(values)
+
         });
     };
 
     login = (params)=>{
-        this.props.login(params,function(){
-            message.error(formatMessage({id:'login.error.failed'}))
+
+        let loginForm = this;
+
+        this.props.login(params,function(errCode){
+
+            loginForm.props.loginFail(formatMessage({id:'login.error.'+errCode}))
+
+        },function () {
+            loginForm.props.loginSuccess();
         });
-    }
+    };
 
     render() {
         const { getFieldDecorator } = this.props.form;
 
         return (
             <Spin spinning={this.props.load}>
-                <Form onSubmit={this.handleSubmit}>
+
+                <Form>
                     <Form.Item>
                         {getFieldDecorator('username', {
                             rules: [{ required: true, message: formatMessage({id:'login.username.message'})}],
@@ -60,22 +82,27 @@ class NormalLoginForm extends Component {
                                    placeholder={formatMessage({id:'login.username'})} />
                         )}
                     </Form.Item>
-                    <Form.Item>
+                    <Form.Item
+                        validateStatus={this.props.loginStatusString}
+                        help={this.props.loginErrorString}
+                    >
                         {getFieldDecorator('password', {
-                            rules: [{ required: true, message: formatMessage({id:'login.password.message'}) }],
+                            rules: [
+                                { required: true, message: formatMessage({id:'login.password.message'}) },
+                                {min:6,message: formatMessage({id: "changePwd.password.length.errMsg"})}
+                            ],
                         })(
                             <Input prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />}
                                    type="password" placeholder={formatMessage({id:'login.password'})} />
                         )}
                     </Form.Item>
-
                     <Form.Item>
-                        <Button type="primary" htmlType="submit" className={styles["login-form-button"]}>
+                        <Button type="primary" onClick={this.handleSubmit} className={styles["login-form-button"]}>
                             {formatMessage({id:'login.button.login'})}
                         </Button>
-
                     </Form.Item>
                 </Form>
+
             </Spin>
         );
     }

@@ -1,0 +1,57 @@
+@startuml
+
+Pod: Pending, Running, Succeeded, Failed, Unknown
+Pod: Creating,  Terminating, Terminated, Completed
+
+[*] --> Creating: Create Pod
+'Successed
+
+Creating --> Created
+
+Created --> Pending
+
+Pending : Wait For Scheduled
+Pending : Resource Not Ready
+
+Pending --> Running: Running Check
+Running : Runntime Ready
+
+Running --> Succeeded
+Succeeded : Pod Complated
+
+Running --> Failed
+Failed --> Terminating
+
+
+Succeeded --> Terminating
+
+Terminating --> Terminated
+
+Terminated --> Completed
+Completed --> [*]
+Completed: Pod does not exist
+
+Failed : Runtime Error: Steady-State/Transient Failure
+
+' Retry
+Failed --> Pending: Retry
+
+' Deleted
+Pending --> Terminating: Deleted
+Running --> Terminating: Deleted
+Created --> Terminating: Deleted
+Creating --> Terminating: Deleted
+
+
+Unknown: Timeout
+
+@enduml
+
+Task:AttemptCreationPending,AttemptCreationRequested,AttemptPreparing,AttemptRunning,AttemptDeletionPending,AttemptDeletionRequested,AttemptDeleting,AttemptCompleted,Completed
+[*] --> Pending: Create Pod
+
+
+
+
+
+

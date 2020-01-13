@@ -1,15 +1,14 @@
 'use strict';
 
 const Service = require('egg').Service;
-const ImageFactoryApi = require('../third-service-apis/image-factory');
+
 class ImageCommitService extends Service {
 
   constructor(...args) {
     super(...args);
-    this.userModel = this.app.model.User;
+    this.ThirdServiceApisComponent = this.app.component.ThirdServiceApis;
     this.jobPlatformModel = this.app.model.JobPlatform;
-    this.organizationModel = this.app.model.Organization;
-    this.imageFactoryApi = ImageFactoryApi.config(this.config.imageFactory);
+    this.imageFactoryApi = this.ThirdServiceApisComponent.imageFactory.config(this.config.imageFactory);
 
     this.userCommitImageTimerMap = {};
   }

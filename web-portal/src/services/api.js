@@ -12,22 +12,6 @@ export default async function requestWithAuth(url,options={}){
     return await request(url,options);
 }
 
-export async function loadJobsSummary(){
-
-    let response  = await requestWithAuth('/api/v1/jobs/status/summary');
-
-    if (response &&'S000' === response.code){
-        return {
-            success:true,
-            jobsSummary:response.payload
-        };
-    }
-
-    return {
-        success:false
-    };
-}
-
 export async function loadJobs(pageSize,pageNumber,searchParamStr) {
 
 
@@ -48,6 +32,22 @@ export async function loadJobs(pageSize,pageNumber,searchParamStr) {
     };
 }
 
+
+export async function loadJobsSummary(){
+
+    let response  = await requestWithAuth('/api/v1/jobs/status/summary');
+
+    if (response &&'S000' === response.code){
+        return {
+            success:true,
+            jobsSummary:response.payload
+        };
+    }
+
+    return {
+        success:false
+    };
+}
 
 export async function thirdPartyUserInfo(token) {
     let response =  await request('/api/v1/user/info',{
@@ -110,12 +110,29 @@ export async function updatePassword(params){
     if (response&&'S000' != response.code){
         return {
             success:false,
+            code: response.code,
             message:response.msg
         };
     }
 
     return {
         success:true,
+    };
+}
+
+export async function loadHardwareInfo(){
+
+    let response  = await requestWithAuth('/api/v1/hardwares');
+
+    if (response &&'S000' === response.code){
+        return {
+            success:true,
+            hardwareInfo:response.payload
+        };
+    }
+
+    return {
+        success:false
     };
 }
 
@@ -143,6 +160,25 @@ export async function loadJob(params){
         return {
             success:true,
             job:response.payload
+        };
+    }
+
+    return {
+        success:false
+    };
+}
+
+
+export async function getServices(){
+
+    let response  = await requestWithAuth('/api/v1/services',{
+        method: 'GET'
+    });
+
+    if (response && 'S000' === response.code){
+        return {
+            success:true,
+            services:response.payload
         };
     }
 
@@ -186,6 +222,9 @@ export async function loadDataSet(){
     };
 }
 
+export async function loadVirtualClusters(){
+    return await requestWithAuth('/api/v1/virtual-clusters');
+}
 
 export async  function submitJob(job){
 
@@ -315,7 +354,7 @@ export async function getUserInfo(username){
     if(rsp && "S000" === rsp.code){
         return {
             success:true,
-            userInfo:rsp.payload
+            userInfo:rsp.payload.userInfo
         };
     }
 
@@ -336,6 +375,22 @@ export async function updateUserInfo(username,newUserInfo){
         return {
             success:true,
             userInfo:rsp.payload
+        };
+    }
+
+    return {
+        success:false,
+        msg:rsp?rsp.msg:''
+    };
+}
+
+export async function getOrgInfo(){
+    let rsp = await requestWithAuth("/api/v1/ogz");
+
+    if(rsp && "S000" === rsp.code){
+        return {
+            success:true,
+            orgInfo:rsp.payload
         };
     }
 
@@ -479,4 +534,47 @@ export async function loadContainerLog(job,taskPod,container,pageSize,pageNumber
     });
 
     return response;
+}
+
+export async function submitWorkOrder(wordOrder){
+
+    let response = await requestWithAuth('/api/v1/wo/',{
+        method:'POST',
+        body:wordOrder
+    });
+
+    if (response && 'S000' === response.code){
+        return {
+            success:true,
+            wordOrder:response.payload
+        };
+    }
+
+    return {
+        success:false,
+        code: response.code,
+        message:response.msg
+    };
+}
+
+
+export async function submitFeedback(feedback){
+
+    let response = await requestWithAuth('/api/v1/feedback/',{
+        method:'POST',
+        body:feedback
+    });
+
+    if (response && 'S000' === response.code){
+        return {
+            success:true,
+            feedback:response.payload
+        };
+    }
+
+    return {
+        success:false,
+        code: response.code,
+        message:response.msg
+    };
 }

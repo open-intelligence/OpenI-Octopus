@@ -3,10 +3,23 @@ import styles from './index.less';
 
 class ClusterDashboard extends Component{
 
+    constructor() {
+        super();
+        this.state = {
+            iFrameHeight: '0px'
+        }
+    }
+
     componentDidMount(){
-        var oIframe = document.getElementById("iframe-cluster");
-        var oBody = document.getElementsByClassName("ant-layout-content")[0];
-        oIframe.style.height = oBody.offsetHeight - 5 + 'px';
+        var parent = window.parent.document.documentElement;
+
+        var scrollHeight = parent.scrollHeight;
+
+        //console.log("scrollHeight:",scrollHeight);
+
+        this.setState({
+            "iFrameHeight":  scrollHeight + 'px'
+        });
     }
 
     render(){
@@ -16,6 +29,8 @@ class ClusterDashboard extends Component{
                 className={styles.clusterDashboard}
                 src={`${__WEBPORTAL__.grafanaUri}/d/ft1oaQnWk/clustermetrics?orgId=1&refresh=10s&from=now-5m&to=now&var-Node=All`}
                 frameBorder="0"
+                scrolling="no"
+                height={this.state.iFrameHeight}
             />
         )
     }

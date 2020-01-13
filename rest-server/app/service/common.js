@@ -1,9 +1,7 @@
 'use strict';
 
 const Service = require('egg').Service;
-const LError = require('../error/proto');
-const ECode = require('../error/code');
-const utils = require('../utils');
+const { ECode, LError } = require('../../lib');
 
 class CommonService extends Service {
   constructor(...args) {
@@ -96,7 +94,7 @@ class CommonService extends Service {
       where: { typeKey },
       attributes: [ 'id', 'typeKey' ],
     });
-    if (utils.isEmptyObject(commonType)) {
+    if (this.app.component.Utils.isEmptyObject(commonType)) {
       throw new LError(ECode.NOT_FOUND, 'not found type');
     }
     const item = Object.assign({ typeId: commonType.id }, commonItem);

@@ -222,13 +222,14 @@ export default {
                     durationSec: getDurationInSeconds(jobStatus.createdTime, jobStatus.completedTime),
                     duration: convertTime(true, jobStatus.createdTime, jobStatus.completedTime),
                     retries: jobStatus.retries,
+                    podName:"",
                     status: jobState,
                     stop: (jobState === 'Waiting' || jobState === 'Running')?true:false,
                     resubmit: true
                 };
 
                 //console.log("Job",job);
-                let jobTerminalUrl= __WEBPORTAL__.terminalUri+'/?pod.FC_FRAMEWORK_NAME='+job.jobId;
+                let jobTerminalUrl= __WEBPORTAL__.terminalUri+'/?pod.TaskSet='+job.jobId;
 
                 //let jobMetricsPageUrl=__WEBPORTAL__.grafanaUri+'/dashboard/db/joblevelmetrics?var-job='+jobName;
 
@@ -265,26 +266,30 @@ export default {
                         let taskStatus = rawTask.taskStatuses[index];
                         task.key= taskStatus.podUid;
                         task.taskIndex = ''+taskStatus.taskIndex;
-                        task.containerName= taskStatus.containerId;
+                        task.containerName= taskStatus.containerId || "";
                         task.podIp= taskStatus.podIp;
+                        task.podName = taskStatus.podName;
                         task.ip=taskStatus.containerIp;
                         task.gpus=convertGpu(taskStatus.containerGpus);
                         task.status= jobState;
+
+                        if (jobState == "Running" && "" == task.containerName){
+                            task.status = "Waiting";
+                        } 
 
                         task.trackingPageUrl = "/openi/single/log?job="+jobName +
                             "&&taskName="+taskRoleName +
                             "&&taskPod="+task.key +
                             "&&container="+task.containerName;
 
-                        task.metricUrl=__WEBPORTAL__.grafanaUri+"/d/TK8iV8nWk/taskmetrics?orgId=1&refresh=10s&var-pod="+
-                            job.jobId+"-"+task.taskRole+"-"+task.taskIndex;
+                        task.metricUrl=__WEBPORTAL__.grafanaUri+"/d/TK8iV8nWk/taskmetrics?orgId=1&refresh=10s&var-pod="+task.podName;
 
                         task.debugIDEUrl="";
                         if(gpuType==='' || gpuType === 'debug'){
                             if(jobState === 'Running'){
 
                                 const logResponse = yield call(apiService.loadContainerLog,jobName,task.key
-                                    ,task.containerName,100,1);
+                                    ,task.containerName,200,1);
 
                                 if(logResponse.hits)
                                 {
@@ -349,7 +354,7 @@ export default {
         *resubmitJob({payload}, { call, put }) {
             yield put(
                 routerRedux.push({
-                    pathname: '/openi/submit',
+                    pathname: '/openi/v2/brain/submitJob',
                     search: stringify({
                         resubmitName: payload.jobId,
                     }),

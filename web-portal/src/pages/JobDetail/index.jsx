@@ -16,12 +16,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import {Component} from "react";
 import { connect } from 'dva';
-import {Form,Typography,Modal,Divider,Tooltip,Card,Tag,Button,message,Popconfirm,Input} from 'antd';
+import {Form,Modal,Divider,Tooltip,Card,Tag,Button,message,Popconfirm,Input} from 'antd';
 import styles from "./index.less";
 import {formatMessage } from 'umi/locale';
 import StandardTable from '@/components/StandardTable';
 const { TextArea } = Input;
-const { Text} = Typography;
 
 const namespace = 'job';
 

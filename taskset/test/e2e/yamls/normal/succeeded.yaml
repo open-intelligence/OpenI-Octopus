@@ -1,0 +1,39 @@
+#只有一个Role,默认event策略，成功，导致整个任务退出，且任务成功
+ 
+
+apiVersion: octopus.openi.pcl.cn/v1alpha1
+kind: TaskSet
+metadata:
+  name: succeededtest
+spec:
+  retryPolicy:
+    retry: false
+    maxRetryCount: 1
+  roles:
+    - name: role1
+      replicas: 1
+      eventPolicy: []
+      completionPolicy:
+        maxFailed: 1
+        minSucceeded: 1
+      retryPolicy:
+        retry: false
+        maxRetryCount: 1
+      template:
+        metadata:
+          annotations:
+            scheduling.k8s.io/group-name: e2e-8
+        spec:
+          schedulerName: kube-batch
+          restartPolicy: Never
+          containers:
+            - name: worker
+              image: busybox
+              command: ["sh","-c","sleep 10;exit 0"]
+---
+apiVersion: scheduling.incubator.k8s.io/v1alpha1
+kind: PodGroup
+metadata:
+  name: e2e-8
+spec:
+  minMember: 1

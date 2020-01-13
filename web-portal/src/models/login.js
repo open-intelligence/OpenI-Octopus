@@ -4,18 +4,45 @@ import { accountLogin } from '@/services/api';
 import { setAuthority,getAuthority } from '@/utils/authority';
 import { getPageQuery } from '@/utils/utils';
 
+let initState = {
+    loginErrorString:'',
+    loginStatusString:'success',
+    visiableLoginModel:false,
+    status: false,
+    load: false,
+    username:'',
+    admin:false
+};
+
+let loginStatus = initState;
+
+
+//f5 refresh page will reload models object
+//we should reload the loginStatus from broswer cache
+const currentLoginStatus = getAuthority();
+
+if(currentLoginStatus)
+{
+    loginStatus = {
+        ...currentLoginStatus
+    }
+}
+
+
+
 export default {
     namespace: 'login',
 
+    //model state fields which will bind to render page doms should set to first level in the state obj
     state: {
-        status: false,
-        load: false,
+        ...loginStatus
     },
 
     effects: {
         *login({ payload }, { call, put }) {
             const params = payload.params ;
             const onFailed = payload&&payload.onFailed?payload.onFailed:function onFailed(){};
+            const onSuccessed = payload&&payload.onSuccessed?payload.onSuccessed:function onSuccessed(){};
             //console.log("login params",params);
 
             params.expiration = 7*24*60*60;
@@ -23,17 +50,11 @@ export default {
             yield put({
                 type: 'changeLoadingStatus',
                 payload: {
+                    loginStatusString:'success',
                     load:true
                 },
             });
             const response = yield call(accountLogin, params);
-
-            yield put({
-                type: 'changeLoadingStatus',
-                payload: {
-                    load:false
-                },
-            });
 
             // Login successfully
             if (response&&response.code === 'S000') {
@@ -42,36 +63,23 @@ export default {
                     type: 'changeLoginStatus',
                     payload: {
                         status:true,
+                        load:false,
                         ...response.payload
                     }
                 });
 
-                //是否有上一次退出的页面,登录成功重定向
-                const urlParams = new URL(window.location.href);
-                const params = getPageQuery();
-                let { redirect } = params;
-                if (redirect) {
-                    const redirectUrlParams = new URL(redirect);
-                    if (redirectUrlParams.origin === urlParams.origin) {
-                        redirect = redirect.substr(urlParams.origin.length);
-                        if (redirect.match(/^\/.*#/)) {
-                            redirect = redirect.substr(redirect.indexOf('#') + 1);
-                        }
-                    } else {
-                        window.location.href = redirect;
-                        return;
-                    }
-                }
-                yield put(routerRedux.replace(redirect || '/openi/overview'));
+                onSuccessed && onSuccessed()
+
             }else{
 
                 yield put({
                     type: 'changeLoginStatus',
                     payload: {
-                        status:false
+                        ...initState,
+                        visiableLoginModel:true
                     },
                 });
-                onFailed && onFailed()
+                onFailed && onFailed(response.code)
             }
         },
 
@@ -79,44 +87,78 @@ export default {
             yield put({
                 type: 'changeLoginStatus',
                 payload: {
-                    status: false
+                    ...initState
                 },
             });
 
             yield put(
                 //跳转localhost:xxx/User/Login?redirect=xxxxx
                 routerRedux.push({
-                    pathname: '/openi/user/login',
+                    pathname: '/openi/v2/home',
                     search: stringify({
                         redirect: window.location.href,
                     }),
                 })
             );
         },
+
         *shouldAutoLogin({loginStatus}, { put }) {
 
-           const loginInfo = getAuthority();
+           const currentLoginStatus = getAuthority();
 
             //console.log("loginInfo",loginInfo);
-            if(loginInfo&&loginInfo.status)
+            if(currentLoginStatus && currentLoginStatus.status)
             {
+
+                yield put({
+                    type: 'changeLoginStatus',
+                    payload: {
+                        ...currentLoginStatus
+                    }
+                });
+
                 yield put(
                     routerRedux.push({
-                        pathname: '/openi/overview',
+                        pathname: '/openi/v2/home',
                     })
                 );
             }
         },
+        *goToLogin({cancelRedirect}, { put }) {
+
+            let dest = {
+                pathname: '/openi/user/login',
+            };
+
+            yield put(
+                routerRedux.push(dest)
+            );
+        },
     },
 
     reducers: {
+        getCurrentUser(){
+
+            const currentLoginStatus = getAuthority();
+
+            if(currentLoginStatus)
+            {
+                return {
+                    ...currentLoginStatus
+                }
+            }else{
+                return {
+                    ...initState
+                }
+            }
+        },
+
         changeLoginStatus(state, { payload }) {
 
             setAuthority(payload);
 
             return {
-                ...state,
-                status: payload.status?payload.status:false,
+                ...payload,
             };
         },
 
@@ -126,5 +168,33 @@ export default {
                 load: payload.load?payload.load:false
             };
         },
+        showLoginModel(state, { payload }) {
+            return {
+                ...state,
+                visiableLoginModel:true
+            };
+        },
+        closeLoginModel(state, { payload }) {
+            return {
+                ...state,
+                visiableLoginModel:false
+            };
+        },
+        loginSuccess(state, { payload }) {
+            return {
+                ...state,
+                loginErrorString:'',
+                loginStatusString:'success',
+                visiableLoginModel:false,
+            };
+        },
+        loginFail(state, { payload }) {
+            return {
+                ...state,
+                loginErrorString:payload.errMsg,
+                loginStatusString:'error',
+                visiableLoginModel:true,
+            };
+        }
     },
 };

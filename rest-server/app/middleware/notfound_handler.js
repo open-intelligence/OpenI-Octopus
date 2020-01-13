@@ -1,6 +1,5 @@
 'use strict';
-const LError = require('../error/proto');
-const ECode = require('../error/code');
+const { ECode, LError } = require('../../lib');
 
 module.exports = () => {
   return async function notFoundHandler(ctx, next) {

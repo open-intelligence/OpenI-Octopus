@@ -1,6 +1,6 @@
 'use strict';
 
-const ECode = require('../error/code');
+const { ECode, LError } = require('../../lib');
 const WHITE_PATHS = /^\/api\/v1\/(user|token|ogz|third)/;
 
 module.exports = () => {

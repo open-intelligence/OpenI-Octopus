@@ -17,7 +17,7 @@ class SyncFrameworksSubscription extends Subscription {
     const { ctx, service } = this;
 
     try {
-      await service.baseJobService.syncFrameworks();
+      await service.v1JobService.syncFrameworks();
     } catch (e) {
       ctx.logger.error(e);
     }

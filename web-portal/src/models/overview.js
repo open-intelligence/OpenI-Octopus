@@ -81,9 +81,9 @@ export default {
             yield put({
                 type: 'init',
                 payload: {
-                    state
+                   state
                 },
-            });
+             });
         },
     },
 

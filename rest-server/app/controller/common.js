@@ -2,7 +2,6 @@
 
 const Controller = require('egg').Controller;
 
-
 class CommonController extends Controller {
   async getCommonTypeItems() {
     const { ctx, service } = this;
