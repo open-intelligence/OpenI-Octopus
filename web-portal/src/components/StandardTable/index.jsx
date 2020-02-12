@@ -154,10 +154,10 @@ class StandardTable extends Component{
                 return (
                     <RenderParent record={record}>
                         <Highlighter
-                        highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-                        searchWords={Object.keys(this.state.searchTextObj).map(columnKey=>this.state.searchTextObj[columnKey])}
-                        autoEscape
-                        textToHighlight={columnData?columnData.toString():''}
+                            highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
+                            searchWords={Object.keys(this.state.searchTextObj).map(columnKey=>this.state.searchTextObj[columnKey])}
+                            autoEscape
+                            textToHighlight={columnData?columnData.toString():''}
                         />
                     </RenderParent>
                 )
@@ -165,10 +165,10 @@ class StandardTable extends Component{
 
                 return (
                     <Highlighter
-                    highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
-                    searchWords={Object.keys(this.state.searchTextObj).map(columnKey=>this.state.searchTextObj[columnKey])}
-                    autoEscape
-                    textToHighlight={columnData?columnData.toString():''}
+                        highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
+                        searchWords={Object.keys(this.state.searchTextObj).map(columnKey=>this.state.searchTextObj[columnKey])}
+                        autoEscape
+                        textToHighlight={columnData?columnData.toString():''}
                     />
                 );
             }

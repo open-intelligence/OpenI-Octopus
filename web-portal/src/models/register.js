@@ -3,7 +3,6 @@ import { stringify } from 'qs';
 import { thirdPartyUserInfo,accountRegister,thirdPartyRegister} from '@/services/api';
 import { setAuthority,getAuthority } from '@/utils/authority';
 import { getPageQuery } from '@/utils/utils';
-import * as apiService from '@/services/api';
 
 const UserStatus = {
     FORBIDDEN: 0, // 禁用
@@ -19,65 +18,14 @@ export default {
         load:false,
         visibleSuccessModel: false,
         username:'',
-        realName:'',
-        tutor:'',
-        email:'',
-        phonePrefix:'+86',
-        phone:'',
-        innerAccount:'',
-        orgInfoArray:[],
-        orgInfo : []
     },
 
     effects: {
 
-        *getAccountUserInfo({ payload }, { call, put }) {
+        *accountUserInfo({ payload }, { call, put }) {
             const onFailed = payload&&payload.onFailed?payload.onFailed:function onFailed(){};
             const pageParams = getPageQuery();
             let { token_3rd } = pageParams;
-
-            //load org info
-            const orgInfoRes = yield call(apiService.getOrgInfo);
-
-
-            let orgInfo =[];
-            if(orgInfoRes.success) {
-                for (let org of orgInfoRes.orgInfo) {
-                    let rootOrg = {
-                        label: org.name,
-                        value: org.organizationId,
-                        children: []
-                    };
-
-                    if (org.children) {
-                        for (let secOrg of org.children) {
-                            let childOrg = {
-                                label: secOrg.name,
-                                value: secOrg.organizationId
-                            };
-
-                            if (secOrg.name === '其它') {
-                                rootOrg.children.push(childOrg);
-                            } else {
-                                rootOrg.children.unshift(childOrg);
-                            }
-                        }
-                    }
-
-                    orgInfo.push(rootOrg);
-                }
-            }else{
-                onFailed && onFailed(orgInfoRes.message);
-                return;
-            }
-
-            yield put({
-                type: 'updateInfo',
-                payload: {
-                    orgInfo
-                },
-            });
-
             let token = '';
             if(token_3rd) {
                 token = token_3rd;
@@ -105,7 +53,7 @@ export default {
 
                         yield put(
                             routerRedux.push({
-                                pathname: '/openi/v2/brain/overview',
+                                pathname: '/openi/overview',
                             })
                         );
 
@@ -118,7 +66,7 @@ export default {
             }
         },
 
-        *registerAccount({ payload }, { call, put }) {
+        *accountRegister({ payload }, { call, put }) {
 
             const accountInfo = payload.params ;
             const onFailed = payload&&payload.onFailed?payload.onFailed:function onFailed(){};
@@ -159,7 +107,7 @@ export default {
 
                     yield put(
                         routerRedux.push({
-                            pathname: '/openi/v2/brain/overview',
+                            pathname: '/openi/overview',
                         })
                     );
                 }else if(response&&response.code === 'S402'){
@@ -193,20 +141,7 @@ export default {
                     },
                 });
 
-
-                let newUserInfo = {
-                    username:accountInfo.username,
-                    password:accountInfo.password,
-                    email:accountInfo.email,
-                    realName:accountInfo.realName,
-                    sex:1,
-                    tutor:accountInfo.tutor,
-                    innerAccount: accountInfo.innerAccount,
-                    phone:accountInfo.phonePrefix+"-"+accountInfo.phone,
-                    organizationId:accountInfo.orgInfoArray[1],
-                };
-
-                const response = yield call(accountRegister, newUserInfo,token);
+                const response = yield call(accountRegister, accountInfo,token);
 
                 yield put({
                     type: 'changeLoadingStatus',
@@ -249,7 +184,7 @@ export default {
 
             yield put(
                 routerRedux.push({
-                    pathname: '/openi/v2/brain/overview',
+                    pathname: '/openi/overview',
                 })
             );
         }
@@ -280,12 +215,5 @@ export default {
                 status: payload.status?payload.status:false,
             };
         },
-        updateInfo(state,{payload}){
-            //console.log("updateJob",payload);
-            return {
-                ...state,
-                ...payload
-            }
-        }
     },
 };

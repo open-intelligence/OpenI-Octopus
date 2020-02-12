@@ -106,7 +106,6 @@ const convertTime = (elapsed, startTime, endTime) => {
     }
 };
 
-
 const JOBSTATE = {
     RUNNING: 'RUNNING',
     WAITING: 'WAITING',
@@ -212,9 +211,9 @@ export default {
                         username: rawJob.userId,
                         job_state: jobState,
                         created_at: convertTime(false, rawJob.createdTime),
-                        jobDetailUrl:'/openi/v2/brain/job?jobId='+rawJob.id,
+                        jobDetailUrl:'/openi/job?jobId='+rawJob.id,
                         vcName:  vClusterName,
-                        vcUrl: vClusterName,
+                        vcUrl:'/openi/virtualClusters?vcName='+vClusterName,
                         startTimeSec: Math.round(rawJob.createdTime / 1000).toString(),
                         durationSec: getDurationInSeconds(rawJob.createdTime, rawJob.completedTime),
                         duration: convertTime(true, rawJob.createdTime, rawJob.completedTime),
@@ -272,7 +271,7 @@ export default {
         *resubmitJob({payload}, { call, put }) {
             yield put(
                 routerRedux.push({
-                    pathname: '/openi/v2/brain/submitJob',
+                    pathname: '/openi/submit',
                     search: stringify({
                         resubmitName: payload.jobId,
                     }),

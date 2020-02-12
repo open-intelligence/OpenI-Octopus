@@ -1,6 +1,6 @@
 # Webportal
 
-启智(OPENI)开源平台的网页前端
+启智(OpenI-Octopus)章鱼开源平台的网页前端
 
 ## 前端架构
 
@@ -9,43 +9,58 @@
 ## 如何开发
 
 ```bash
-$ yarn install
+$ npm install
 $ npm run dev
 $ 打开浏览器访问 http://localhost:9286/
 ```
 
-## 部署
+### 快速部署
 
-##### 1.配置docker私有仓库
+
+1.给服务目标部署节点node加上label
 
 ```
-# vim /etc/docker/daemon.json
-
-{
-"insecure-registries":["192.168.202.74:5000"],
-"live-restore":true
-}
+# kubectl label nodes <node-name> openinode=worker
 ```
 
-##### 2.重启docker服务
+2. k8s集群中执行yaml部署
 
-``systemctl restart docker``
+```
+# kubectl apply -f ./k8s
+```
 
+### 源码编译部署
 
-##### 3.编译
+##### 1.编译镜像
 
 ```
 # cd webportal
 # npm install
 # npm run build:prod
-# docker build -t 192.168.202.74:5000/openi/webportal .
-# docker push 192.168.202.74:5000/openi/webportal
+# docker build -t $dockerRegistry/openi/webportal:latest .
+# docker push $dockerRegistry/openi/webportal:latest
 ```
 
-##### 4.k8s部署
+##### 2.修改yaml文件
+```
+# cd k8s
+# vim webportal.deploy.yaml
+# 配置image的地址
+```
+
+##### 3.k8s部署
+
+
+1.给服务目标部署节点node加上label
 
 ```
-kubectl label node $node openinode=worker
-kubectl apply -f ./k8s
+# kubectl label nodes <node-name> openinode=worker
 ```
+
+2. k8s集群中执行yaml部署
+
+```
+# kubectl apply -f ./k8s
+```
+
 

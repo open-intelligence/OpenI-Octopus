@@ -1,16 +1,13 @@
 import webportalConfig from '../src/webportal.config.dev.js';
 
 global.jobTypesFilter = {
-    gpuTypeMap:{"dgx":true,"debug":true},
+    gpuTypeMap:{"run":true,"debug":true},
     cpuTypeMap:{"debug_cpu":true}
 };
 
 export default {
-    theme: {
-        "border-radius-base": "0px",
-        "menu-dark-item-active-bg":"white",
-        "menu-light-item-active-bg": "white",
-    },
+    history: 'hash',
+    publicPath: "./",
     plugins: [
         ['umi-plugin-react', {
             antd: true,
@@ -24,63 +21,12 @@ export default {
     ],
     routes: [
         {
-            path: '/openi/v2',
-            component: '../layouts/GlobalLayout',
+            path: '/openi/user',
+            component: '../layouts/UserLayout',
             routes: [
-                { path: '/', redirect: '/openi/v2/home' },
-                { path: 'home',component:'./Home'},
-                { path: 'ascend',component:'./Ascend'},
-                {
-                    path: 'brain',
-                    component: '../layouts/SiderContentLayout',
-                    routes: [
-                        {
-                            path:"overview",
-                            component:"./Overview",
-                        },
-                        {
-                            path:"submitJob",
-                            component:"./JobSubmit",
-                        },
-                        {
-                            path:"jobList",
-                            component:"./JobList",
-                        },
-                        {
-                            path:"job",
-                            component:"./JobDetail",
-
-                        },
-                        {
-                            path:"imageList",
-                            component:"./ImageSet",
-
-                        },
-                        {
-                            path:"datasetList",
-                            component:"./DataSet",
-
-                        },
-                        {
-                            path:"monitor",
-                            component:"./Admin/ClusterDashboard",
-                        },
-                        {
-                            path:"register",
-                            component:"./User/Register",
-                        },
-                        {
-                            path: 'userInfo',
-                            component:'./User/UserInfo'
-                        },
-                        {
-
-                            path: 'changePwd',
-                            component:'./User/ChangePwd'
-                        }
-
-                    ]
-                },
+                { path: '/', redirect: '/openi/user/login' },
+                { path: 'login', component: './User/Login' },
+                { path: 'register',component:'./User/Register'},
                 {
                     component: '404',
                 }
@@ -95,6 +41,64 @@ export default {
                     component: '404',
                 }
             ],
+        },
+        {
+            path: '/openi/admin',
+            component: '../layouts/IframeLayout',
+            routes: [
+                { path: 'dashboard',component:'./Admin/ClusterDashboard'},
+                {
+                    component: '404',
+                }
+            ],
+        },
+        {
+        path: '/openi',
+        component: '../layouts/BasicLayout',
+        routes: [
+            { path: '/', redirect: '/openi/user/login' },
+            {
+                path: 'overview',
+                component: './Overview'
+            },
+            {
+                path:"imageset",
+                component:"./ImageSet",
+
+            },
+            {
+                path:"dataset",
+                component:"./DataSet",
+
+            },
+            {
+                path:"submit",
+                component:"./JobSubmit",
+
+            },
+            {
+
+                path: 'change-password',
+                component:'./User/ChangePwd'
+            },
+            {
+                path: 'userInfo',
+                component:'./User/UserInfo'
+            },
+            {
+                path:"jobs",
+                component:"./JobList",
+
+            },
+            {
+                path:"job",
+                component:"./JobDetail",
+
+            },
+            {
+                component: '404',
+            }
+          ]
         },
         {
             name: 'exception',
@@ -131,17 +135,13 @@ export default {
     },
     proxy: {
         //grafana,kubernetes-dashboard,yarn,can not test the path will redirect by server in local env
-        "/rest-server": {
-            target: "http://localhost:9185/",
+        [webportalConfig.restServerUri]: {
+            target: "http://localhost:9186/",
             changeOrigin: true,
-            pathRewrite: {"/rest-server":""}
+            pathRewrite: {[webportalConfig.restServerUri]:""}
         },
         "/es": {
             target: "http://192.168.202.71/",
-            changeOrigin: true
-        },
-        "/ascend/adapter":{
-            target: "http://192.168.202.73/",
             changeOrigin: true
         }
     }

@@ -1,5 +1,4 @@
 export default {
-    'sidermenu.overview': '总览',
     'sidermenu.submitJob': '提交任务',
     'sidermenu.jobList': '任务列表',
     'sidermenu.imageList': '镜像列表',

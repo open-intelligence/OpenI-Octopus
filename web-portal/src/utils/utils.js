@@ -191,7 +191,6 @@ export function format_subtask (task){
 
 
 export function format_job (job){
-
     let task = {
         "jobName": (job.jobName||"").split(" ").join("_"),
         "image": job.image,

@@ -109,8 +109,6 @@ class JobList extends Component{
         };
 
 
-
-
         if(DataIndex ==='stop'){
             return {
                 ...columnDef,
@@ -193,7 +191,7 @@ class JobList extends Component{
                     <Tooltip title={record.durationSec}>
                         {duration}
                     </Tooltip>
-                )
+                ),
             };
         }
 
@@ -202,7 +200,7 @@ class JobList extends Component{
                 ...columnDef,
                 render: (text) =>(
                     <span>{text}</span>
-                )
+                ),
             };
         }
     });

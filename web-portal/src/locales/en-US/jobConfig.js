@@ -10,7 +10,7 @@ export default {
     "jobConfig.error.load_failed_image":"Failed to load image list.",
     "jobConfig.error.load_failed_job":"Failed to load job information",
 
-    "jobConfig.job.title":"Job Information",
+    "jobConfig.job.title":"Create New Job",
     "jobConfig.subTaskList.title":"Sub Task List",
 
     "jobConfig.button.import_file":"Import",

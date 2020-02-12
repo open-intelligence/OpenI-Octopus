@@ -63,7 +63,7 @@ export default {
             const response = yield call(apiService.loadContainerLog,
                 job,taskPod,container,pageSize,pageNumber);
 
-            //console.log("loadLog",response);
+            console.log("loadLog",response);
             let totalLogNumber = 0;
             let pageLogList = [];
 

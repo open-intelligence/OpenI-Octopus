@@ -9,7 +9,7 @@ export default {
     "jobConfig.error.load_failed_image":"加载镜像列表失败",
     "jobConfig.error.load_failed_job":"加载任务信息失败",
 
-    "jobConfig.job.title":"基本信息",
+    "jobConfig.job.title":"创建新任务",
     "jobConfig.subTaskList.title":"子任务列表",
 
     "jobConfig.button.import_file":"导入",

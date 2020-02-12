@@ -1,5 +1,4 @@
 export default {
-    'sidermenu.overview': 'Overview',
     'sidermenu.submitJob': 'Submit Job',
     'sidermenu.jobList': 'Job List',
     'sidermenu.imageList': 'Image List',

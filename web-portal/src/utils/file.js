@@ -1,7 +1,7 @@
 import {formatMessage } from 'umi/locale';
 
 export function loadFromFile(file_path,callback){
-    
+
     let Reader = null;
 
     let called = false;
@@ -40,7 +40,7 @@ export function exportAsJsonFile(job){
 
     let Bob = null;
     let URL_OBJECT = null;
-    
+
     try{
         Bob = Blob;
         URL_OBJECT = URL;
@@ -90,10 +90,10 @@ export function choseFile(callback){
        input.setAttribute("type","file");
        input.setAttribute("id",id);
     }
-    
+
     input.onchange = function(e){
        callback && callback(e.target.files[0]);
-       input.value  = ""; 
+       input.value  = "";
     }
 
     input.click();

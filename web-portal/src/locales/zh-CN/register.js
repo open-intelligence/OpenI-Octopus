@@ -3,15 +3,11 @@ export default {
     'register.username.message': '请输入用户名!',
     'register.password': '密码',
     'register.password.message': '请输入密码!',
-    'register.email': '邮箱',
-    'register.email.require.message':'请输入邮箱地址！',
-    'register.email.valid.message':'请输入合法的邮箱地址！',
     'register.button.register': '注册',
     'register.password.confirm' :'确认密码',
     'register.password.confirm.message' :'输入的两个密码不一致!',
     'register.model.title':'注册提示',
     'register.model.success.message':'注册成功!新注册账号为:',
     'register.model.button.cancel.text':'留在本页面',
-    'register.model.button.ok.text':'返回主页面',
-    'register.token.error':"注册需管理员授权",
+    'register.model.button.ok.text':'返回主页面'
 }

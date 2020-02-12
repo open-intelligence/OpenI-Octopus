@@ -17,17 +17,13 @@
 
 // get config from environment variables
 let config = {
-  helpDocUri: 'https://github.com/open-intelligence/openi',
-  restServerUri: "/rest-server",//process.env.REST_SERVER_URI,
+  helpDocUri: 'https://github.com/open-intelligence/OpenI-Octopus/tree/k8s',
+  restServerUri: "/rest-server-core",//process.env.REST_SERVER_URI,
   logServiceUri: "",//process.env.YARN_WEB_PORTAL_URI,
   grafanaUri: "/grafana",//process.env.GRAFANA_URI,
   terminalUri: "/terminal",
   jupyterLabProxyUri: "",
-  ascendUri: "",
   clusterName: "default",
-  tucao:{
-    productId: 94774
-  }
 };
 
 for(let key in config){

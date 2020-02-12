@@ -16,11 +16,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import {Component} from "react";
 import { connect } from 'dva';
-import {Form,Modal,Divider,Tooltip,Card,Tag,Button,message,Popconfirm,Input} from 'antd';
+import {Form,Typography,Modal,Divider,Tooltip,Card,Tag,Button,message,Popconfirm,Input} from 'antd';
 import styles from "./index.less";
 import {formatMessage } from 'umi/locale';
 import StandardTable from '@/components/StandardTable';
 const { TextArea } = Input;
+const { Text} = Typography;
 
 const namespace = 'job';
 
@@ -95,7 +96,6 @@ class JobDetail extends Component {
     columnTitles = [
         formatMessage({id:'jobList.column.jobName'}),
         formatMessage({id:'jobList.column.gpuType'}),
-        formatMessage({id:'jobList.column.vcName'}),
         formatMessage({id:'jobList.column.status'}),
         formatMessage({id:'jobList.column.startTime'}),
         formatMessage({id:'jobList.column.duration'}),
@@ -107,7 +107,6 @@ class JobDetail extends Component {
     columnDataIndexs = [
         "jobName",
         "gpuType",
-        "vcName",
         "status",
         "startTime",
         "duration",
@@ -123,7 +122,6 @@ class JobDetail extends Component {
             dataIndex:this.columnDataIndexs[index],
             key: this.columnDataIndexs[index]
         };
-
 
         if(DataIndex ==='stop')
         {

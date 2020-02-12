@@ -8,17 +8,12 @@ import changePwd from './zh-CN/changePwd'
 import jobList from './zh-CN/jobList';
 import jobConfig from "./zh-CN/jobConfig";
 import jobDetail from './zh-CN/jobDetail';
-import virtualClusters from './zh-CN/virtualClusters';
 import overview from "./zh-CN/overview";
 import exception from "./zh-CN/exception";
 import openIPanel from "./zh-CN/openIPanel";
 import userInfo from "./zh-CN/userInfo";
 import datasets from "./zh-CN/datasets";
 import jobLog from "./zh-CN/jobLog";
-import home from "./zh-CN/home";
-import globalLayout from "./zh-CN/globalLayout";
-import siderContentMenu from "./zh-CN/siderContentMenu";
-import expressWay from "./zh-CN/expressWay";
 
 export default {
     platformName: '鹏城云脑',
@@ -31,17 +26,11 @@ export default {
     ...changePwd,
     ...jobList,
     ...jobDetail,
-    ...virtualClusters,
-    ...jobDetail,
     ...overview,
     ...exception,
     ...openIPanel,
     ...userInfo,
     ...jobConfig,
     ...datasets,
-    ...jobLog,
-    ...globalLayout,
-    ...siderContentMenu,
-    ...home,
-    ...expressWay
+    ...jobLog
 }
