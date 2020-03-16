@@ -126,26 +126,25 @@ function to_web_format(framework) {
 function record_to_list_item(record) {
     const startAt = new Date(record.created_at);
     let finishedAt = null;
-    
-    if(record.job_detail.job.finishedAt){
+    if(record.job_detail.job && record.job_detail.job.finishedAt){
         finishedAt = new Date(record.job_detail.job.finishedAt);
     }else{
         finishedAt = new Date();
     }
-
+    //can not find job framework in k8s will stop an job_detail is empty obj {}
     const item = {
         id: record.job_id,
         name: record.job_name,
-        platform: record.job_detail.platformSpecificInfo.platform,
+        platform: record.job_detail.platformSpecificInfo.platform?record.job_detail.platformSpecificInfo.platform:'unknown',
         userId: record.user_id,
         taskRoleDetailInfo: {},
         state: record.job_state,
         subState: '',
         executionType: 'START',
-        retries: record.job_detail.job.totalRetriedCount,
+        retries: record.job_detail.job.totalRetriedCount?record.job_detail.job.totalRetriedCount:'0',
         createdTime: startAt.getTime(),
         completedTime: finishedAt.getTime(),
-        appExitCode: record.job_detail.job.exitCode,
+        appExitCode: record.job_detail.job.exitCode?record.job_detail.job.exitCode:'0',
         virtualCluster: 'default',
         type: record.job_type,
     };

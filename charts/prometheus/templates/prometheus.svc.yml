@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ template "prometheus.fullname" . }}
+  labels:
+{{ include "prometheus.labels" . | indent 6 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - port: {{ .Values.service.port }}
+    targetPort: {{ .Values.service.targetPort }}
+    nodePort: {{ .Values.service.hostPort }}
+  selector:
+{{ include "prometheus.select-labels" . | indent 4 }}

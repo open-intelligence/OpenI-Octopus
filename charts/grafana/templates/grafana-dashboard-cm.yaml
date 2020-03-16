@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "grafana.fullname" . }}-dashboards
+data:
+{{- if .Values.exts }}
+  {{- range .Values.exts }}
+    {{ .name }}: |
+      {{ .context }}
+  {{- end }}
+{{- end }}

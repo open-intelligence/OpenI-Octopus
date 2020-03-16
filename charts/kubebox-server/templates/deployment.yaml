@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "kubebox-server.fullname" . }}
+  labels:
+{{ include "kubebox-server.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+{{ include "kubebox-server.select-labels" . | indent 8 }}
+  template:
+    metadata:
+      name: {{ template "kubebox-server.name" . }}
+      labels:
+{{ include "kubebox-server.labels" . | indent 8 }}
+    spec:
+      serviceAccountName: {{ template "kubebox-server.fullname" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.global.image.repository.address }}{{ .Values.global.image.repository.pathname }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          env:
+          - name: KUBEBOX_CLUSTER_NUM
+            value: "3"
+          - name: KUBEBOX_LOG_LEVEL
+            value: "info"
+          - name: WORK_IN_K8S_CLUSTER
+            value: "YES"
+          ports:
+          - name: http
+            containerPort: {{ .Values.service.targetPort }}
+            protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

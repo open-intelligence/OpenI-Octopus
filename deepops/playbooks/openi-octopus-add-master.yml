@@ -1,0 +1,23 @@
+---
+# Commented by zhangshuiyong@pcl.ac.cn
+
+# Install python required for Ansible
+- include: bootstrap-python.yml
+  tags:
+    - bootstrap
+
+# Kubernetes Cluster Add Master Node Playbook
+- hosts: kube-new-master-node
+  gather_facts: no
+  vars:
+    nok8snode: true
+  roles:
+    - checkAndResetAllNodeInK8s
+
+# Install Kubernetes
+# for configuration, see: config/group_vars/k8s-cluster.yml
+- include: add-master-node.yml
+
+# reset keepalived & haproxy for new master node
+# When reset, do not stop all node keepalived-haproxy for one time, should one by one using ansible
+#- include: init-master-keepalived-haproxy.yml

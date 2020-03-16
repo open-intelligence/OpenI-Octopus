@@ -1,0 +1,28 @@
+dependencies:
+  - name: tasksetcontroller
+    version: 0.1.0
+    repository: https://open-intelligence.github.io/charts
+  - name: web-portal
+    version: 0.1.0
+    repository: https://open-intelligence.github.io/charts
+  - name: rest-server
+    version: 0.1.1
+    repository: https://open-intelligence.github.io/charts
+  - name: log-factory
+    version: 0.1.0
+    repository: https://open-intelligence.github.io/charts
+  - name: image-factory
+    version: 0.1.0
+    repository: https://open-intelligence.github.io/charts
+  - name: prometheus
+    version: 0.1.0
+    repository: https://open-intelligence.github.io/charts
+  - name: grafana
+    version: 0.1.0
+    repository: https://open-intelligence.github.io/charts
+  - name: kubebox-server
+    version: 0.1.0
+    repository: https://open-intelligence.github.io/charts
+  - name: kube-batch
+    version: 0.4.2
+    repository: https://open-intelligence.github.io/charts

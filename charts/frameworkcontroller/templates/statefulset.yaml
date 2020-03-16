@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "frameworkcontroller.fullname" . }}
+spec:
+  serviceName: {{ template "frameworkcontroller.fullname" . }}
+  selector:
+    matchLabels:
+{{ include "frameworkcontroller.select-labels" . | indent 8 }}
+  replicas: {{ .Values.replicas }}
+  template:
+    metadata:
+      labels:
+{{ include "frameworkcontroller.labels" . | indent 8 }}
+    spec:
+      serviceAccountName: {{ template "frameworkcontroller.fullname" . }}
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.global.image.repository.address }}{{ .Values.global.image.repository.pathname }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+{{- with .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+{{- end }}

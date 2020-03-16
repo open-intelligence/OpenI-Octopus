@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "grafana.fullname" . }}
+  labels:
+{{ include "grafana.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+{{ include "grafana.select-labels" . | indent 8 }}
+  template:
+    metadata:
+      labels:
+{{ include "grafana.labels" . | indent 8 }}
+    spec:
+      {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+      {{ toYaml . | indent 2 }}
+      {{- end }}
+      containers:
+      - image: grafana/grafana:{{ .Values.image.tag }}
+        name: grafana
+        # env:
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+        env:
+        # This variable is required to setup templates in Grafana.
+        # The following env variables are required to make Grafana accessible via
+        # the kubernetes api-server proxy. On production clusters, we recommend
+        # removing these env variables, setup auth for grafana, and expose the grafana
+        # service using a LoadBalancer or a public IP.
+        - name: GF_AUTH_BASIC_ENABLED
+          value: "{{ .Values.env.GF_AUTH_BASIC_ENABLED }}"
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "{{ .Values.env.GF_AUTH_ANONYMOUS_ENABLED }}"
+        - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+          value: "{{ .Values.env.GF_AUTH_ANONYMOUS_ORG_ROLE }}"
+        - name: GF_SECURITY_ADMIN_USER
+          value: "{{ .Values.env.GF_SECURITY_ADMIN_USER }}"
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          value: "{{ .Values.env.GF_SECURITY_ADMIN_PASSWORD }}"
+        - name: GF_SECURITY_ALLOW_EMBEDDING
+          value: "{{ .Values.env.GF_SECURITY_ALLOW_EMBEDDING }}"
+        - name: GF_SERVER_ROOT_URL
+          value: "{{ .Values.env.GF_SERVER_ROOT_URL }}"
+        volumeMounts:
+        - name: grafana-persistent-storage
+          mountPath: /var/lib/grafana
+        - name: datasource
+          mountPath: /etc/grafana/provisioning/datasources/
+        - name: dashboard-providers
+          mountPath: /etc/grafana/provisioning/dashboards
+        - name: dashboards
+          mountPath: /var/lib/grafana/dashboards
+      volumes:
+      - name: grafana-persistent-storage
+        emptyDir: {}
+      - name: datasource
+        configMap:
+          name: '{{ template "grafana.fullname" . }}-datasource'
+      - name: dashboard-providers
+        configMap:
+          name: '{{ template "grafana.fullname" . }}-dashboard-providers'
+      - name: dashboards
+        configMap:
+          name: '{{ template "grafana.fullname" . }}-dashboards'

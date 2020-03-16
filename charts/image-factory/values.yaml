@@ -1,0 +1,70 @@
+# Default values for image-factory.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+global:
+  image:
+    repository:
+      address: ""
+      pathname: "openi"
+    pullPolicy: Always
+  nodeSelector: {}
+
+agent:
+  image:
+    name: "image-factory-agent"
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 9002
+    targetPort: 9002
+  volumes:
+    - name: docker-run
+      mountPath: /var/run
+      hostPath: /var/run
+    - name: docker
+      mountPath: /var/lib/docker
+      hostPath: /var/lib/docker
+  resources: {}
+  tolerations: []
+  affinity: {}
+  nodeSelector: {}
+
+shield:
+  replicaCount: 1
+  image:
+    name: "image-factory-shield"
+    tag: "latest"
+  service:
+    type: ClusterIP
+    port: 80
+    targetPort: 9001
+  resources: {}
+  tolerations: []
+  affinity: {}
+
+ingress:
+  enabled: false
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+  # kubernetes.io/tls-acme: "true"
+  path: /
+  tls: []
+  #  - secretName: chart-example-tls
+  #    hosts:
+  #      - chart-example.local
+
+
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+#  memory: 128Mi

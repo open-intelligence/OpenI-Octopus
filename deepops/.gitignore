@@ -1,0 +1,10 @@
+# ansible
+*.retry
+
+# project-specific
+/admin.conf
+/config/
+/galaxy-roles/
+/k8s-config/
+/kubectl
+/kubespray

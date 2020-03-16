@@ -1,0 +1,37 @@
+---
+
+- name: create kubeadm certificate-key
+  register: kubeadm-certificate-outputs
+  shell: kubeadm init phase upload-certs --upload-certs
+  ignore_errors: True
+
+- name: print kubeadm certificate-key lines length
+  debug:
+    msg: "{{ hostvars[groups['kube-init-master'][0]]['kubeadm-certificate-outputs'].stdout_lines|last }}"
+  ignore_errors: True
+
+- name: set fact var kubeadm_certificate_key for master node
+  set_fact:
+    kubeadm_certificate_key: "{{ hostvars[groups['kube-init-master'][0]]['kubeadm-certificate-outputs'].stdout_lines|last }}"
+  ignore_errors: True
+  
+- name: kubeadm generate token
+  register: k8sMasterTokenInfo
+  shell: kubeadm token generate
+
+- name: print token
+  debug:
+    msg: "{{k8sMasterTokenInfo.stdout}}"
+
+- name: get k8s join as node command for token
+  shell: kubeadm token create {{k8sMasterTokenInfo.stdout}} --print-join-command --ttl=0
+  register: k8sNodeJoinCommandInfo
+
+- name: print k8s join as node command
+  debug:
+    msg: "{{k8sNodeJoinCommandInfo.stdout}}"
+
+- name: set fact var k8sNodeJoinCommand 
+  set_fact:
+    k8sNodeJoinCommand: "{{ k8sNodeJoinCommandInfo.stdout }}"
+  

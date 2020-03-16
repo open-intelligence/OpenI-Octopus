@@ -1,0 +1,38 @@
+---
+- name: create keepalived config directory
+  file:
+    path: /etc/keepalived
+    state: directory
+
+- name: write new keepalived config
+  template:
+    src: keepalived.conf.j2
+    dest: /etc/keepalived/keepalived.conf
+
+- name: write check haproxy.sh file
+  template:
+    src: check_haproxy.sh.j2
+    dest: /etc/keepalived/check_haproxy.sh
+
+- name: chmod 755 /etc/keepalived/check_haproxy.sh
+  shell: chmod 755 /etc/keepalived/check_haproxy.sh
+
+- name: show keepalived install docker command
+  debug:
+   msg: "docker run -d --name openi-octopus-keepalived --net=host --cap-add=NET_ADMIN --cap-add=NET_BROADCAST --cap-add=NET_RAW -v /etc/keepalived/keepalived.conf:/etc/keepalived/keepalived.conf -v /etc/keepalived/check_haproxy.sh:/etc/keepalived/check_haproxy.sh --restart always {{keepalived_image}}"
+
+#- name: install keepalived docker
+#  shell: docker run -d --name openi-octopus-keepalived --net=host --cap-add=NET_ADMIN -e KEEPALIVED_INTERFACE={{k8s_ha_master_keepalived_interface}} -e KEEPALIVED_VIRTUAL_IPS="#PYTHON2BASH:['{{k8s_ha_master_keepalived_vip}}']" -e KEEPALIVED_UNICAST_PEERS="#PYTHON2BASH:{{k8s_ha_master_keepalived_peers}}" -e KEEPALIVED_PASSWORD=password  --restart always {{keepalived_image}}
+
+- name: install keepalived docker
+  shell: docker run -d --name openi-octopus-keepalived --net=host --cap-add=NET_ADMIN --cap-add=NET_BROADCAST --cap-add=NET_RAW -v /etc/keepalived/keepalived.conf:/etc/keepalived/keepalived.conf -v /etc/keepalived/check_haproxy.sh:/etc/keepalived/check_haproxy.sh --restart always {{keepalived_image}}
+
+
+- name: get keepalived docker info
+  shell: docker ps | grep keepalived
+  register: keepaliveddockerInfo
+  ignore_errors: True
+
+- name: show keepalived docker info
+  debug:
+   msg: "{{keepaliveddockerInfo}}"

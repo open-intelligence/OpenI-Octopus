@@ -1,0 +1,9 @@
+{{- $enabled := include "schedulerEnabled" . -}}
+{{- if eq $enabled "1" -}}
+apiVersion: scheduling.incubator.k8s.io/v1alpha1
+kind: Queue
+metadata:
+  name: default
+spec:
+  weight: 1
+{{- end -}}

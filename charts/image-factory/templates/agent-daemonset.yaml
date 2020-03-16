@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ template "image-factory-agent.fullname" . }}
+  labels:
+{{ include "image-factory-agent.labels" . | indent 4 }}
+spec:
+  selector:
+    matchLabels:
+{{ include "image-factory-agent.select-labels" . | indent 8 }}
+  template:
+    metadata:
+      labels:
+{{ include "image-factory-agent.labels" . | indent 8 }}
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      hostPID: true
+    {{- if .Values.agent.volumes }}
+      volumes:
+      {{- range .Values.agent.volumes }}
+        - name: {{ .name }}
+          hostPath:
+            path: {{ .hostPath }}
+      {{- end }}
+    {{- end }}
+      containers:
+      - name: {{ template "image-factory-agent.name" . }}
+        image: "{{ .Values.global.image.repository.address }}{{ .Values.global.image.repository.pathname }}/{{ .Values.agent.image.name }}:{{ .Values.agent.image.tag }}"
+        imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.agent.service.targetPort }}
+          hostPort: {{ .Values.agent.service.targetPort }}
+          protocol: TCP
+        resources:
+{{ toYaml .Values.agent.resources | indent 12 }}
+        env:
+        - name: SHIELD_ADDRESS
+          value: 'http://{{ template "image-factory-shield.fullname" . }}.{{ .Release.Namespace }}:{{ .Values.shield.service.port }}'
+      {{- if .Values.agent.volumes }}
+        volumeMounts:
+        {{- range .Values.agent.volumes }}
+        - mountPath: {{ .mountPath }}
+          name: {{ .name }}
+        {{- end }}
+      {{- end }}
+{{- with .Values.agent.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- with .Values.agent.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- with .Values.agent.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+{{- end }}

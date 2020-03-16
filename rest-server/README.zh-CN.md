@@ -101,11 +101,11 @@ $ docker run -p 8195:8195 -e EGG_SERVER_ENV=prod ... -d ${image name}
 
 ### k8s
 
-当您需要在k8s中运行服务时，可以根据清单文件`build/k8s/rest server.yaml`来执行它。
+通过按需求修改 `./charts/rest-server/value.yaml` 文件中的配置
 
-```bash
-# Modify the placeholder `${xxx}` configuration item in the file
-$ kuberctl apply -f build/k8s/rest-server.yaml
+```
+// 安装
+helm install octopus ./charts/rest-server
 ```
 
 发布成功后可以通过 http://${ip}/rest-server/ 访问

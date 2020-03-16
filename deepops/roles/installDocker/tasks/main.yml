@@ -1,0 +1,59 @@
+---
+- name: stop docker service first whether it install or not
+  shell: systemctl stop docker
+  ignore_errors: True
+
+#- name: purge docker-ce
+#  shell: apt-get purge -y docker-ce docker docker-engine docker.io
+
+#- name: autoremove docker
+#  shell: apt-get autoremove -y docker-ce docker docker-engine docker.io
+
+- name: install dokcer dependence
+  apt:
+    state: present
+    name:
+    - apt-transport-https
+    - ca-certificates
+    - curl
+    - software-properties-common
+
+- name: add dokcer ali apt-key
+  shell: curl -fsSL http://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo apt-key add -
+
+- name: add ali docker source
+  shell: add-apt-repository "deb [arch=amd64] http://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable"
+
+- name: apt-get update
+  shell: apt-get update --fix-missing
+
+- name: create docker config directory
+  file:
+    path: /etc/docker
+    state: directory
+
+- name: write new docker config
+  copy:
+    content: "{{ docker_daemon_json }}"
+    dest: /etc/docker/daemon.json
+    owner: root
+    group: root
+    mode: 0644
+
+- name: install docker
+  shell: apt-get install -y --allow-downgrades docker-ce={{docker_ce_version}}
+
+- name: enable and restart docker
+  shell: systemctl enable docker && systemctl start docker
+
+- name: restart docker
+  shell: systemctl daemon-reload && systemctl restart docker
+
+- name: get docker info
+  shell: docker info
+  register: dockerInfo
+  ignore_errors: True
+
+- name: show docker info
+  debug:
+   msg: "{{dockerInfo}}"

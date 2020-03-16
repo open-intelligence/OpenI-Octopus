@@ -231,7 +231,7 @@ export default {
                 //console.log("Job",job);
                 let jobns = userid?userid.toLowerCase():'';
                 //let jobTerminalUrl= __WEBPORTAL__.terminalUri+'/?pod.FC_FRAMEWORK_NAME='+job.jobId+'&namespace.name='+jobns;
-                let jobTerminalUrl= __WEBPORTAL__.terminalUri+'/?pod.TaskSet='+job.jobId;
+                let jobTerminalUrl= __WEBPORTAL__.terminalUri+'/?pod.TaskSet='+job.jobId+'&namespace.name='+jobns;
                 //let jobMetricsPageUrl=__WEBPORTAL__.grafanaUri+'/dashboard/db/joblevelmetrics?var-job='+jobName;
 
                 //console.log("sub tasks",tasks);

@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ template "tasksetcontroller.fullname" . }}
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ template "tasksetcontroller.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ template "tasksetcontroller.fullname" . }}
+  # TO BE UPDATED IF NEEDED
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: poddiscovery
+
+---
+
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ template "tasksetcontroller.fullname" . }}-poddiscovery
+subjects:
+  - kind: ServiceAccount
+    name: poddiscovery
+    # TO BE UPDATED IF NEEDED
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ template "tasksetcontroller.fullname" . }}-poddiscovery
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ template "tasksetcontroller.fullname" . }}-poddiscovery
+rules:
+  - apiGroups:
+      - '*'
+    resources:
+      - 'taskset'
+    verbs:
+      - get
+      - watch
+      - list

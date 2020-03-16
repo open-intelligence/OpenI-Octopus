@@ -1,0 +1,12 @@
+---
+- name: label node
+  shell: kubectl label node {{inventory_hostname}} {{kube_nvidia_gpu_node_labels}} --overwrite
+
+- name: get node lables info
+  shell: kubectl get node --show-labels
+  register: nodeLableInfo
+  ignore_errors: True
+
+- name: show node Lable Info
+  debug:
+   msg: "{{nodeLableInfo}}"

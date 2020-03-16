@@ -8,20 +8,23 @@
 
 ## 简介
 
-OPENI是一个集群管理工具和资源调度平台，最初由 [微软研究院(MSR)](https://www.microsoft.com/en-us/research/group/systems-research-group-asia/)，[微软搜索技术中心(STC)](https://www.microsoft.com/en-us/ard/company/introduction.aspx)，[北京大学](http://eecs.pku.edu.cn/EN/)，[西安交通大学](http://www.aiar.xjtu.edu.cn/)，[浙江大学](http://www.cesc.zju.edu.cn/index_e.htm)， 和[中国科学技术大学](http://eeis.ustc.edu.cn/) 联合设计并开发， 由 [鹏城实验室](http://www.pcl.ac.cn/)、[北京大学](http://idm.pku.edu.cn/) 、[中国科学技术大学](https://www.ustc.edu.cn/)和 [AITISA](http://www.aitisa.org.cn/) 进行维护。
-该平台结合了一些在微软大规模生产环境中表现良好的成熟设计，主要为学术研究而量身打造。
+OpenI-Octopus是一个集群管理工具和资源调度平台，由北京大学，西安交通大学，浙江大学和中国科学技术大学联合设计并开发， 由鹏城实验室、北京大学、中国科学技术大学和 AITISA 进行维护。 该平台结合了一些在大规模生产环境中表现良好的成熟设计，主要为提升学术研究效率，复现学术研究成果而量身打造。
 
-OPENI支持在GPU集群中运行AI任务作业（比如深度学习任务作业）。平台提供了一系列接口，能够支持主流的深度学习框架，如CNTK, TensorFlow等。这些接口同时具有强大的可扩展性：添加一些额外的脚本或者Python代码后，平台即可支持新的深度学习框架（或者其他类型的工作）。
+### 特点
 
+- 基于Kubernetes开发资源调度平台，以镜像方式管理任务运行环境，一次配置随处可用；
+- 针对AI场景设计，AI场景的任务调度和任务启动有一定特殊性，如PS-Worker架构的分布式任务，需要至少满足两个角色的资源请求才能启动任务，否则即使启动任务也会造成资源浪费，而OpenI-Octopus针对类似场景做了很多设计和优化；
+- 插件式设计理念，以核心的业务流为基础，通过插件化的方式提供扩展性，不限制插件开发语言；
+- 易于部署，OpenI-Octopus支持helm方式的快速部署，同时支持服务的自定义部署；
+- 支持异构硬件，如GPU、NPU、FPGA等，由于采用OpenI-Octopus基于Kubernetes开发，可自定义不同异构硬件插件；
+- 支持多种深度学习框架，如 tensorflow、pytorch、paddlepaddle等，并通过镜像方式可方便的支持新增框架。
 
-作为深度学习中非常重要的一项要求，OPENI支持GPU调度。
-为了能得到更好的性能，OPENI支持细粒度的拓扑感知任务部署，可以获取到指定位置的GPU（比如获取在相同的PCI-E交换机下的GPU）。
+### 适用场景
 
-启智采用[microservices](https://en.wikipedia.org/wiki/Microservices) 结构：每一个组件都在一个容器中运行。 
-平台利用[Kubernetes](https://kubernetes.io/) 来部署和管理系统服务。
-平台的最新版本，动态的深度学习任务的调度引擎也使用Kubernetes，使得系统服务和深度学习任务都使用Kubernetes进行调度和管理。 
-训练数据和训练结果储存可根据平台/设备需求自定义。任务日志采用[Filebeat](https://www.elastic.co/cn/products/beats/filebeat)收集，
-[Elasticsearch](https://www.elastic.co/cn/products/elasticsearch)集群存储。
+- 构建大规模AI计算平台；
+- 希望共享计算资源；
+- 希望在统一的环境下完成模型训练；
+- 希望使用集成的插件辅助模型训练，提升效率。
 
 ## 用于研发及教育的开源AI平台
 
@@ -51,9 +54,9 @@ OPENI以开源的模式运营：来自学术和工业界的贡献我们都非常
 
 执行以下几个步骤来部署和使用本系统。
 
-1. [部署适配OpenI章鱼系统的kubernetes 1.13](https://www.processon.com/view/link/5d157ebae4b0a916e8f6bcc5)
+1. [部署适配OpenI章鱼系统的kubernetes](./deepops/README_zh.md)
 2. [部署OpenI章鱼系统服务](./install_openi_octopus_zh.md)
-3. 访问[web门户页面](https://github.com/open-intelligence/OpenI-Octopus/tree/k8s/web-portal) 进行任务提交和集群管理
+3. 访问[web门户页面](./web-portal/README.zh-CN.md) 进行任务提交和集群管理
 
 #### 作业管理
 
@@ -67,12 +70,12 @@ Web门户上也提供了Web UI进行集群的管理。
 ## 系统结构
 
 <p style="text-align: left;">
-  <img src="./sysarch.png" title="System Architecture" alt="System Architecture" />
+  <img src="./sysarch.png" title="System Architecture" alt="System Architecture" width = 70% height = 70% />
 </p>
 
 系统的整体结构如上图所示。
-用户通过Web门户提交了任务作业或集群状态监视的申请，该操作会调用[Restserver服务](https://github.com/open-intelligence/OpenI-Octopus/tree/k8s/rest-server)提供的API。
+用户通过Web门户提交了任务作业或集群状态监视的申请，该操作会调用[Restserver服务](./rest-server/README.zh-CN.md)提供的API。
 第三方工具也可以直接调用Restserver服务进行作业管理。收到API调用后，Restserver服务会将任务作业提交到k8s ApiServer，k8s的调度引擎负责对任务作业进行调度，调度完成后任务就可以使用集群节点中的GPU资源进行深度学习运算。
-[FrameworkController服务](https://github.com/open-intelligence/OpenI-Octopus/tree/k8s/frameworkcontroller)负责监控任务作业在K8s集群中的生命周期。Restserver服务向k8s ApiServer获取任务的状态，并且Web网页可以展示在界面上。
+[TaskSetController服务](./taskset/README.md)负责监控任务作业在K8s集群中的生命周期。Rest-Server服务向k8s ApiServer获取任务的状态，并且Web网页可以展示在界面上。
 其他基于CPU的AI工作或者传统的大数据任务作业也可以在平台上运行，与那些基于GPU的作业共存。平台训练数据和训练结果储存可根据平台/设备需求自定义。
 

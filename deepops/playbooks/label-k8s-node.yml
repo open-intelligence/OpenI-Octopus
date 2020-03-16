@@ -1,0 +1,11 @@
+
+# install HaProxy and KeepAlived docker container
+- hosts: kube-label-node
+  gather_facts: no
+  roles:
+    - labelK8sNode
+
+- hosts: kube-nvidia-gpu-node
+  gather_facts: no
+  roles:
+    - labelK8sNvGpuNode

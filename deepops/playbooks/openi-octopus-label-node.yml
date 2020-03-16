@@ -1,0 +1,5 @@
+---
+# Commented by zhangshuiyong@pcl.ac.cn
+
+# label worker node
+- include: label-k8s-node.yml

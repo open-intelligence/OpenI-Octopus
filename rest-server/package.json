@@ -8,6 +8,7 @@
   },
   "private": true,
   "dependencies": {
+    "@kubernetes/client-node": "^0.11.0",
     "apidoc": "^0.17.7",
     "bluebird": "^3.5.3",
     "egg-cors": "^2.1.2",

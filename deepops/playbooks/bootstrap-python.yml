@@ -1,0 +1,10 @@
+---
+- hosts: all
+  become: true
+  gather_facts: False
+  tasks:
+    # Fortunately, python is a dependency of yum. So RedHat systems always have it.
+    - name: install python
+      raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+      register: output
+      changed_when: output.stdout != ""

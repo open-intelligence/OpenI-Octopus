@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "image-factory-shield.fullname" . }}
+  labels:
+{{ include "image-factory-shield.labels" . | indent 4 }}
+spec:
+  type: {{ .Values.shield.service.type }}
+  ports:
+    - port: {{ .Values.shield.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+{{ include "image-factory-shield.select-labels" . | indent 4 }}

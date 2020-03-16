@@ -283,9 +283,6 @@ class UserService extends Service {
 
     return false;
   }
-
-
-
 }
 
 module.exports = UserService;

@@ -1,0 +1,11 @@
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: ClusterConfiguration
+kubernetesVersion: v{{kube_version}}
+imageRepository: {{kube_image_repo}}
+networking:
+    serviceSubnet: {{kube_service_addresses}}
+    podSubnet: {{kube_pods_subnet}}
+---
+apiVersion: kubeproxy.config.k8s.io/v1alpha1
+kind: KubeProxyConfiguration
+mode: {{kube_proxy_mode}}  # kube-proxy 模式

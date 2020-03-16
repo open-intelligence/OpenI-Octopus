@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "log-factory-es.fullname" . }}-external
+  labels:
+{{ include "log-factory-es.labels" . | indent 4 }}
+spec:
+  type: {{ .Values.es.service.type }}
+  ports:
+  - name: es-db
+    port: {{ .Values.es.service.ports.db.port }}
+    protocol: TCP
+    targetPort: {{ .Values.es.service.ports.db.targetPort }}
+  - name: es-cluster
+    port: {{ .Values.es.service.ports.transport.port }}
+    protocol: TCP
+    targetPort: {{ .Values.es.service.ports.transport.targetPort }}
+  selector:
+    app.kubernetes.io/instance: {{ template "log-factory-es.fullname" . }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "log-factory-es.fullname" . }}
+  labels:
+{{ include "log-factory-es.labels" . | indent 4 }}
+spec:
+  clusterIP: None
+  ports:
+  - name: es-db
+    port: {{ .Values.es.service.ports.db.port }}
+    protocol: TCP
+    targetPort: {{ .Values.es.service.ports.db.targetPort }}
+  - name: es-cluster
+    port: {{ .Values.es.service.ports.transport.port }}
+    protocol: TCP
+    targetPort: {{ .Values.es.service.ports.transport.targetPort }}
+  selector:
+{{ include "log-factory-es.select-labels" . | indent 8 }}

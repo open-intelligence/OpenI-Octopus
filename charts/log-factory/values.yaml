@@ -1,0 +1,67 @@
+# Default values for log-factory.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: ""
+fullnameOverride: ""
+
+es:
+  replicaCount: 3
+  index:
+    number_of_shards: 5
+    number_of_replicas: 2
+  username: ""
+  password: ""
+  image:
+    pullPolicy: Always
+    tag: "7.5.2"
+  volumes:
+    esDataPath: /usr/share/elasticsearch
+  service:
+    type: ClusterIP
+    ports:
+      db:
+        port: 9200
+        targetPort: 9200
+      transport:
+        port: 9300
+        targetPort: 9300
+  ingress:
+    enabled: true
+    annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    path: /es
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+  ES_JAVA_OPTS: "-Xms30g -Xmx30g"
+  resources: {
+    limits: {
+      cpu: "8000m",
+      memory: "32Gi"
+    },
+    requests: {
+      cpu: "8000m",
+      memory: "32Gi"
+    }         
+  }
+  nodeSelector:
+    octopus.openi.pcl.cn/log-service-es: "yes"
+  affinity:
+
+filebeat:
+  image:
+    tag: "7.5.2"
+  resources: {
+    limits: {
+      cpu: "4000m",
+      memory: "8Gi"
+    },
+    requests: {
+      cpu: "4000m",
+      memory: "8Gi"
+    }         
+  }
+  nodeSelector: {}

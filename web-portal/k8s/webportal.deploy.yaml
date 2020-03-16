@@ -15,7 +15,7 @@ spec:
       nodeSelector:
         openinode: "worker"
       containers:
-        - image: openi/webportal:1.6
+        - image: openi/web-portal:latest
           imagePullPolicy: Always
           name: web-portal
           # env:

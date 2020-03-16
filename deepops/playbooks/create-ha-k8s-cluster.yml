@@ -1,0 +1,53 @@
+# install Docker first
+- hosts: all
+  gather_facts: no
+  roles:
+    - setClusterCommon
+    - installDocker
+    - stopKeepalivedHaproxy
+
+# 高可用K8s集群需要在所有k8s master节点上启动haproxy和keepalived, 以实现一个高可用的load balancer层
+# Install load balancer
+# Note!!! This Step Must Install Before Install HA Kubernetes, Because it should start haproxy before start ha master
+
+# 只有init-master与master-node需要安装KeepAlived与HaProxy
+- hosts: kube-init-master
+  gather_facts: yes
+  roles:
+    - installKeepAlived
+    - installHaProxy
+
+- hosts: kube-master-node
+  gather_facts: yes
+  roles:
+    - installKeepAlived
+    - installHaProxy
+
+
+# Notice1: Do not move installDocker / installKube_ctl_adm_let to all groups! 
+# Notice2: Because In add-master-node.yml logic, all group will not install Docker & installKube_ctl_adm_let
+# Notice3: According Object-Orient coding mode, should not move installDocker / installKube_ctl_adm_let to all groups
+
+- hosts: kube-init-master
+  gather_facts: no
+  roles:
+     - installKube_ctl_adm_let
+     - initHaK8sMaster
+     - installCalico
+
+- hosts: kube-init-master
+  gather_facts: no
+  roles:
+     - genNodeJoinCommand
+
+- hosts: kube-master-node
+  gather_facts: no
+  roles:
+     - installKube_ctl_adm_let
+     - joinK8sMaster
+
+- hosts: kube-worker-node
+  gather_facts: no
+  roles:
+    - installKube_ctl_adm_let
+    - joinK8sNode

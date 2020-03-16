@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ template "prometheus.fullname" . }}-gpu-exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ template "prometheus.name" . }}-gpu-exporter
+      app.kubernetes.io/instance: {{ template "prometheus.fullname" . }}-gpu-exporter
+      app.kubernetes.io/part-of: {{ template "prometheus.name" . }}
+  template:
+    metadata:
+      name: {{ template "prometheus.fullname" . }}-gpu-exporter
+      labels:
+{{ include "prometheus.common-labels" . | indent 8 }}
+        app.kubernetes.io/name: {{ template "prometheus.name" . }}-gpu-exporter
+        app.kubernetes.io/instance: {{ template "prometheus.fullname" . }}-gpu-exporter
+        app.kubernetes.io/part-of: {{ template "prometheus.name" . }}
+    spec:
+      nodeSelector:
+        hardware-type: NVIDIAGPU
+      containers:
+      - image: nvidia/pod-gpu-metrics-exporter:v1.0.0-alpha
+      #- image: yzs981130/pod-gpu-metrics-exporter:latest
+        name: pod-nvidia-gpu-metrics-exporter
+        ports:
+        - name: gpu-metrics
+          containerPort: 9400
+        securityContext:
+          runAsNonRoot: false
+          runAsUser: 0
+        volumeMounts:
+        - name: pod-gpu-resources
+          readOnly: true
+          mountPath: /var/lib/kubelet/pod-resources
+        - name: device-metrics
+          readOnly: true
+          mountPath: /run/prometheus
+      - image: nvidia/dcgm-exporter:1.4.6
+        name: nvidia-dcgm-exporter
+        securityContext:
+          runAsNonRoot: false
+          runAsUser: 0
+        volumeMounts:
+        - name: device-metrics
+          mountPath: /run/prometheus
+      volumes:
+      - name: pod-gpu-resources
+        hostPath:
+          path: /var/lib/kubelet/pod-resources
+      - name: device-metrics
+        emptyDir:
+          medium: Memory
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+{{ include "prometheus.common-labels" . | indent 4 }}
+    app.kubernetes.io/name: {{ template "prometheus.name" . }}-gpu-exporter
+    app.kubernetes.io/instance: {{ template "prometheus.fullname" . }}-gpu-exporter
+    app.kubernetes.io/part-of: {{ template "prometheus.name" . }}
+  annotations:
+    prometheus.io/port: "9400"
+    prometheus.io/path: "/gpu/metrics"
+    prometheus.io/scrape: "true"
+  name: {{ template "prometheus.fullname" . }}-gpu-exporter
+spec:
+  type: NodePort
+  ports:
+  - port: 9400
+    targetPort: 9400
+    nodePort: 30400
+  selector:
+    app.kubernetes.io/name: {{ template "prometheus.name" . }}-gpu-exporter
+    app.kubernetes.io/instance: {{ template "prometheus.fullname" . }}-gpu-exporter
+    app.kubernetes.io/part-of: {{ template "prometheus.name" . }}

@@ -1,0 +1,31 @@
+{{- $enabled := include "schedulerEnabled" . -}}
+{{- if eq $enabled "1" -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: kube-batch
+  template:
+    metadata:
+      labels:
+        app: kube-batch
+    spec:
+      serviceAccountName: {{ template "fullname" . }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+      {{ toYaml . | indent 2 }}
+      {{- end }}
+      containers:
+      - name: {{ template "fullname" . }}
+        image: "{{ .Values.image.repository }}/kube-batch:{{ .Values.image.tag }}"
+        args: ["--logtostderr", "--v", "3"]
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+{{- end -}}

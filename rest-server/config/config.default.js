@@ -95,7 +95,7 @@ module.exports = appInfo => {
 
   // define the order of middleware and options,
   const middlewareConfig = {
-    middleware: [ 'validateHandler', 'jwtHandler', 'compressHandler', 'checkUserStatus', 'checkUserIsAdmin', 'notfoundHandler' ],
+    middleware: [ 'validateHandler', 'jwtHandler', 'compressHandler', 'checkUserStatus', 'checkUserIsAdmin', 'initUserNetspaceInK8s', 'notfoundHandler' ],
     jwtHandler: {
       secret: config.jwt.secret,
       ignore: [ '/public','/api/v1/token', '/api/v2/token', '/api/v2/user/register', '/api/v2/user/existed', '/api/v1/third/oauth' ],

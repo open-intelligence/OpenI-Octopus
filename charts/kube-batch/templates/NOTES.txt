@@ -1,0 +1,7 @@
+The batch scheduler of Kubernetes.
+{{- $enabled := include "schedulerEnabled" . -}}
+{{- if eq $enabled "1" -}}
+scheduler kube-batch is enabled.
+{{- else -}}
+scheduler kube-batch is disabled.
+{{- end -}}

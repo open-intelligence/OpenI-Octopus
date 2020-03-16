@@ -1,0 +1,24 @@
+---
+- hosts: kube-nvidia-gpu-node
+  become: true
+  become_method: sudo
+  tasks:
+
+    - name: write new docker config
+      copy:
+        content: "{{ nv_docker_daemon_json }}"
+        dest: /etc/docker/daemon.json
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: restart openi-octopus nvidia docker
+      shell: systemctl daemon-reload && systemctl restart docker
+    
+    - name: ensure openi-octopus nvidia docker service is started and enabled
+      service:
+        name: "{{ item }}"
+        enabled: yes
+        state: started
+      with_items:
+        - docker

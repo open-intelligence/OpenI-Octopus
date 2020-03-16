@@ -1,0 +1,43 @@
+---
+
+- name: run kubectl get nodes
+  register: getNodesResult
+  shell: kubectl get nodes
+  ignore_errors: True
+
+- name: run kubectl get nodes -o wide in {{ansible_ssh_host}}
+  register: getNodesResult
+  shell: kubectl get nodes -o wide
+  ignore_errors: True
+
+- name: show info of kubectl get nodes
+  debug:
+    msg: "{{getNodesResult}}"
+
+- name: set fact var nok8snode 
+  set_fact:
+    nok8snode: false
+  when: "'{{ansible_ssh_host}}' in getNodesResult.stdout"
+
+- name: Should Continue Install K8s ?
+  fail:
+    msg: "Some node have joined in k8s cluster, Stop install!"
+  when: nok8snode==false and kubeadm_reset_if_node_in_k8s != "yes"
+
+# --------kubeadm reset  
+- name: kubeadm reset k8s node
+  shell: kubeadm reset -f
+  ignore_errors: True
+
+- name: clear iptables
+  shell: iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+
+- name: clear ipvs
+  shell: ipvsadm --clear
+  ignore_errors: True
+
+- name: remove dir /root/.kube 
+  shell: rm -rf /root/.kube
+
+- name: remove dir /home/{{ansible_ssh_user}}/.kube 
+  shell: rm -rf /home/{{ansible_ssh_user}}/.kube

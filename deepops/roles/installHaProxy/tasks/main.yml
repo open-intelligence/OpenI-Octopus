@@ -1,0 +1,26 @@
+---
+- name: create haproxy config directory
+  file:
+    path: /etc/haproxy
+    state: directory
+
+- name: write new haproxy config
+  template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+
+- name: show haproxy install haproxy docker command
+  debug:
+   msg: "docker run -d --name openi-octopus-haproxy -v /etc/haproxy:/usr/local/etc/haproxy:ro -p {{k8s_ha_master_haproxy_port}}:{{k8s_ha_master_haproxy_port}} -p {{k8s_ha_master_haproxy_admin_port}}:{{k8s_ha_master_haproxy_admin_port}} --restart always {{haproxy_image}}"
+
+- name: install haproxy docker
+  shell: docker run -d --name openi-octopus-haproxy -v /etc/haproxy:/usr/local/etc/haproxy:ro -p {{k8s_ha_master_haproxy_port}}:{{k8s_ha_master_haproxy_port}} -p {{k8s_ha_master_haproxy_admin_port}}:{{k8s_ha_master_haproxy_admin_port}} --restart always {{haproxy_image}}
+
+- name: get haproxy docker info
+  shell: docker ps | grep haproxy
+  register: haproxydockerInfo
+  ignore_errors: True
+
+- name: show haproxy docker info
+  debug:
+   msg: "{{haproxydockerInfo}}"

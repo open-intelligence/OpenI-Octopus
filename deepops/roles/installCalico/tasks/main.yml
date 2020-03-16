@@ -1,0 +1,36 @@
+---
+- name: kubectl get pods -n kube-system
+  register: getPodsResult
+  shell: kubectl get pods -n kube-system
+
+- name: Have installed calico?
+  fail:
+    msg: "calico have installed in k8s cluster , stop install !!!"
+  when: "'calico-node' in getPodsResult.stdout"
+
+- name: cp {{kube_network_plugin}}.yaml to /root
+  template:
+    src: '{{kube_network_plugin}}.yaml.j2'
+    dest: /root/calico.yaml
+    mode: u=r,g=r,o=rwx
+
+- name: kubectl install calico
+  shell: kubectl apply -f /root/calico.yaml
+
+- name: kubectl get pods -n kube-system
+  register: getCalicoPods
+  shell: kubectl get pods -n kube-system
+  ignore_errors: True
+
+- name: show kubectl get pods -n kube-system
+  debug:
+    msg: "{{getCalicoPods}}"
+
+- name: install calicoctl v3.10
+  copy:
+    src: calicoctl_v3.10
+    dest: /bin/calicoctl
+
+- name: chmod +x /bin/calicoctl
+  shell: chmod +x /bin/calicoctl
+    

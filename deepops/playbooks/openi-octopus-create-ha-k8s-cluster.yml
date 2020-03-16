@@ -1,0 +1,43 @@
+---
+# Commented by zhangshuiyong@pcl.ac.cn
+
+# Kubernetes Cluster Playbook
+# Install python required for Ansible
+- include: bootstrap-python.yml
+  tags:
+    - bootstrap
+
+# for configuration, see: config/group_vars/all.yml
+# 请注意检查vip是否为ping不通
+# 多master情况下，vip不为空，极有可能被其他master占用了vip,导致kube init请求找不到init-master的node
+# 这种情况下，又不能安装前把所有节点的loadbalancer层停止，因为如果节点配置错误，极有可能把另一个好的集群给破环了
+# 只能检查vip是否为空，不空就停止安装
+- include: check-and-reset-all-node-in-k8s.yml
+
+# Install driver and container runtime on GPU servers
+- include: install-nvidia-driver.yml
+  tags:
+    - nvidia
+
+- include: nvidia-docker.yml
+  tags:
+    - nvidia
+
+# Install Kubernetes
+- include: create-ha-k8s-cluster.yml
+
+# config nvidia docker
+- include: config-openi-octopus-nvidia-docker.yml
+  tags:
+    - config-openi-octopus-nvidia-docker
+
+# Install k8s GPU device plugin
+# one cluster only install once
+- hosts: kube-nvidia-gpu-node
+  tasks:
+    - name: Install k8s GPU device plugin
+      shell: kubectl create -f 'https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/{{k8s_nvidia_gpu_device_plugin_version}}/nvidia-device-plugin.yml'
+      ignore_errors: True
+
+# label worker node
+- include: label-k8s-node.yml

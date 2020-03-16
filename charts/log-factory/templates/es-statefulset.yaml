@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "log-factory-es.fullname" . }}
+  labels:
+{{ include "log-factory-es.labels" . | indent 4 }}
+spec:
+  serviceName: {{ template "log-factory-es.fullname" . }}
+  replicas: {{ .Values.es.replicaCount }}
+  selector:
+    matchLabels:
+{{ include "log-factory-es.select-labels" . | indent 8 }}
+  template:
+    metadata:
+      labels:
+{{ include "log-factory-es.labels" . | indent 8 }}
+    spec:
+      serviceAccountName: {{ template "log-factory-es.fullname" . }}
+{{- with .Values.es.affinity }}     
+      affinity:
+{{ toYaml . | indent 8 }}
+{{- end }}
+      {{- with .Values.es.nodeSelector }}
+      nodeSelector:
+      {{ toYaml . | indent 2 }}
+      {{- end }}
+      containers:
+      - image: elastic/elasticsearch:{{ .Values.es.image.tag }}
+        imagePullPolicy: {{ .Values.es.image.pullPolicy }}
+        name: {{ template "log-factory-es.fullname" . }}
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 0
+        resources:
+{{ toYaml .Values.es.resources | indent 10 }}
+        ports:
+          - containerPort: {{ .Values.es.service.ports.db.targetPort }}
+            name: db
+            protocol: TCP
+          - containerPort: {{ .Values.es.service.ports.transport.targetPort }}
+            name: transport
+            protocol: TCP
+        volumeMounts:
+          - name: elasticsearch-logging
+            mountPath: /data
+          - name: esdata
+            mountPath: /usr/share/elasticsearch/data
+        env:
+          - name: "cluster.name"
+            value: "es-cluster"
+          - name: "node.max_local_storage_nodes"
+            value: "{{ .Values.es.replicaCount }}"
+          - name: "node.name"
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: "discovery.seed_hosts"
+            value: {{ template "log-factory-es.fullname" . }}
+          - name: "cluster.initial_master_nodes"
+            value: {{ template "log-factory-es.namelist" . }}
+          - name: "discovery.zen.minimum_master_nodes"
+            value: {{ template "log-factory-es.minimum_master_nodes" . }}
+          - name: "network.host"
+            value: "0.0.0.0"
+          - name: "http.cors.enabled"
+            value: "true"
+          - name: "http.cors.allow-origin"
+            value: "/.*/"
+          - name: "path.repo"
+            value: "/usr/share/elasticsearch/data/backup"
+          - name: "ES_JAVA_OPTS"
+            value: "{{ .Values.es.ES_JAVA_OPTS }}"
+          - name: "bootstrap.memory_lock"
+            value: "false"
+          - name: "NAMESPACE"
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+      volumes:
+        - name: elasticsearch-logging
+          emptyDir: {}
+        - name: esdata
+{{- if .Values.es.volumes.esDataPath }}
+          hostPath:
+            path: {{ .Values.es.volumes.esDataPath }}
+            type: DirectoryOrCreate
+{{- else }}
+          emptyDir: {}
+{{- end }}
+      # Elasticsearch requires vm.max_map_count to be at least 262144.
+      # If your OS already sets up this number to a higher value, feel free
+      # to remove this init container.
+      initContainers:
+        - image: alpine:3.6
+          command: ["sh","-c","sysctl -w vm.max_map_count=262144 && swapoff -a"]
+          name: {{ template "log-factory-es.fullname" . }}-init
+          securityContext:
+            privileged: true

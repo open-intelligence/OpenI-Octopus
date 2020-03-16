@@ -1,0 +1,17 @@
+{{- if .Values.ingress.enabled -}}
+{{- $ingressPath := .Values.ingress.path -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ template "grafana.fullname" . }}
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+spec:
+   rules:
+   - http:
+       paths:
+       - path: {{ $ingressPath }}/(.*)
+         backend:
+          serviceName: {{ template "grafana.fullname" . }}
+          servicePort: {{ .Values.service.port }}
+{{- end }}

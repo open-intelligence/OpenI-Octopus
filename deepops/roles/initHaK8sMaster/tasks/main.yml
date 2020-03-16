@@ -1,0 +1,51 @@
+---
+
+- name: mkdir /etc/kubernetes
+  shell: mkdir -p /etc/kubernetes
+
+- name: copy kubeadm-config.yaml to /etc/kubernetes
+  template:
+    src: kubeadm-config.yaml.j2
+    dest: /etc/kubernetes/kubeadm-config.yaml
+    mode: u=r,g=r,o=rwx
+
+- name: init k8s master
+  register: kubeadm_init
+  shell: sudo kubeadm init --config=/etc/kubernetes/kubeadm-config.yaml --upload-certs
+
+- name: show init k8s master output
+  debug:
+    msg: "{{kubeadm_init}}"
+
+- name: init k8s master failed?
+  fail:
+    msg: "init k8s master failed !!!"
+  when: "'initialized successfully' not in kubeadm_init.stdout"
+
+- name: mkdir /root/.kube
+  shell: mkdir -p /root/.kube
+
+- name: copy k8s admin.conf to /root/.kube
+  shell: sudo cp -i /etc/kubernetes/admin.conf /root/.kube/config
+
+- name: chown admin.conf to user root
+  shell: chmod 777 /root/.kube/config
+
+- name: create dir /home/{{ansible_ssh_user}}/.kube
+  shell: mkdir -p /home/{{ansible_ssh_user}}/.kube
+
+- name: copy k8s admin.conf to /home/{{ansible_ssh_user}}/.kube
+  shell: sudo cp -i /etc/kubernetes/admin.conf /home/{{ansible_ssh_user}}/.kube/config
+
+- name: chown admin.conf to user {{ansible_ssh_user}}
+  shell: chmod 777 /home/{{ansible_ssh_user}}/.kube/config
+
+- name: run kubectl get nodes -o wide
+  register: getNodesInInitMaster
+  shell: kubectl get nodes -o wide
+  ignore_errors: True
+
+- name: show kubectl get nodes info
+  debug:
+    msg: "{{getNodesInInitMaster}}"
+

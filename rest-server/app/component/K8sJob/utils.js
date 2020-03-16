@@ -13,44 +13,44 @@ const Constants = require('./constants');
 
 function current_valid_state(next_state) {
 
-  if (Constants.FRAMEWORK_STATUS.UNKNOWN === next_state) {
+  if (Constants.TASK_STATUS.UNKNOWN === next_state) {
     return [
-      Constants.FRAMEWORK_STATUS.WAITING,
-      Constants.FRAMEWORK_STATUS.RUNNING,
-      Constants.FRAMEWORK_STATUS.FAILED,
-      Constants.FRAMEWORK_STATUS.STOPPED,
-      Constants.FRAMEWORK_STATUS.SUCCEEDED,
-      Constants.FRAMEWORK_STATUS.UNKNOWN,
+      Constants.TASK_STATUS.WAITING,
+      Constants.TASK_STATUS.RUNNING,
+      Constants.TASK_STATUS.FAILED,
+      Constants.TASK_STATUS.STOPPED,
+      Constants.TASK_STATUS.SUCCEEDED,
+      Constants.TASK_STATUS.UNKNOWN,
     ];
   }
 
-  if (Constants.FRAMEWORK_STATUS.RUNNING === next_state) {
+  if (Constants.TASK_STATUS.RUNNING === next_state) {
     return [
-      Constants.FRAMEWORK_STATUS.WAITING,
-      Constants.FRAMEWORK_STATUS.UNKNOWN,
+      Constants.TASK_STATUS.WAITING,
+      Constants.TASK_STATUS.UNKNOWN,
       next_state,
     ];
   }
 
-  if (Constants.FRAMEWORK_STATUS.WAITING === next_state) {
+  if (Constants.TASK_STATUS.WAITING === next_state) {
     return [
-      Constants.FRAMEWORK_STATUS.UNKNOWN,
+      Constants.TASK_STATUS.UNKNOWN,
       next_state,
     ];
   }
 
 
   const exited_state = [
-    Constants.FRAMEWORK_STATUS.FAILED,
-    Constants.FRAMEWORK_STATUS.STOPPED,
-    Constants.FRAMEWORK_STATUS.SUCCEEDED,
+    Constants.TASK_STATUS.FAILED,
+    Constants.TASK_STATUS.STOPPED,
+    Constants.TASK_STATUS.SUCCEEDED,
   ];
 
   if (exited_state.includes(next_state)) {
     return [
-      Constants.FRAMEWORK_STATUS.UNKNOWN,
-      Constants.FRAMEWORK_STATUS.WAITING,
-      Constants.FRAMEWORK_STATUS.RUNNING,
+      Constants.TASK_STATUS.UNKNOWN,
+      Constants.TASK_STATUS.WAITING,
+      Constants.TASK_STATUS.RUNNING,
       next_state,
     ];
   }

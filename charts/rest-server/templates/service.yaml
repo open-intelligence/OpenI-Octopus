@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "rest-server.fullname" . }}
+  labels:
+{{ include "rest-server.labels" . | indent 4 }}
+spec:
+  ports:
+  - name: http
+    protocol: TCP
+    port: {{ .Values.service.port }}
+    targetPort: {{ .Values.service.targetPort }}
+  selector:
+{{ include "rest-server.select-labels" . | indent 8 }}

@@ -14,24 +14,9 @@ $ npm run dev
 $ 打开浏览器访问 http://localhost:9286/
 ```
 
-### 快速部署
+## 源码编译部署
 
-
-1.给服务目标部署节点node加上label
-
-```
-# kubectl label nodes <node-name> openinode=worker
-```
-
-2. k8s集群中执行yaml部署
-
-```
-# kubectl apply -f ./k8s
-```
-
-### 源码编译部署
-
-##### 1.编译镜像
+### 1.编译镜像
 
 ```
 # cd webportal
@@ -41,26 +26,13 @@ $ 打开浏览器访问 http://localhost:9286/
 # docker push $dockerRegistry/openi/webportal:latest
 ```
 
-##### 2.修改yaml文件
-```
-# cd k8s
-# vim webportal.deploy.yaml
-# 配置image的地址
-```
+### 2 使用helm启动
 
-##### 3.k8s部署
-
-
-1.给服务目标部署节点node加上label
+通过按需求修改 `./charts/web-portal/value.yaml` 文件中的配置
 
 ```
-# kubectl label nodes <node-name> openinode=worker
-```
-
-2. k8s集群中执行yaml部署
-
-```
-# kubectl apply -f ./k8s
+// 安装
+helm install octopus ./charts/web-portal
 ```
 
 

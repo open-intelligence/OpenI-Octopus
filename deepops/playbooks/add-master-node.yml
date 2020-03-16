@@ -1,0 +1,28 @@
+- hosts: kube-init-master
+  gather_facts: yes
+  roles:
+    - setClusterCommon
+    - installDocker
+    - stopKeepalivedHaproxy
+    - installKeepAlived
+    - installHaProxy
+
+- hosts: kube-master-node
+  gather_facts: yes
+  roles:
+    - setClusterCommon
+    - installDocker
+    - stopKeepalivedHaproxy
+    - installKeepAlived
+    - installHaProxy
+
+- hosts: kube-init-master
+  gather_facts: no
+  roles:
+     - genNodeJoinCommand
+
+- hosts: kube-new-master-node
+  gather_facts: no
+  roles:
+     - installKube_ctl_adm_let
+     - joinK8sMaster

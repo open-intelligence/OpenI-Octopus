@@ -1,0 +1,18 @@
+- name: stop kubelet，ready for kubelet，kubeadm,kubectl
+  shell: systemctl stop kubelet
+  ignore_errors: True
+#- name: purge kubelet，kubeadm, kubectl
+#  shell: apt-get purge -y --allow-change-held-packages kubelet kubeadm kubectl
+
+#- name: autoremove kubelet，kubeadm, kubectl
+#  shell: apt-get -y autoremove kubelet kubeadm kubectl
+
+- name: show kubelet，kubeadm,kubectl version
+  debug:
+    msg: "{{kube_version}}-00"
+
+- name: install kubelet，kubeadm,kubectl
+  shell: apt-get install -y --allow-change-held-packages --allow-downgrades kubelet={{kube_version}}-00 kubeadm={{kube_version}}-00 kubectl={{kube_version}}-00
+
+- name: enable and start kubelet service 
+  shell: systemctl enable kubelet && sudo systemctl start kubelet

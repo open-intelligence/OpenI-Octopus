@@ -35,6 +35,7 @@ class V1JobService extends BaseJobService {
     const taskset = libTaskSet.NewTaskSet();
 
     taskset.SetName(job_id);
+    taskset.SetNamespace(user_info.user_id.toLowerCase());
 
     taskset.SetConfig(job);
 

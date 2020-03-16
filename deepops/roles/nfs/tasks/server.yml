@@ -1,0 +1,51 @@
+---
+- name: install ubuntu packages
+  apt:
+    name: nfs-kernel-server
+    state: latest
+  when: ansible_os_family == "Debian"
+  tags:
+    - nfs
+
+- name: ensure export path exists
+  file: path={{ item.path }} state=directory
+  with_items: '{{ nfs_exports }}'
+  notify: restart nfs
+  tags:
+    - nfs
+
+- name: configure exports
+  template:
+    src: exports.j2
+    dest: /etc/exports
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart nfs
+  register: nfs_exports_copy
+  tags:
+    - nfs
+
+- name: restart when exports change
+  service: name=nfs-kernel-server state=restarted
+  when: nfs_exports_copy.changed and ansible_os_family == "Debian"
+  tags:
+    - nfs
+
+- name: restart when exports change
+  service: name=nfs-server state=restarted
+  when: nfs_exports_copy.changed and ansible_os_family == "RedHat"
+  tags:
+    - nfs
+
+- name: ensure nfs server is running
+  service: name=nfs-kernel-server state=started enabled=yes
+  when: nfs_exports|length and ansible_os_family == "Debian"
+  tags:
+    - nfs
+
+- name: ensure nfs server is running
+  service: name=nfs-server state=started enabled=yes
+  when: nfs_exports|length and ansible_os_family == "RedHat"
+  tags:
+    - nfs

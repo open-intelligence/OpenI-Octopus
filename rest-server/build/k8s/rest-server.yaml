@@ -54,7 +54,7 @@ spec:
       hostPID: false
       containers:
         - name: rest-server
-          image: openi/rest-server:1.6
+          image: openi/rest-server:latest
           imagePullPolicy: Always
           securityContext:
             privileged: true
@@ -97,7 +97,7 @@ spec:
             - name: IMAGE_FRAMEWORKBARRIER
               value: "frameworkcontroller/frameworkbarrier"
             - name: IMAGE_POD_DISCOVERY
-              value: "yyrdl/poddiscovery:latest"
+              value: "openi/poddiscovery:latest"
             - name: ENABLED_API_DOC
               value: "NO"
           ports:

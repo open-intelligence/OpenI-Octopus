@@ -1,0 +1,103 @@
+# Commented by zhangshuiyong@pcl.ac.cn
+
+# Server Inventory File
+#
+# Uncomment and change the IP addresses in this file to match your environment
+# Define per-group or per-host configuration in group_vars/*.yml
+
+## 在Ansible脚本执行前，请先设计集群节点分组方案，按以下提示配置!!!
+## [$groupname] 是ansible特有的对一系列节点进行分组的方式
+
+
+######
+# ALL NODES
+######
+
+## [all] 节点组是可能被ansible脚本改变的节点的分组。节点的必要信息默认在该分组中填写，其他组组合节点只需要引用[all]组中节点的机器名
+## 注意：首项是节点的机器名，ansible只支持全小写（有大写也要填写全小写！）
+## ansible_ssh_pass为用户密码（安装K8s集群时候最好不要用特殊字符，实践中，ansible可能对复杂密码字符验证不通过问题，最好是a-z/A-z/数字，安装后再修改）
+## 所有节点的ansible_ssh_pass需要修改为一样，如果节点密码不相同，请修改后再改回原来（ 修改密码命令：passwd $ansible_ssh_user ）
+## ansible_become与ansible_become_user是配置ansible是否可以自动给ansible_ssh_user提升到root权限
+## 请按如下格式填写节点信息
+
+[all]
+p100-1 ansible_ssh_host=192.168.202.75 ansible_ssh_user=amax ansible_ssh_pass=Amax1979! ansible_become=yes ansible_become_user=root
+p100-2 ansible_ssh_host=192.168.202.76 ansible_ssh_user=amax ansible_ssh_pass=Amax1979! ansible_become=yes ansible_become_user=root
+pcsys02 ansible_ssh_host=192.168.202.102 ansible_ssh_user=pcsys02 ansible_ssh_pass=Amax1979! ansible_become=yes ansible_become_user=root
+#$hostname_01 ansible_ssh_host=$ip ansible_ssh_user=$user ansible_ssh_pass=$pwd ansible_become=yes ansible_become_user=root
+#$hostname_02 ansible_ssh_host=$ip ansible_ssh_user=$user ansible_ssh_pass=$pwd ansible_become=yes ansible_become_user=root
+#$hostname_03 ansible_ssh_host=$ip ansible_ssh_user=$user ansible_ssh_pass=$pwd ansible_become=yes ansible_become_user=root
+#$hostname_04 ansible_ssh_host=$ip ansible_ssh_user=$user ansible_ssh_pass=$pwd ansible_become=yes ansible_become_user=root
+#$hostname_05 ansible_ssh_host=$ip ansible_ssh_user=$user ansible_ssh_pass=$pwd ansible_become=yes ansible_become_user=root
+
+######
+# KUBERNETES
+######
+## [kube-init-master] 节点组属于历史分组，组内只能有1个节点
+## [kube-init-master] 节点组用于K8s 初始master的安装，执行kubeadm init命令
+## 本脚本需要在该分组的指定的唯一的节点上运行，从而方便向所有集群分发公钥
+## K8s集群公钥admin.conf分发到各个worker节点的$HOME/.kube/config, kubectl 才能访问集群
+## k8s_ha_master_keepalived_role用来配置keepalived的主备角色,Vip首先漂移到MASTER角色的K8s master机器
+## k8s_ha_master_keepalived_priority用来配置keepalived的主备角色的优先级，MASTER角色发生故障优先级会动态计算降低，Vip就会漂移到BACKUP角色的K8s Master
+## 如果MASTER角色的K8s master机器恢复正常，由于优先级原因，Vip首先会再次漂移到MASTER角色的K8s master机器
+
+[kube-init-master]
+p100-2 k8s_ha_master_keepalived_role=MASTER k8s_ha_master_keepalived_priority=100
+
+
+## [kube-master-node] 节点组属于历史分组，存储集群所有的历史master
+## [kube-master-node] 节点组用于指定哪些节点是master node角色, 高可用K8s集群有多个master
+## 自动化脚本执行后，该节点组中的node将会以master node的角色join到K8s集群中，组成高可用集群
+## k8s_ha_master_keepalived_role用来配置keepalived的主备角色,Vip首先漂移到MASTER角色的K8s master机器
+## k8s_ha_master_keepalived_priority用来配置keepalived的主备角色的优先级，MASTER角色发生故障优先级会动态计算降低，Vip就会漂移到BACKUP角色的K8s Master
+## 如果MASTER角色的K8s master机器恢复正常，由于优先级原因，Vip首先会再次漂移到MASTER角色的K8s master机器
+
+[kube-master-node]
+pcsys02 k8s_ha_master_keepalived_role=BACKUP k8s_ha_master_keepalived_priority=90
+#p100-1
+#master02
+#master03
+
+## [kube-new-master-node] 节点组属于增量分组
+## 初始化集群时候不需要填入master节点，只有在新增master节点(ansible-playbook playbooks/openi-octopus-add-master.yml -K)才使用该分组信息
+## 初始化集群结束后，此后需要新增master，只有新的未加入的master才加入到该分组，集群已经存在的节点不要加到这个分组
+## 注意：新的master节点也要添加到[kube-master-node]历史分组中（为了成功加入新master后，通过kube-master-node，更新haproxy层的软件）
+[kube-new-master-node]
+pcsys02
+
+
+## [kube-worker-node] 节点组属于增量分组
+## 初始化集群时候需要填入计划的worker节点
+## 初始化集群结束后，此后需要新增worker，只有新的未加入的worker才加入到该分组，集群已经存在的节点不要加到这个分组
+## 该分组用于指定非master节点，无论worker节点是纯CPU节点还是GPU节点，都要被加到该节点组
+## 该节点组会以worker node的角色join到k8s集群中
+
+[kube-worker-node]
+#p100-1
+
+## [kube-nvidia-gpu-node] 节点组属于增量分组
+## 初始化集群时候需要填入计划的worker节点
+## 初始化集群结束后，此后需要新增worker，只有新的未加入的worker才加入到该分组，集群已经存在的节点不要加到这个分组
+## 用于指定哪个worker节点上安装有英伟达GPU，方便自动化脚本给组内节点安装适配软件。如nvidia driver/docker
+## playbooks/label-k8s-node.yml 自动化脚本也会对该分组中的英伟达节点打上预先在config/group_vars/all.yml配置好的 $kube_nvidia_gpu_node_labels
+## 注意：无论初始化集群，还是新增worker节点。分组内的英伟达GPU节点也需要添加到[kube-worker-node]中
+
+[kube-nvidia-gpu-node]
+#p100-1
+#gpu01
+#gpu02
+
+
+## [kube-label-node] 节点组属于增量分组
+## 初始化集群时候需要填入计划的worker节点
+## 初始化集群结束后，此后需要新增worker，只有新的未加入的worker才加入到该分组，集群已经存在的节点不要加到这个分组
+## 用于指定哪个K8s worker节点需要被kubectl标记 $kube_label_node_labels
+
+## 为什么不直接使用[kube-worker-node]节点组？
+## 因为[kube-worker-node]代表初始化集群或者新增workers操作的所有的worker节点（可能包括cpu/gpu/寒武纪等异构硬件）
+## 而打label是面向上层应用，用来区分节点，给所有worker节点打上相同的label就失去了区分意义
+## 为了更加灵活，就多设置一个[kube-label-node]分组与[kube-nvidia-gpu-node]分组一起完成对node打label操作 (以后集群有寒武纪等更多异构硬件加入可新设置分组)
+## playbooks/label-k8s-node.yml 自动化脚本会对本分组中的节点打上预先在config/group_vars/all.yml配置好的 $kube_label_node_labels
+
+[kube-label-node]
+#p100-1

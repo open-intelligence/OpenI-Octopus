@@ -1,0 +1,188 @@
+# Default values for octopus.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+global:
+  scheduler:
+    type: "kube-batch"
+  image:
+    repository:
+      address: ""
+      pathname: "openi"
+    pullPolicy: Always
+  nodeSelector: {}
+
+web-portal:
+  image:
+    name: "web-portal"
+    tag: "latest"
+
+rest-server:
+  storage:
+    replicaCount: 1
+    rootPassword: "root"
+    image:
+      name: "rest-server-storage"
+      tag: "latest"
+    dataVolume:
+      hostPath: ""
+    resources: {}
+    tolerations:
+      - key: "node-role.kubernetes.io/master"
+        operator: "Exists"
+        effect: "NoSchedule"
+    affinity: {}
+    nodeSelector:
+      octopus.openi.pcl.cn/rest-server-storage: "yes"
+  image:
+    name: "rest-server"
+    tag: "latest"
+    poddiscoveryName: "poddiscovery"
+    poddiscoveryTag: "latest"
+  imageFactory:
+    customAddr: ""
+    protocol: "http"
+    host: "image-factory-shield"
+    port: "80"
+  logFactory:
+    customAddr: ""
+    port: "9200"
+    protocol: "http"
+    host: "log-factory-es"
+  envs: []
+  git:
+    server: ""
+    username: ""
+    password: ""
+    registry: ""
+  docker:
+    registry: ""
+    username: ""
+    password: ""
+  volumes:
+    - name: ghome
+      mountPath: /ghome
+      hostPath: /ghome
+    - name: gmodel
+      mountPath: /gmodel
+      hostPath: /gmodel
+
+kubebox-server:
+  image:
+    name: "kubebox-server"
+    tag: "latest"
+
+image-factory:
+  agent:
+    image:
+      name: "image-factory-agent"
+      tag: "latest"
+  shield:
+    image:
+      name: "image-factory-shield"
+      tag: "latest"
+
+tasksetcontroller:
+  image:
+    name: "tasksetcontroller"
+    tag: "latest"
+
+log-factory:
+  es:
+    replicaCount: 3
+    index:
+      number_of_shards: 5
+      number_of_replicas: 2
+    username: ""
+    password: ""
+    image:
+      pullPolicy: Always
+      tag: "7.5.2"
+    volumes:
+      esDataPath: /usr/share/elasticsearch
+    service:
+      type: ClusterIP
+      ports:
+        db:
+          port: 9200
+          targetPort: 9200
+        transport:
+          port: 9300
+          targetPort: 9300
+    ingress:
+      enabled: true
+      annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+      path: /es
+      tls: []
+      #  - secretName: chart-example-tls
+      #    hosts:
+      #      - chart-example.local
+    ES_JAVA_OPTS: "-Xms30g -Xmx30g"
+    resources: {
+      limits: {
+        cpu: "8000m",
+        memory: "32Gi"
+      },
+      requests: {
+        cpu: "8000m",
+        memory: "32Gi"
+      }         
+    }
+    nodeSelector:
+      octopus.openi.pcl.cn/log-service-es: "yes"
+    affinity:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+              - es
+          topologyKey: kubernetes.io/hostname
+  filebeat:
+    image:
+      tag: "7.5.2"
+    resources: {
+      limits: {
+        cpu: "4000m",
+        memory: "8Gi"
+      },
+      requests: {
+        cpu: "4000m",
+        memory: "8Gi"
+      }         
+    }
+    nodeSelector: {}
+
+prometheus:
+  image:
+    tag: "v2.0.0"
+  service:
+    type: NodePort
+    hostPort: 30003
+    port: 9090
+    targetPort: 9090
+
+grafana:
+  image:
+    tag: "6.2.0"
+  prometheus:
+    customAddr: ""
+    protocol: "http"
+    host: "prometheus"
+    port: "9090"
+  env:
+    GF_AUTH_BASIC_ENABLED: "true"
+    GF_AUTH_ANONYMOUS_ENABLED: "true"
+    GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    GF_SECURITY_ADMIN_USER: "admin"
+    GF_SECURITY_ADMIN_PASSWORD: "Pa22word"
+    GF_SECURITY_ALLOW_EMBEDDING: "true"
+    GF_SERVER_ROOT_URL: "/grafana-core"
+  ingress:
+    enabled: true
+    annotations: {}
+    path: /grafana-core

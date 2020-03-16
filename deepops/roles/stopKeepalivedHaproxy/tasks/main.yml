@@ -1,0 +1,19 @@
+---
+- name: stop keepalived docker container
+  shell: docker stop $(docker ps -a |  grep "keepalived"  | awk '{print $1}')
+  ignore_errors: True
+
+- name: rm keepalived docker container
+  shell: docker rm -f $(docker ps -a |  grep "keepalived"  | awk '{print $1}')
+  ignore_errors: True
+
+- name: stop haproxy docker container
+  shell: docker stop $(docker ps -a |  grep "haproxy"  | awk '{print $1}')
+  ignore_errors: True
+
+- name: rm haproxy docker container
+  shell: docker rm -f $(docker ps -a |  grep "haproxy"  | awk '{print $1}')
+  ignore_errors: True
+
+- name: restart docker
+  shell: systemctl restart docker

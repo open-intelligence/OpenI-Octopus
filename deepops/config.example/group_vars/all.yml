@@ -1,0 +1,194 @@
+# Commented by zhangshuiyong@pcl.ac.cn
+
+# Configuration common to all hosts
+# Define per-group or per-host values in the other configuration files
+
+
+# ------------------------------------------ Config Cluster HA Load Balancer ------------------------------------------
+
+# 高可用K8s集群需要在所有k8s master节点上启动haproxy和keepalived, 以实现一个高可用的load balancer层
+# 请注意：当一个K8s集群已经部署完成后，以后要增加master node, 也需要修改keepalived 和 haproxy的配置
+
+# Config keepalived
+# Keepailived 把多台主机虚拟在一起，提供一个虚拟IP对外提供服务。它拥有一台master服务器和多台backup服务器
+# 当主服务器出现故障时，虚拟IP地址会自动漂移到备份服务器，实现故障转移的高可用可能，即双机热备。注意：服务器的时间一定要一致。
+
+# K8s Ha方案需要预先选定局域网中一个没有实体机的ip（ping这个ip无响应）,该虚拟ip是k8s master节点的负载均衡的入口ip
+k8s_ha_master_keepalived_vip: "192.168.202.100"
+
+# 镜像名字
+keepalived_image: "zhangshuiyong/keepalived:2.0.19"
+
+# Config haproxy
+# 配置haproxy, haproxy是一种反向代理软件，作用为load balancer，可以将master请求路由到多个master节点上, 这方面比nginx要好
+# 配置haproxy的管理端口
+k8s_ha_master_haproxy_admin_port: "1080"
+
+# 配置haproxy的管理员uri，http://ip:k8s_ha_master_haproxy_admin_port/k8s_ha_master_haproxy_admin_uri可以打开haproxy管理界面
+k8s_ha_master_haproxy_admin_uri: "/haproxy-status"
+
+# 配置haproxy的管理员账号
+k8s_ha_master_haproxy_admin_user: "admin"
+
+# 配置haproxy的管理员密码
+k8s_ha_master_haproxy_admin_password: "password"
+
+# 配置haproxy的负载均衡端口
+k8s_ha_master_haproxy_port: "16443"
+
+# 配置haproxy给k8s master节点发送请求的端口
+k8s_ha_master_port: "6443"
+
+# 镜像名字
+haproxy_image: "registry.cn-shanghai.aliyuncs.com/baicheng_dev/haproxy:2.0.0"
+
+# 错误解决方法：
+# 1. 出现 driver failed programming external connectivity on endpoint 错误，重启docker服务可以解决
+
+
+#---------------------------------------------- Conifg Kubernetes ---------------------------------------
+
+## 在节点安装K8s的时候，如果该节点已经在别的k8s集群中,是否要强制重置？(kubeadm reset -f)
+## yes or no
+kubeadm_reset_if_node_in_k8s: "no"
+
+
+## 配置需要安装的K8s版本
+## 查看版本k8s版本号（v+中间的号码去掉-00）： apt-cache madison kubeadm
+## Change this to use another Kubernetes version
+kube_version: "1.16.3"
+
+## 在节点安装K8s的时候，相关版本的K8s镜像下载地址
+## define kubernetes image repo
+kube_image_repo: "registry.aliyuncs.com/google_containers"
+
+## K8s集群中Service资源的内部虚拟ip地址网段空间
+## Kubernetes internal network for services, unused block of space.
+kube_service_addresses: 10.16.0.0/16
+
+## K8s集群中Pod资源的内部虚拟ip地址网段空间
+## 网络插件Calico也需要依赖这个配置
+## internal network. Kubernetes will assign IP addresses from this range to individual pods.
+## This network must be unused in your network infrastructure!
+kube_pods_subnet: 10.0.0.0/24
+
+## kubeproxy工作模式，ipvs或者iptables
+## Kube-proxy proxyMode configuration.
+## Can be ipvs, iptables.
+kube_proxy_mode: ipvs
+
+# ----------------------------------------- Config Calico -----------------------------------------------------------
+
+## 配置K8s集群的网络插件和版本（目前只支持calico, 支持版本请查看roles/installCalico/templates的版本配置文件）
+## 字符串格式为：calico-$version (roles/installCalico/templates中的文件名)
+## Choose network plugin (only support calico right now, please check roles/installCalico/templates to find support version)
+## String format: calico-$version (is the filename in roles/installCalico/templates)
+kube_network_plugin: calico-v3.10
+
+## calico使用Bgp模式还是IPIP隧道模式(注意：如果集群的机器是来自于多网段的，只能使用IPIP模式)
+## IPIP模式填写: "Always"
+## Bgp模式填写："off"
+## 查看Bgp网络的node mesh网络状态可使用命令: calicoctl node status
+## 查看Bgp网络某个node的详情命令： calico get node $nodeName -o yaml
+## 查看某个机器的网卡的ip包分析：tcpdump -i $网卡名字 host $主机名字 -n
+## enable calico IPIP mode input "Always", enable bgp mode inpu "off"
+calico_enable_IPIP: "off"
+
+# calico寻找可用物理网卡的策略
+# 1. 默认: "first-found"
+# 2. 网卡名字正则表达式匹配: "interface=e.*"
+# 如果机器有多个e开头的名字最后一位不同的物理网卡，但是其他机器物理网卡又不是这种正则模式，就比较难用正则表达式
+# 3. 路由方法匹配网卡："can-reach=114.114.114.114"
+# 哪个物理网卡能路由到114.114.114.114就使用哪个
+calico_ip_autodetection_method: "can-reach=114.114.114.114"
+
+
+# ------------------------------------------ Config Docker ----------------------------------------------
+
+## 设定Docker的版本，K8s 1.16/1.15 都是与docker-ce 18.09搭配
+## 要注意的是docker --version命令查看的版本号只是部分版本号
+## 查看docker-ce完整的可安装版本号命令是：apt-cache show docker-ce | grep Version 
+## ubuntu-xenial 后缀是 ubuntu 16.04 系统的安装版本
+docker_ce_version: "5:18.09.9~3-0~ubuntu-xenial"
+
+
+## 非GPU节点的Docker配置
+## live-restore:true是机器重启以后docker的容器镜像都自动重新加载
+## log-opts是配置docker的日志文件超过100m就新建文件打印日志
+## cgroupdriver=systemd 是K8s kubelet的默认支持模式，Docker需要特别配置去适配K8s
+
+docker_daemon_json:
+  registry-mirrors: ["https://registry.docker-cn.com"]
+  storage-driver: overlay2
+  log-opts:
+    max-size: 100m
+  exec-opts: ["native.cgroupdriver=systemd"]
+  live-restore: true
+  insecure-registries: ["192.168.202.74:5000"]
+
+
+# ------------------------------------------------- Config Nvidia Docker -----------------------------------
+
+## 英伟达GPU节点的Nvidia Docker配置
+# NVIDIA Docker Configuration
+# Setting reference: https://docs.nvidia.com/deeplearning/dgx/user-guide/index.html
+
+nv_docker_daemon_json:
+  registry-mirrors: ["https://registry.docker-cn.com"]
+  storage-driver: overlay2
+  log-opts:
+    max-size: 100m
+  exec-opts: ["native.cgroupdriver=systemd"]
+  live-restore: true
+  insecure-registries: ["192.168.202.74:5000"]
+  default-shm-size: 1G
+  default-ulimits:
+    memlock:
+      name: memlock
+      hard: -1
+      soft: -1
+    stack:
+      name: stack
+      hard: 67108864
+      soft: 67108864
+  default-runtime: nvidia
+  runtimes:
+    nvidia:
+      path: /usr/bin/nvidia-container-runtime
+      runtimeArgs: []
+
+
+# -------Install Nvidia GPU Driver-------------------------
+
+# 由于不同的服务器可能有不同的GPU, 在自动化安装前需要确认服务器的GPU硬件选用那个版本的Driver
+# 请运行以下两个命令，确定目标服务器是否已经安装好Driver
+# nvidia-smi
+# nvidia-container-cli -k -d /dev/tty info
+
+# 如果要使用自动化脚本安装英伟达GPU driver，请在英伟达官网(https://www.nvidia.cn/Download/index.aspx?lang=cn)
+# 根据服务器的GPU类型,Cuda版本选择GPU driver版本，注意：系统选择Linux x64——》点击下载——》跳转下载页面——》鼠标浮在下载按钮上——》右键——》复制链接地址
+# 获得通用的Linux 64位服务器的driver安装文件（.run文件）的下载路径
+# (注意，选择Ubutun系统会变成下载.deb文件，一般情况下手动用这种模式安装也是可以的，但实际测试中，.deb文件安装模式有可能会安装driver不成功, 所以本脚本只采用run文件安装模式)
+nvidia_driver_run_file_download_url: "http://cn.download.nvidia.com/tesla/418.116.00/NVIDIA-Linux-x86_64-418.116.00.run"
+
+# ------------------------------------------------ Config K8s Device Plugin For Nvidia GPU -------------------------------
+# 要让K8s资源管理器能识别到英伟达的GPU，需要安装英伟达GPU的 K8s deivce plugin
+# k8s-device-plugin version
+k8s_nvidia_gpu_device_plugin_version: "1.0.0-beta4"
+
+
+
+# ----------------------------------------------------------- Label Nodes -------------------------------------------------
+
+## 所有节点成功组成K8s集群后，自动给[kube-label-node]节点组的节点打上kube_label_node_labels的lables
+## 多个key=value的label要用空格隔开
+## kubectl label node $hostname labels
+## inventroy [kube-label-node] will add kube_label_node_labels
+kube_label_node_labels: "openinode=worker"
+
+## 所有节点成功组成K8s集群后，自动给[kube-nvidia-gpu-node]节点组打上kube_nvidia_gpu_node_labels的labels
+# inventroy [kube-nvidia-gpu-node] will add kube_nvidia_gpu_node_labels
+kube_nvidia_gpu_node_labels: "hardware-type=NVIDIAGPU"
+
+#--------------elasticsearch节点服务的数据存储路径-------------------
+es_data_dir: "/usr/share/elasticsearch"

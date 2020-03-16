@@ -1,0 +1,43 @@
+- name: creat dir /root/.kube for {{ansible_ssh_host}}
+  shell: mkdir -p /root/.kube
+
+- name: copy k8s init-master admin.conf to {{ansible_ssh_host}}/root/.kube
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /root/.kube/config
+    mode: u=r,g=r,o=rw
+
+- name: create dir /home/{{ansible_ssh_user}}/.kube for {{ansible_ssh_host}}
+  shell: mkdir -p /home/{{ansible_ssh_user}}/.kube
+
+- name: copy k8s init-master admin.conf to {{ansible_ssh_host}}/home/{{ansible_ssh_user}}/.kube
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/{{ansible_ssh_user}}/.kube/config
+    owner: "{{ansible_ssh_user}}"
+    group: "{{ansible_ssh_user}}"
+    mode: u=r,g=r,o=rw
+
+- name: show join K8s as master command
+  debug:
+    msg: "{{ hostvars[groups['kube-init-master'][0]].k8sNodeJoinCommand}} --control-plane  --certificate-key {{ hostvars[groups['kube-init-master'][0]].kubeadm_certificate_key}}"
+
+- name: run kubeadm join as master command in {{ansible_ssh_host}}
+  shell: "{{ hostvars[groups['kube-init-master'][0]].k8sNodeJoinCommand}} --control-plane  --certificate-key {{ hostvars[groups['kube-init-master'][0]].kubeadm_certificate_key}}"
+
+- name: run kubectl get nodes -o wide
+  register: getNodesAfterAdd
+  shell: kubectl get nodes -o wide
+  ignore_errors: True
+
+- name: show kubectl get nodes info
+  debug:
+    msg: "{{getNodesAfterAdd}}"
+
+- name: get ipvsadm info to check kube-proxy ipvs mode
+  shell: ipvsadm -Ln
+  register: ipvsadmInfo
+
+- name: show ipvsadm info to check kube-proxy ipvs mode
+  debug:
+    msg: "{{ipvsadmInfo}}"

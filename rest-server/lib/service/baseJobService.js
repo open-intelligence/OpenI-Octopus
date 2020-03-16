@@ -39,7 +39,9 @@ class BaseJobService extends Service {
       throw new LError(ECode.RESOURCES_OVERLOAD, `job with job_id: ${job_id} is already exist!`);
     }
 
-    const rsp = await this.k8sPodGroupClient.create(podgroup.toJson());
+    const userNamespaceName = taskset.GetNamespace();
+
+    const rsp = await this.k8sPodGroupClient.create(podgroup.toJson(), userNamespaceName);
 
     if (rsp.kind === 'Status') {
 
@@ -67,16 +69,24 @@ class BaseJobService extends Service {
       job_state: Constants.TASK_STATUS.WAITING,
       completed_at: new Date(),
       job_config: taskset.GetConfig(),
-      job_detail: {},
+      job_detail: {
+        job: {},
+        tasks: [],
+        cluster: {},
+        platformSpecificInfo: {
+          platform: 'k8s',
+        },
+
+      },
     };
 
     await this.jobRecordModel.upsert(job_record);
-
-    const result = await this.k8sTaskSetClient.create(taskset.toJson());
+    
+    const result = await this.k8sTaskSetClient.create(taskset.toJson(),userNamespaceName);
 
     if (result.kind === 'Status') {
       
-      await this.k8sPodGroupClient.deleteByName(podgroup.GetName());
+      await this.k8sPodGroupClient.deleteByName(podgroup.GetName(),userNamespaceName);
 
       throw new LError(ECode.FAILURE, result.message);
 
@@ -102,9 +112,7 @@ class BaseJobService extends Service {
    * @return {JSON} rsp
    * @api private
    */
-  async _is_pod_failed(pod_name) {
-
-    let namespace =  this.k8sTaskSetClient.getNamespace();
+  async _is_pod_failed(pod_name,namespace) {
 
     const opt = {
       url: `${this.k8sTaskSetClient.getApiServer()}/api/v1/namespaces/${namespace}/pods/${pod_name}`,
@@ -170,17 +178,17 @@ class BaseJobService extends Service {
    * @return {JSON} rsp
    * @api private
    */
-  async _is_taskset_failed(taskset) {
-    
+  async _is_taskset_failed(taskset, namespace) {
+    namespace = namespace || taskset.GetNamespace();
     const rsp = {
       failed: false,
       message: '',
     };
 
-    if(!taskset.status || !taskset.status.roleStatus){
-        return rsp;
+    if (!taskset.status || !taskset.status.roleStatus) {
+      return rsp;
     }
-     
+
     const task_role_status_list = taskset.status.roleStatus || [];
 
     for (let i = 0; i < task_role_status_list.length; i++) {
@@ -193,7 +201,7 @@ class BaseJobService extends Service {
 
       const pod_name = status.podName;
 
-      const failed_check = await this._is_pod_failed(pod_name);
+      const failed_check = await this._is_pod_failed(pod_name,namespace);
 
       if (failed_check.failed === true) {
         rsp.failed = true;
@@ -230,9 +238,9 @@ class BaseJobService extends Service {
    * @return {Array} list ,taskset list
    * @api private
    */
-  async _query_taskset_from_k8s(label_selector) {
+  async _query_taskset_from_k8s(label_selector,namespace) {
 
-    const k8s_res = await this.k8sTaskSetClient.getByLabelSelector(label_selector);
+    const k8s_res = await this.k8sTaskSetClient.getByLabelSelector(label_selector,namespace);
 
     const taskset_list = k8s_res.items || [];
 
@@ -242,7 +250,7 @@ class BaseJobService extends Service {
 
       const taskset = taskset_list[i];
 
-      const failure_check = await this._is_taskset_failed(taskset);
+      const failure_check = await this._is_taskset_failed(taskset,namespace);
 
       // change the state of the taskset manually
       // please make sure what you are doing when you try to modify
@@ -264,15 +272,15 @@ class BaseJobService extends Service {
    * @return {JSON} taskset  ,the k8s taskset object
    * @api private
    */
-  async _get_taskset_from_k8s_by_id(job_id) {
+  async _get_taskset_from_k8s_by_id(job_id,namespace) {
 
-    const taskset = await this.k8sTaskSetClient.getByName(job_id);
+    const taskset = await this.k8sTaskSetClient.getByName(job_id,namespace);
 
     if (taskset.kind === 'Status') {
       return null;
     }
 
-    const failure_check = await this._is_taskset_failed(taskset);
+    const failure_check = await this._is_taskset_failed(taskset,namespace);
 
     if (failure_check.failed === true) {
       this._mark_as_completed_when_failed(taskset, failure_check.message);
@@ -280,6 +288,7 @@ class BaseJobService extends Service {
      
     return this._standard_taskset(taskset);
   }
+ 
 
   /**
    * update job cache in db
@@ -301,7 +310,7 @@ class BaseJobService extends Service {
     if (current_valid_state.length > 0) {
       condition.where.job_state = { [this.app.Sequelize.Op.in]: current_valid_state };
     }
-
+    //console.log("record.job_state",record.job_state);
     await this.jobRecordModel.update(record, condition);
   }
 
@@ -319,9 +328,9 @@ class BaseJobService extends Service {
       if(job_cache.job_detail.platformSpecificInfo.platform == "yarn"){
         return job_cache.job_detail;
       }
-
     }
-    const Constants = this.K8sJobComponent.Constants;
+     
+    const Constants = this.K8sJobComponent.Constants
 
     const completed = [
       Constants.TASK_STATUS.FAILED,
@@ -333,8 +342,10 @@ class BaseJobService extends Service {
       return job_cache.job_detail;
     }
 
-    const taskset = await this._get_taskset_from_k8s_by_id(job_cache.job_id);
-     
+    const userNamespaceName = job_cache.user_id.toLowerCase();
+
+    const taskset = await this._get_taskset_from_k8s_by_id(job_cache.job_id,userNamespaceName);
+
     const record = {
       job_id: job_cache.job_id,
     };
@@ -352,7 +363,7 @@ class BaseJobService extends Service {
       if(completed.includes(latest_record.job_state)){
         return job_cache.job_detail;
       }
-      console.log("mark as stop")
+ 
       //can't find job from k8s,mark as `stopped`
       record.job_state = Constants.TASK_STATUS.STOPPED;
     }
@@ -382,8 +393,8 @@ class BaseJobService extends Service {
     await this._update_job_in_db(record);
 
     if (completed.includes(record.job_state)) {
-      await this.k8sPodGroupClient.deleteByName(job_cache.job_id);
-      await this.k8sTaskSetClient.deleteByName(job_cache.job_id);
+      await this.k8sPodGroupClient.deleteByName(job_cache.job_id,userNamespaceName);
+      await this.k8sTaskSetClient.deleteByName(job_cache.job_id,userNamespaceName);
     }
 
     return taskset === null ? job_cache.job_detail : taskset;
@@ -483,11 +494,10 @@ class BaseJobService extends Service {
 
     await this._update_job_in_db(record);
     
-    await this.k8sPodGroupClient.deleteByName(job.job_id);
-    await this.k8sTaskSetClient.deleteByName(job.job_id);
-
+    let userNamespaceName= job.user_id.toLowerCase();
+    await this.k8sPodGroupClient.deleteByName(job.job_id,userNamespaceName);
+    await this.k8sTaskSetClient.deleteByName(job.job_id,userNamespaceName);
     return true;
-
   }
 
   /**
@@ -553,8 +563,7 @@ class BaseJobService extends Service {
   async _get_taskset_list_from_database(condition) {
     condition.raw = true;
     return  await this.jobRecordModel.findAll(condition);
-  }
-
+  }   
 }
 
 

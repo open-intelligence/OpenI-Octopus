@@ -44,3 +44,12 @@ cacheCreationTimeoutSec: 300 #等待一个新创建资源出现在本地的最�
 
 您也可以通过环境变量设置`WorkerAmount` 和　`CacheCreationTimeoutSec`，WorkerAmount默认是10,CacheCreationTimeoutSec默认
 是300秒。在kubernetes里面启动不需要设置`K8sAPIServer`和`K8sConfigFile`两个环境变量。
+
+### 2.4 使用helm启动
+
+通过按需求修改 `./charts/tasksetcontroller/value.yaml` 文件中的配置
+
+```
+// 安装
+helm install octopus ./charts/tasksetcontroller
+```

@@ -1,0 +1,166 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "log-factory-filebeat.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "log-factory-filebeat.labels" . | indent 4 }}
+data:
+  filebeat.yml: |-
+    filebeat.inputs:
+    - type: container
+      paths:
+        - /var/log/containers/*.log
+      processors:
+        - add_kubernetes_metadata:
+            host: ${NODE_NAME}
+            matchers:
+            - logs_path:
+                logs_path: "/var/log/containers/"
+
+    # To enable hints based autodiscover, remove `filebeat.inputs` configuration and uncomment this:
+    #filebeat.autodiscover:
+    #  providers:
+    #    - type: kubernetes
+    #      host: ${NODE_NAME}
+    #      hints.enabled: true
+    #      hints.default_config:
+    #        type: container
+    #        paths:
+    #          - /var/log/containers/*${data.kubernetes.container.id}.log
+
+    processors:
+      - add_cloud_metadata:
+      - add_host_metadata:
+
+    cloud.id: ${ELASTIC_CLOUD_ID}
+    cloud.auth: ${ELASTIC_CLOUD_AUTH}
+
+    setup.template.settings:
+      index.number_of_shards: 5
+      index.number_of_replicas: 2
+    output.elasticsearch:
+      hosts: ['${ELASTICSEARCH_HOST:elasticsearch}:${ELASTICSEARCH_PORT:9200}']
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ template "log-factory-filebeat.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "log-factory-filebeat.labels" . | indent 4 }}
+spec:
+  selector:
+    matchLabels:
+{{ include "log-factory-filebeat.labels" . | indent 6 }}
+  template:
+    metadata:
+      labels:
+{{ include "log-factory-filebeat.labels" . | indent 8 }}
+    spec:
+      serviceAccountName: {{ template "log-factory-filebeat.fullname" . }}
+      terminationGracePeriodSeconds: 30
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      {{- with .Values.filebeat.nodeSelector }}
+      nodeSelector:
+      {{ toYaml . | indent 2 }}
+      {{- end }}
+      containers:
+        - name: filebeat
+          image: docker.elastic.co/beats/filebeat:{{ .Values.filebeat.image.tag }}
+          args: [
+            "-c", "/etc/filebeat.yml",
+            "-e",
+          ]
+          env:
+            - name: ELASTICSEARCH_HOST
+              value: '{{ template "log-factory-es.fullname" . }}-external.{{ .Release.Namespace }}'
+            - name: ELASTICSEARCH_PORT
+              value:  "{{ .Values.es.service.ports.db.port }}"
+            - name: ELASTICSEARCH_USERNAME
+              value:
+            - name: ELASTICSEARCH_PASSWORD
+              value:
+            - name: ELASTIC_CLOUD_ID
+              value:
+            - name: ELASTIC_CLOUD_AUTH
+              value:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          securityContext:
+            runAsUser: 0
+            # If using Red Hat OpenShift uncomment this:
+            #privileged: true
+          resources:
+{{ toYaml .Values.filebeat.resources | indent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/filebeat.yml
+              readOnly: true
+              subPath: filebeat.yml
+            - name: data
+              mountPath: /usr/share/filebeat/data
+            - name: varlibdockercontainers
+              mountPath: /var/lib/docker/containers
+              readOnly: true
+            - name: varlog
+              mountPath: /var/log
+              readOnly: true
+      volumes:
+        - name: config
+          configMap:
+            defaultMode: 0600
+            name: {{ template "log-factory-filebeat.fullname" . }}
+        - name: varlibdockercontainers
+          hostPath:
+            path: /var/lib/docker/containers
+        - name: varlog
+          hostPath:
+            path: /var/log
+        # data folder stores a registry of read status for all files, so we don't send everything again on a Filebeat pod restart
+        - name: data
+          hostPath:
+            path: /var/lib/filebeat-data
+            type: DirectoryOrCreate
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ template "log-factory-filebeat.fullname" . }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "log-factory-filebeat.fullname" . }}
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ template "log-factory-filebeat.fullname" . }}
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ template "log-factory-filebeat.fullname" . }}
+  labels:
+{{ include "log-factory-filebeat.labels" . | indent 4 }}
+rules:
+  - apiGroups: [""] # "" indicates the core API group
+    resources:
+      - namespaces
+      - pods
+    verbs:
+      - get
+      - watch
+      - list
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ template "log-factory-filebeat.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+{{ include "log-factory-filebeat.labels" . | indent 4 }}
+---

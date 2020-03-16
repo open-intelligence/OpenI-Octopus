@@ -1,0 +1,46 @@
+- name: unload nouveau
+  modprobe:
+    name: nouveau
+    state: absent
+  ignore_errors: true
+
+- name: remove ppa
+  apt_repository:
+    repo: ppa:graphics-drivers/ppa
+    state: absent
+
+- name: download nvidia gpu driver run file
+  shell: wget -O /root/NVIDIA-Linux-x86_64.run {{ nvidia_driver_run_file_download_url }}
+
+- name: chmod +x nvidia gpu driver run file
+  shell: chmod +x /root/NVIDIA-Linux-x86_64.run
+
+- name: stop kubelet service to use nvidia module
+  shell: systemctl stop kubelet
+  ignore_errors: true
+
+- name: stop nvidia_drm module
+  shell: rmmod nvidia_drm
+  ignore_errors: true
+
+- name: stop nvidia_modeset module
+  shell: rmmod nvidia_modeset
+  ignore_errors: true
+
+- name: stop  nvidia_uvm module
+  shell: rmmod nvidia_uvm
+  ignore_errors: true
+
+- name: must to stop  nvidia module
+  shell: rmmod nvidia
+  register: stopNvidiaModResult
+  ignore_errors: true
+
+- name: check to stop  nvidia module
+  fail:
+    msg: "Failed to stop  nvidia module, stop install nvidia driver"
+  when: "stopNvidiaModResult|failed and 'Module nvidia is not currently loaded' not in stopNvidiaModResult.stderr"
+
+
+- name: install nvidia driver by run file
+  shell: sh /root/NVIDIA-Linux-x86_64.run -a -s -Z -X

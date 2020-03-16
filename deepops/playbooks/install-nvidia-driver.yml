@@ -1,0 +1,82 @@
+- hosts: kube-nvidia-gpu-node
+  become: true
+  vars:
+    readyToInstallDriver: false
+  tasks:
+    - name: install custom facts
+      include_role:
+        name: facts
+
+    - name: get nvidia-smi info
+      shell: nvidia-smi
+      changed_when: false
+      when:
+        - ansible_local['gpus']['count']
+        #- ansible_product_name is not search("DGX-1") and ansible_product_name is not search("DGX-2")
+      register: nvidiaSmiInfo
+      ignore_errors: true
+    
+    - name: check nvidia-smi info
+      set_fact:
+        readyToInstallDriver: true
+      when:
+        - nvidiaSmiInfo|failed
+    
+    - name: get nvidiaContainerCli info
+      shell: nvidia-container-cli -k -d /dev/tty info
+      changed_when: false
+      when:
+        - ansible_local['gpus']['count']
+        #- ansible_product_name is not search("DGX-1") and ansible_product_name is not search("DGX-2")
+        - nvidiaSmiInfo|success
+      register: nvidiaContainerCliInfo
+      ignore_errors: true
+    
+    - name: show nvidiaContainerCli info 
+      debug:
+        msg: "{{nvidiaContainerCliInfo}}"
+
+    - name: check nvidiaContainerCli info
+      set_fact:
+        readyToInstallDriver: true
+      when:
+        - nvidiaSmiInfo|success
+        - nvidiaContainerCliInfo|failed
+
+    - name: check nvidiaContainerCli info
+      set_fact:
+        readyToInstallDriver: true
+      when: 
+        - nvidiaSmiInfo|success
+        - nvidiaContainerCliInfo|success
+        - "'GPU UUID' not in nvidiaContainerCliInfo.stdout"
+
+    - name: show nvidiaContainerCli info 
+      debug:
+        msg: No Correct Nvidia driver, Ready to ReInstall Nvidia driver
+      when:
+        - readyToInstallDriver
+
+    - name: install nvidia driver
+      include_role:
+        name: installNvidiaDriver
+      when:
+        - ansible_local['gpus']['count']
+        #- ansible_product_name is not search("DGX-1") and ansible_product_name is not search("DGX-2")
+        - readyToInstallDriver
+    
+    - name: test nvidia-smi
+      command: nvidia-smi
+      changed_when: false
+      when:
+        - ansible_local['gpus']['count']
+        #- ansible_product_name is not search("DGX-1") and ansible_product_name is not search("DGX-2")
+        - readyToInstallDriver
+    
+    - name: show all gpu info
+      shell: nvidia-container-cli -k -d /dev/tty info
+      changed_when: false
+      when:
+        - ansible_local['gpus']['count']
+        #- ansible_product_name is not search("DGX-1") and ansible_product_name is not search("DGX-2")
+        - readyToInstallDriver

@@ -1,0 +1,19 @@
+- hosts: kube-worker-node
+  gather_facts: no
+  roles:
+    - setClusterCommon
+    - installDocker
+    - stopKeepalivedHaproxy
+
+- hosts: kube-init-master
+  gather_facts: no
+  roles:
+     - genNodeJoinCommand
+
+# if node rejoin, maybe have keepalived-haproxy docker.Stop it when install single master k8s cluster
+
+- hosts: kube-worker-node
+  gather_facts: no
+  roles:
+    - installKube_ctl_adm_let
+    - joinK8sNode

@@ -1,0 +1,46 @@
+global
+  log 127.0.0.1 local0 err
+  maxconn 4096
+  uid 99
+  gid 99
+  #daemon
+  nbproc 1
+  pidfile haproxy.pid
+
+defaults
+  mode http
+  log 127.0.0.1 local0 err
+  maxconn 4096
+  retries 3
+  timeout connect 5s
+  timeout client 30s
+  timeout server 30s
+  timeout check 2s
+
+listen admin_stats
+  mode http
+  bind 0.0.0.0:{{k8s_ha_master_haproxy_admin_port}}
+  log 127.0.0.1 local0 err
+  stats refresh 30s
+  stats uri     {{k8s_ha_master_haproxy_admin_uri}}
+  stats realm   Haproxy\ Statistics
+  stats auth    {{k8s_ha_master_haproxy_admin_user}}:{{k8s_ha_master_haproxy_admin_password}}
+  stats hide-version
+  stats admin if TRUE
+
+frontend openi-octopus-k8s-https-lb
+  bind 0.0.0.0:{{k8s_ha_master_haproxy_port}}
+  mode tcp
+  #maxconn 4096
+  default_backend openi-octopus-k8s-https-masters
+
+backend openi-octopus-k8s-https-masters
+  mode tcp
+  balance roundrobin
+  {% for host in groups['kube-init-master'] %}
+server {{host}} {{hostvars[host].ansible_ssh_host}}:6443 check port 6443 maxconn 1000 inter 2000 rise 2 fall 3
+  {% endfor %}
+  {% for host in groups['kube-master-node'] %}
+server {{host}} {{hostvars[host].ansible_ssh_host}}:6443 check port 6443 maxconn 1000 inter 2000 rise 2 fall 3
+  {% endfor %}
+

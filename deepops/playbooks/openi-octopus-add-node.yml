@@ -1,0 +1,49 @@
+---
+# Commented by zhangshuiyong@pcl.ac.cn
+# Install python required for Ansible
+- include: bootstrap-python.yml
+  tags:
+    - bootstrap
+
+# Kubernetes Cluster Add GPU Node Playbook
+- hosts: kube-worker-node
+  gather_facts: no
+  vars:
+    nok8snode: true
+  roles:
+    - checkAndResetAllNodeInK8s
+
+
+# ----------------------------------------------------------
+# Notice1: kube-nvidia-gpu-node will run the below script
+# Notice2: kube-node will not run the below script
+# ----------------------------------------------------------
+  
+# Install driver and container runtime on GPU servers
+- include: install-nvidia-driver.yml
+  tags:
+    - nvidia
+
+- include: nvidia-docker.yml
+  tags:
+    - nvidia
+
+# Install Kubernetes
+# for configuration, see: config/group_vars/k8s-cluster.yml
+- include: add-worker-node.yml
+
+# config nvidia docker
+- include: config-openi-octopus-nvidia-docker.yml
+  tags:
+    - config-openi-octopus-nvidia-docker
+
+# Install k8s GPU device plugin
+# one cluster only install once
+- hosts: kube-nvidia-gpu-node
+  tasks:
+    - name: Install k8s GPU device plugin
+      shell: kubectl create -f 'https://raw.githubusercontent.com/NVIDIA/k8s-device-plugin/{{k8s_nvidia_gpu_device_plugin_version}}/nvidia-device-plugin.yml'
+      ignore_errors: True
+
+# label worker node
+- include: label-k8s-node.yml

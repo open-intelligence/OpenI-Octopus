@@ -1,0 +1,162 @@
+---
+- name: DNS config
+  copy:
+     src: resolv.conf
+     dest: /etc/resolv.conf
+
+- name: backup apt source
+  copy: 
+   src: /etc/apt/sources.list
+   dest: /etc/apt/sources.list.old
+
+- name: replace apt source to ali source
+  copy: 
+    src: sources.list
+    dest: /etc/apt/sources.list
+
+- name: install curl
+  apt:
+    state: present
+    name:
+    - curl
+
+- name: add ali k8s apt-key
+  shell: curl -s https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | sudo apt-key add -
+
+- name: add ali k8s source
+  copy:
+    src: kubernetes.list
+    dest: /etc/apt/sources.list.d/kubernetes.list
+
+- name: apt-get update
+  apt:
+   update_cache: yes
+
+- name: apt fix broken pkg
+  shell: apt --fix-broken install
+
+- name: install ufw
+  apt:
+    state: present
+    name:
+    - ufw
+
+- name: disable firewall
+  shell: ufw disable
+
+- name: disable SELINUX
+  shell: setenforce 0
+  register: closeSelinuxResult
+  ignore_errors: True
+
+- name: persist disable SELINUX persist (don't worry reboot)
+  copy:
+    src: selinuxconfig
+    dest: /etc/selinux/config
+
+- name: persist allow Linux kernel forward net pkg (don't worry reboot)
+  lineinfile:
+    dest: /etc/rc.local 
+    regexp: '^iptables -P FORWARD ACCEPT$'
+    insertafter: '^#'
+    line: 'iptables -P FORWARD ACCEPT'
+    backrefs: no
+
+- name: reset system ipv4 & ipv6 network setting for k8s
+  copy:
+    src: sysctl.conf
+    dest: /etc/sysctl.conf
+
+- name: config ipv4 & ipv6 network setting for k8s
+  copy:
+    src: k8snet.conf
+    dest: /etc/sysctl.d/k8s.conf
+
+- name: active ipv4 & ipv6 network setting module for k8s
+  shell: modprobe br_netfilter
+
+- name: persist ipv4 & ipv6 network setting module for k8s
+  shell: echo "br_netfilter" > /etc/modules-load.d/br_netfilter.conf
+
+- name: get active ipv4 & ipv6 network setting info
+  shell: sysctl --system
+  register: k8sNetworkSetting
+
+- name: show ipv4 & ipv6 network setting
+  debug:
+    msg: "{{k8sNetworkSetting}}"
+
+#----iptables relate to docker & calico network
+- name: allow Linux kernel forward net pkg
+  shell: iptables -P FORWARD ACCEPT
+
+- name: swapoff（kubelet need）
+  shell: swapoff -a
+
+- name: persist swapoff (don't worry reboot)
+  shell: sed -i 's/.*swap.*/#&/' /etc/fstab
+
+#----- config for kubeproxy and keepalived to use ipvs
+- name: install ipset
+  apt:
+    state: present
+    name:
+    - ipset
+
+- name: install ipvsadm
+  apt:
+    state: present
+    name:
+    - ipvsadm
+
+- name: mkdir ipvs modules dir
+  shell: mkdir -p /etc/sysconfig/modules
+
+- name: persist active ipvs (don't worry reboot)
+  copy:
+    src: ipvs.modules
+    dest: /etc/sysconfig/modules/ipvs.modules
+
+- name: chmod 755 /etc/sysconfig/modules/ipvs.modules 
+  shell: chmod 755 /etc/sysconfig/modules/ipvs.modules
+
+- name: active ipvs.modules
+  shell: bash /etc/sysconfig/modules/ipvs.modules
+
+- name: get lsmod info
+  shell: lsmod | grep -e ip_vs -e nf_conntrack_ipv4
+  register: lsmodinfo
+
+- name: show lsmod info
+  debug:
+    msg: "{{lsmodinfo}}"
+
+#---- config for keepalived
+
+- name: sync timezone & network time
+  shell: timedatectl set-timezone Asia/Shanghai
+
+- name: get machine time info
+  shell: timedatectl
+  register: timedateInfo
+
+- name: show machine time info
+  debug:
+   msg: "{{timedateInfo}}"
+
+# -----config for prometheus
+
+- name: config kubelet for nvidia pod-gpu-metrics-exporter
+  copy:
+    src: kubeletForNvidiaPodGPUMetricsExporter
+    dest: /etc/default/kubelet
+
+# -----config for efk
+- name: mkdir for elasticsearch
+  shell: mkdir -p {{es_data_dir}}
+
+- name: chmod 755 for elasticsearch data dir
+  shell: chmod 755 {{es_data_dir}}
+
+- name: chown -R 1000:0 for elasticsearch data dir
+  shell: chown -R 1000:0 {{es_data_dir}}

@@ -1,0 +1,23 @@
+{{- if .Values.ingress.enabled -}}
+{{- $fullName := include "kubebox-server.fullname" . -}}
+{{- $ingressPath := .Values.ingress.path -}}
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    kubernetes.io/ingress.allow-http: "true"
+    ingress.kubernetes.io/ssl-redirect: "false"
+    # ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.org/websocket-services: "{{ $fullName }}"
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: {{ $fullName }}
+          servicePort: {{ .Values.service.port }}
+        path: {{ $ingressPath }}(/|$)(.*)
+{{- end }}

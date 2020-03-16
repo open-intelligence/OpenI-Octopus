@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "image-factory-shield.fullname" . }}
+  labels:
+{{ include "image-factory-shield.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.agent.replicaCount }}
+  selector:
+    matchLabels:
+{{ include "image-factory-shield.select-labels" . | indent 8 }}
+  template:
+    metadata:
+      labels:
+{{ include "image-factory-shield.labels" . | indent 8 }}
+    spec:
+      containers:
+        - name: {{ template "image-factory-shield.name" . }}
+          image: "{{ .Values.global.image.repository.address }}{{ .Values.global.image.repository.pathname }}/{{ .Values.shield.image.name }}:{{ .Values.shield.image.tag }}"
+          imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.shield.service.targetPort }}
+              protocol: TCP
+          resources:
+{{ toYaml .Values.shield.resources | indent 12 }}
+    {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.shield.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.shield.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

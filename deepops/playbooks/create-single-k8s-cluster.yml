@@ -1,0 +1,29 @@
+# if node rejoin,maybe have keepalived-haproxy docker.Stop it when install single master k8s cluster
+- hosts: all
+  gather_facts: no
+  roles:
+    - setClusterCommon
+    - installDocker
+    - stopKeepalivedHaproxy
+
+# Notice1: Do not move installDocker / installKube_ctl_adm_let to all groups! 
+# Because in add-master-node.yml logic, all group will not install Docker & installKube_ctl_adm_let
+# Notice3: According Object-Orient coding mode, should not move installDocker / installKube_ctl_adm_let to all groups
+
+- hosts: kube-init-master
+  gather_facts: no
+  roles:
+     - installKube_ctl_adm_let
+     - initSingleK8sMaster
+     - installCalico
+
+- hosts: kube-init-master
+  gather_facts: no
+  roles:
+     - genNodeJoinCommand
+
+- hosts: kube-worker-node
+  gather_facts: no
+  roles:
+    - installKube_ctl_adm_let
+    - joinK8sNode

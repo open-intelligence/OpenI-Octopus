@@ -5,24 +5,27 @@
 [![Build Status](https://travis-ci.org/Microsoft/openi.svg?branch=master)](https://travis-ci.org/open-intelligence/openi)
 [![Coverage Status](https://coveralls.io/repos/github/open-intelligence/openi/badge.svg?branch=master)](https://coveralls.io/github/open-intelligence/openi?branch=master)
 
+[简体中文](./README_zh.md)
 
 ## Introduction
 
-OPENI is a cluster management tool and resource scheduling platform, initially designed and jointly developed by [Microsoft Research (MSR)](https://www.microsoft.com/en-us/research/group/systems-research-group-asia/), [Microsoft Search Technology Center (STC)](https://www.microsoft.com/en-us/ard/company/introduction.aspx), [Peking University](http://eecs.pku.edu.cn/EN/), [Xi'an Jiaotong University](http://www.aiar.xjtu.edu.cn/), [Zhejiang University](http://www.cesc.zju.edu.cn/index_e.htm), and [University of Science and Technology of China](http://eeis.ustc.edu.cn/), and [maintained by PCL LAB](http://www.pcl.ac.cn/), [Peking University](http://idm.pku.edu.cn/), [University of Science and Technology of China
-](https://www.ustc.edu.cn/)and [AITISA](http://www.aitisa.org.cn/).
-The platform incorporates some mature design that has a proven track record in large scale Microsoft production environment, and is tailored primarily for academic and research purpose. 
+Openi-octopus is a cluster management tool and resource scheduling platform jointly designed and developed by Peking University, Xi'an Jiaotong University, Zhejiang University and China University of science and technology, and maintained by Pengcheng laboratory, Peking University, China University of science and technology and aitisa. The platform combines some mature designs that perform well in large-scale production environment, and is mainly designed to improve the efficiency of academic research and reproduce academic research results.
 
-OPENI supports AI jobs (e.g., deep learning jobs) running in a GPU cluster. The platform provides a set of interfaces to support major deep learning frameworks: CNTK, TensorFlow, etc. The interface provides great extensibility: new deep learning framework (or other type of workload) can be supported by the interface with a few extra lines of script and/or Python code.
+### Feature
 
-OPENI supports GPU scheduling, a key requirement of deep learning job. 
-For better performance, OPENI supports fine-grained topology-aware job placement that can request for the GPU with a specific location (e.g., under the same PCI-E switch).
+- Based on kubernetes, the resource scheduling platform is developed to manage the task running environment in a mirror way, and the primary configuration is available everywhere;
+- For AI scenario design, task scheduling and start-up of AI scenario have certain particularity. For example, distributed tasks of PS worker architecture need to meet resource requests of at least two roles to start tasks. Otherwise, even start-up tasks will cause resource waste. Openi octopus has done a lot of design and Optimization for similar scenarios;
+- The plug-in design concept, based on the core business flow, provides extensibility through plug-in, and does not limit the plug-in development language;
+- It is easy to deploy. Openi Octopus supports rapid deployment in helm mode, and supports customized deployment of services;
+- Support heterogeneous hardware, such as GPU, NPU, FPGA, etc. because openi octopus is used to develop based on kubernetes, different heterogeneous hardware plug-ins can be customized;
+- Support a variety of deep learning frameworks such as tensorflow, pytorch, paddlepaddle, etc., and can easily support new frameworks by mirroring.
 
-OPENI embraces a [microservices](https://en.wikipedia.org/wiki/Microservices) architecture: every component runs in a container.
-The system leverages [Kubernetes](https://kubernetes.io/) to deploy and manage system service.
-The latest version of OPENI,the scheduling engine of more dynamic deep learning jobs also uses Kubernetes,
-which enables system services and deep learning jobs to be scheduled and managed using Kubernetes. 
-The storage of training data and results can be customized according to platform/equipment requirements.
-Jobs logs are collected by [Filebeat](https://www.elastic.co/cn/products/beats/filebeat) and stored in [Elasticsearch](https://www.elastic.co/cn/products/elasticsearch) cluster.
+### Applicable Scenario
+
+- Build large-scale AI computing platform;
+- Want to share computing resources;
+- Hope to complete the model training in a unified environment;
+- We hope to use integrated plug-ins to assist model training and improve efficiency.
 
 ## An Open AI Platform for R&D and Education 
 
@@ -55,9 +58,9 @@ And the system need [NTP](http://www.ntp.org/) service for clock synchronization
 ### Deployment process
 To deploy and use the system, the process consists of the following steps.
 
-1. [Deploy Kubernetes 1.13 for OPENI-octopus system](https://www.processon.com/view/link/5d157ebae4b0a916e8f6bcc5)
+1. [Deploy Kubernetes for OPENI-octopus system](./deepops/README_zh.md)
 2. [Deploy OPENI-octopus system services](./install_openi_octopus.md)
-3. Access [web portal](https://github.com/open-intelligence/OpenI-Octopus/tree/k8s/web-portal) for job submission and cluster management
+3. Access [web portal](./web-portal/README.md) for job submission and cluster management
 
 #### Job management
 
@@ -71,15 +74,15 @@ The web portal also provides Web UI for cluster management.
 ## System Architecture
 
 <p style="text-align: left;">
-  <img src="./sysarch.png" title="System Architecture" alt="System Architecture" />
+  <img src="./sysarch.png" title="System Architecture" alt="System Architecture" width = 70% height = 70%  />
 </p>
 
 The system architecture is illustrated above. 
 User submits jobs or monitors cluster status through the Web Portal, 
-which calls APIs provided by the [REST server](https://github.com/open-intelligence/OpenI-Octopus/tree/k8s/rest-server).
+which calls APIs provided by the [REST server](./rest-server/README.md).
 Third party tools can also call REST server directly for job management.
 Upon receiving API calls, the REST server coordinates with k8s ApiServer, k8s Scheduler will schedule the job to k8s node with CPU,GPU and other resources.
-[FrameworkController](https://github.com/open-intelligence/OpenI-Octopus/tree/k8s/frameworkcontroller) will monitor the job life cycle in k8s cluster.
+[TaskSetController](./taskset/README.md) will monitor the job life cycle in k8s cluster.
 Restserver retrieve the status of jobs from k8s ApiServer, and its status can display on Web portal.
 Other type of CPU based AI workloads or traditional big data job
 can also run in the platform, coexisted with those GPU-based jobs. 

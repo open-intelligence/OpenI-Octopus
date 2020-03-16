@@ -40,7 +40,7 @@ class DebugJobProxyService extends Service {
 
     const condition = { where: { job_type: 'debug' ,job_state: Constants.TASK_STATUS.RUNNING} };
 
-    const jobList = await service.v1JobService._get_framework_list_from_database(condition);
+    const jobList = await service.v1JobService._get_taskset_list_from_database(condition);
 
     let lastJobConfigTypes = await this.getJobConfigTypes();
 
@@ -152,7 +152,7 @@ class DebugJobProxyService extends Service {
                                       container + '/' + container + '-json.log',
             },
           },
-          size: 100,
+          size: 200,
           from: 0,
           sort: 'log.offset',
         },

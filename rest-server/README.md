@@ -101,12 +101,13 @@ If you need to run in k8s, configure it in the k8s manifest configuration file.
 
 ### k8s
 
-When you need to run the service in k8s, it can be executed according to the manifest file `build/k8s/rest-server.yaml`.
+Modify the configuration in the file `./charts/rest-server/value.yaml` as required
 
-```bash
-# Modify the placeholder `${xxx}` configuration item in the file
-$ kuberctl apply -f build/k8s/rest-server.yaml
 ```
+// installing
+helm install octopus ./charts/rest-server
+```
+
 After successful publication, access can be made through http://${ip}/rest-server/
 
 ## Upgrading
