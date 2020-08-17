@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "rest-plugin-storage.fullname" . }}
+  labels:
+{{ include "rest-plugin-storage.labels" . | indent 4 }}
+spec:
+  serviceName: {{ template "rest-plugin-storage.fullname" . }}
+  replicas: {{ .Values.storage.replicaCount }}
+  selector:
+    matchLabels:
+{{ include "rest-plugin-storage.select-labels" . | indent 8 }}
+  template:
+    metadata:
+      labels:
+{{ include "rest-plugin-storage.labels" . | indent 8 }}
+    spec:
+{{- with .Values.storage.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+{{- end }}
+      nodeSelector:
+{{- with .Values.global.nodeSelector }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+{{- with .Values.storage.nodeSelector }}
+{{ toYaml . | indent 8 }}
+{{- end }}
+      containers:
+      - name: mysql-db
+        image: "{{ .Values.storage.image.name }}:{{ .Values.storage.image.tag }}"
+        imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+{{- with .Values.storage.args }}
+        args:
+{{ toYaml . | indent 8 }}
+{{- end }}
+        volumeMounts:
+        - mountPath: /var/lib/mysql
+          name: mysql-storage
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "{{ .Values.storage.rootPassword }}"
+        - name: MYSQL_DATABASE
+          value: "restplugins"
+        ports:
+        - name: mysql-db
+          containerPort: {{ .Values.storage.service.targetPort }}
+          hostPort: {{ .Values.storage.service.port }}
+      volumes:
+      - name: mysql-storage
+{{- if .Values.storage.dataVolume.hostPath }}
+        hostPath:
+          path: {{ .Values.storage.dataVolume.hostPath }}
+{{- else }}
+        emptyDir: {}
+{{- end }}

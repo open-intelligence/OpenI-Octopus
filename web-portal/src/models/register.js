@@ -110,14 +110,13 @@ export default {
                             pathname: '/openi/overview',
                         })
                     );
-                }else if(response&&response.code === 'S402'){
+                } else if (response&&response.code === 'S402') {
                     onFailed && onFailed("非合法第三方用户");
                     return;
-                }else if(response&&response.code === 'S202')
-                {
+                } else if (response&&response.code === 'S409') {
                     onFailed && onFailed("用户名已存在");
                     return;
-                }else{
+                } else {
                     onFailed && onFailed(response.msg);
                     return;
                 }
@@ -160,7 +159,13 @@ export default {
                             username: accountInfo.username
                         },
                     });
-                }else{
+                } else if (response&&response.code === 'S409') {
+                    onFailed && onFailed("用户名已存在");
+                    return;
+                } else if (response&&response.code === 'S202') {
+                    onFailed && onFailed("信息填写错误", response.payload);
+                    return;
+                } else {
                     yield put({
                         type: 'visibleSuccessModelWindow',
                         payload: {

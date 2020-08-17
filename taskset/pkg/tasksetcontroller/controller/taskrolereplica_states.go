@@ -147,12 +147,12 @@ func (c *TaskSetController) DeclareReplicaStates() {
 
 func replicaStateChangeHandler(pre, next *typeStateMachine.State, reason string, args ...interface{}) error {
 	controller, taskset, _, _, pod, record := convertReplicaStateMachineArgs(args...)
-
 	//update replica status
 	if record.Phase != next.GetName() {
 		record.Phase = next.GetName()
-		record.PhaseMessage = reason
 		record.TransitionTime = metav1.Now()
+		record.PhaseMessage = reason
+
 		controller.logger.Info("",
 			zap.String("QueryKey", "ReplicaTransition"),
 			zap.String("TaskSet", taskset.Name),

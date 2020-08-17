@@ -1,3 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "log-factory-es.fullname" . }}
+data:
+  elasticsearch.yml: |
+    cluster.name: es-cluster
+    network.host: "0.0.0.0"
+    http.cors.enabled: true
+    http.cors.allow-origin: "/.*/"
+    bootstrap.memory_lock: false
+---
+
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
@@ -43,11 +56,14 @@ spec:
         volumeMounts:
           - name: elasticsearch-logging
             mountPath: /data
+          - name: elasticsearch-config
+            mountPath: /usr/share/elasticsearch/config/elasticsearch.yml
+            subPath: elasticsearch.yml
           - name: esdata
             mountPath: /usr/share/elasticsearch/data
+          - name: esbackup
+            mountPath: /usr/share/elasticsearch/backup
         env:
-          - name: "cluster.name"
-            value: "es-cluster"
           - name: "node.max_local_storage_nodes"
             value: "{{ .Values.es.replicaCount }}"
           - name: "node.name"
@@ -58,27 +74,27 @@ spec:
             value: {{ template "log-factory-es.fullname" . }}
           - name: "cluster.initial_master_nodes"
             value: {{ template "log-factory-es.namelist" . }}
-          - name: "discovery.zen.minimum_master_nodes"
-            value: {{ template "log-factory-es.minimum_master_nodes" . }}
-          - name: "network.host"
-            value: "0.0.0.0"
-          - name: "http.cors.enabled"
-            value: "true"
-          - name: "http.cors.allow-origin"
-            value: "/.*/"
           - name: "path.repo"
-            value: "/usr/share/elasticsearch/data/backup"
+            value: "/usr/share/elasticsearch/backup"
           - name: "ES_JAVA_OPTS"
             value: "{{ .Values.es.ES_JAVA_OPTS }}"
-          - name: "bootstrap.memory_lock"
-            value: "false"
-          - name: "NAMESPACE"
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
       volumes:
         - name: elasticsearch-logging
           emptyDir: {}
+        - name: elasticsearch-config
+          configMap:
+            name: {{ template "log-factory-es.fullname" . }}
+            items:
+              - key: elasticsearch.yml
+                path: elasticsearch.yml
+        - name: esbackup
+{{- if .Values.es.volumes.esBackupPath }}
+          hostPath:
+            path: {{ .Values.es.volumes.esBackupPath }}
+            type: DirectoryOrCreate
+{{- else }}
+          emptyDir: {}
+{{- end }}
         - name: esdata
 {{- if .Values.es.volumes.esDataPath }}
           hostPath:

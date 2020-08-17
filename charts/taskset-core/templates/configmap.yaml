@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "taskset-core.fullname" . }}
+  labels:
+{{ include "taskset-core.labels" . | indent 4 }}
+data:
+  core-config.yml: |
+    adminToken: {{ .Values.adminToken }}
+    pipeline:
+      workerAmount: {{ .Values.pipeline.workerAmount }}
+    mysql:
+      maxIdleConns: 10
+      maxOpenConns: 5
+      authStr: "root:{{ .Values.storage.rootPassword }}@({{ template "taskset-core-storage.host" .}}:{{ .Values.storage.service.port }})/{{ .Values.storage.database }}?charset=utf8mb4&parseTime=True&loc=Local"
+      debugSql: {{ .Values.debugSql }}
+    lifehook:
+      requestTimeOutSec: {{ .Values.lifehook.requestTimeOutSec }}
+      maxParallelProcessRequest: {{ .Values.lifehook.maxParallelProcessRequest }}
+      maxRetryOnFail: {{ .Values.lifehook.maxRetryOnFail }}
+    server:
+      port: {{ .Values.service.targetPort }}
+      debugMode: {{ .Values.debugMode }}
+    kubernetes:
+      apiServer: ""
+      kubeFilePath: ""

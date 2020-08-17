@@ -1,0 +1,7 @@
+.vscode
+.idea
+.github
+typings
+run
+logs
+node_modules

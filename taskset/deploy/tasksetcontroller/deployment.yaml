@@ -29,5 +29,5 @@ spec:
     spec:
       containers:
         - name: tasksetcontroller
-          image: 192.168.202.74:5000/openi/tasksetcontroller:v0.0.2
+          image: 192.168.202.74:5000/openi/tasksetcontroller:v0.0.8
           imagePullPolicy: IfNotPresent

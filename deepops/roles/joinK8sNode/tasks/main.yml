@@ -39,9 +39,11 @@
 
 - name: get ipvsadm info to check kube-proxy ipvs mode
   shell: ipvsadm -Ln
+  when: kube_proxy_mode == "ipvs"
   register: ipvsadmInfo
 
 - name: show ipvsadm info to check kube-proxy ipvs mode
   debug:
     msg: "{{ipvsadmInfo}}"
+  when: kube_proxy_mode == "ipvs"
 

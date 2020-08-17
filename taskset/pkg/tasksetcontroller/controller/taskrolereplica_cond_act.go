@@ -326,14 +326,14 @@ func condWhenPodRunning(args ...interface{}) (bool, string) {
 }
 
 func condWhenPodAssigned(args ...interface{}) (bool, string) {
-	_, _, _, _, pod, _ := convertReplicaStateMachineArgs(args...)
+	_, _, _, _, pod, record := convertReplicaStateMachineArgs(args...)
 
 	if nil == pod {
 		return false, "can not find pod at local "
 	}
 
 	if pod.Status.HostIP != "" && pod.Status.PodIP != "" {
-		return true, ""
+		return true, record.PhaseMessage
 	}
 
 	return false, "Pod is not assigned"
@@ -346,19 +346,26 @@ func condWhenPodExited(args ...interface{}) (bool, string) {
 		return false, "can not find pod at local "
 	}
 
+	reason := fmt.Sprintf(
+		"PodPhase:%v ,PodMessage:%v ,PodReason: %v",
+		pod.Status.Phase,
+		pod.Status.Message,
+		pod.Status.Reason,
+	)
+
 	if pod.Status.Phase != corev1.PodPending && pod.Status.Phase != corev1.PodRunning {
-		return true, fmt.Sprintf("Pod is not running now,the PodPhase is %v", pod.Status.Phase)
+		return true, reason
 	}
 
-	return false, fmt.Sprintf("Pod is not exited now,the PodPhase is %v", pod.Status.Phase)
+	return false, reason
 }
 
 func condWhenPodDeletionCompleted(args ...interface{}) (bool, string) {
-	_, _, _, _, pod, _ := convertReplicaStateMachineArgs(args...)
+	_, _, _, _, pod, record := convertReplicaStateMachineArgs(args...)
 	if nil == pod {
-		return true, "The deletion of pod is completed"
+		return true, record.PhaseMessage
 	}
-	return false, "Pod  still exists at local"
+	return false, record.PhaseMessage
 }
 
 func condWhenNeedRetryReplica(args ...interface{}) (bool, string) {
@@ -368,7 +375,13 @@ func condWhenNeedRetryReplica(args ...interface{}) (bool, string) {
 		return false, "Replica is stopped by parent TaskRole"
 	}
 
-	return shoudRetryTaskRoleReplica(taskset, record)
+	retry, reason := shoudRetryTaskRoleReplica(taskset, record)
+
+	if true == retry {
+		return retry, reason
+	}
+
+	return retry, record.PhaseMessage
 }
 
 func condWhenTRRADelayReached(args ...interface{}) (bool, string) {
@@ -377,11 +390,11 @@ func condWhenTRRADelayReached(args ...interface{}) (bool, string) {
 	spec := taskset.GetTaskRoleSpec(record.Name)
 
 	if nil == spec {
-		return true, ""
+		return true, record.PhaseMessage
 	}
 
 	if 0 == spec.RetryPolicy.Delay {
-		return true, ""
+		return true, record.PhaseMessage
 	}
 
 	delay := time.Duration(spec.RetryPolicy.Delay) * time.Second
@@ -389,8 +402,8 @@ func condWhenTRRADelayReached(args ...interface{}) (bool, string) {
 	waitTime := time.Since(record.TransitionTime.Time)
 
 	if waitTime >= delay {
-		return true, ""
+		return true, record.PhaseMessage
 	}
 
-	return false, ""
+	return false, record.PhaseMessage
 }

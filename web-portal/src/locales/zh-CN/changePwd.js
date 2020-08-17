@@ -11,6 +11,7 @@ export default {
     'changePwd.password.confirm.message':'密码确认错误，与新密码不一致',
     'changePwd.password.new.confirm.required':'确认密码为必填项',
     'changePwd.password.new.required':'新密码为必填项',
-    'changePwd.password.old.required':'旧密码为必填项'
-
+    'changePwd.password.old.required':'旧密码为必填项',
+    'changePwd.password.old.error':'旧密码错误',
+    'changePwd.password.length.errMsg':'密码位数不能小于6位',
 }

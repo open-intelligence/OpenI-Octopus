@@ -25,6 +25,7 @@ export default {
     'jobDetail.task.commitimage.title':'提交任务镜像',
     'jobDetail.task.commitimage.imageName':'镜像名字：',
     'jobDetail.task.commitimage.lastImageStatus':'上次提交：',
+    'jobDetail.task.commitimage.imageTag': '镜像标签:',
     'jobDetail.task.commitimage.imageDescription':'镜像描述：',
     'jobDetail.task.commitimage.confirm':'继续提交',
     'jobDetail.task.imagestate.PROCESSING':'正在处理,请等待',

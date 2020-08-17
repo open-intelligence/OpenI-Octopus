@@ -22,6 +22,7 @@ Openi-Octopus集群使用ansible-playbook可以自动化部署K8s GPU 高可用�
 
 ![单master的K8s集群](./singlek8s.png)
 
+
 ## 高可用的K8s集群
 
 本方案采用KeepAlived + Haproxy + Kubeadm 安装高可用K8s集群
@@ -29,6 +30,7 @@ Openi-Octopus集群使用ansible-playbook可以自动化部署K8s GPU 高可用�
 架构图如下（control plane node = master node）：
 
 ![高可用的K8s集群](./hak8s.png)
+
 
 ### 高可用loadbalancer集群（负载均衡层）
 
@@ -55,6 +57,17 @@ haproxy配合keepalived, 在load balancer层实现一套多个haproxy的Master-B
 
 # 使用方法
 
+## 前提条件
+
+1. 准备加入K8s集群的所有节点可使用ssh互相连接
+2. 所有节点配置脚本登录的ssh用户在安装集群阶段设置为相同ssh密码
+3. 所有节点需要有一个固定ip
+4. 所有节点可以ping 114.114.114.114
+5. 所有节点都可以ping www.baidu.com
+6. 所有节点都可以互相ping
+7. 所有节点的内网ip网卡名字要相同（如所有节点的内网ip网卡的名字都是“eno1”）
+
+
 ## 一、把deepops自动化安装脚本下载到机器中
 
 
@@ -66,21 +79,31 @@ $ 输入sudo密码
 
 ```
 
+
+
 ## 三、先配置，再安装
 
-# 如何配置
+# 1. 如何配置
 
-### 1. 生成配置文件夹config
+ubuntu安装[ansible](http://www.ansible.com.cn/docs/intro_installation.html)
+
+```
+$ sudo apt-get install software-properties-common
+$ sudo apt-add-repository ppa:ansible/ansible
+$ sudo apt-get update
+$ sudo apt-get install ansible
+```
+
+### 2. 生成配置文件夹config
 
 以下命令运行完安装必要软件和从config.example文件夹复制出一个文件夹config, 在[ansible.cfg](./ansible.cfg)中指定了该文件夹是实际指挥ansible安装的配置文件夹
 
 ```
 $ cd deepops
-$ ./scripts/setup.sh
 $ ./scripts/init_config.sh
 ```
 
-### 2. K8s集群节点配置
+### 3. K8s集群节点配置
 
 ```
 $ vi config/inventroy
@@ -90,7 +113,7 @@ $ vi config/inventroy
 
 请注意：[kube-init-master]组指向的唯一ip需要和自动化脚本所在的机器一致
 
-### 3. K8s集群参数配置
+### 4. K8s集群参数配置
 
 ```
 $ vi config/group_vars/all.yml
@@ -98,6 +121,15 @@ $ vi config/group_vars/all.yml
 ```
 
 详情请看[K8s集群参数配置方案](./config.example/group_vars/all.yml)的注释
+
+
+### 4. 如果worker节点是英伟达GPU节点，需要提前配置节点
+
+需要先安装英伟达GPU驱动，保证节点上的nvidia-smi命令执行成功
+
+```
+$ nvidia-smi
+```
 
 # 如何首次安装K8s集群
 
@@ -183,9 +215,6 @@ $ 输入sudo密码
 
 ### 首次安装K8s集群后，如何增加worker节点
 
-#### 注意：如果增加英伟达GPU节点，请先在config/group_vars/all.yml（有操作注释）中配置驱动文件下载路径参数 nvidia_driver_run_file_download_url
-
-
 
 ```
 $ ansible-playbook playbooks/openi-octopus-add-node.yml -K
@@ -206,54 +235,25 @@ $ 输入sudo密码
 
 约定4：[kube-label-node] <= [kube-worker-node]。配置在[all.yml](./config.example/group_vars/all.yml)配置文件中的参数kube_label_node_labels，安装脚本会给[kube-label-node]节点打label。
 
-#### 增加英伟达GPU worker节点，出错: ERROR: Module nvidia is in use! 如何解决 ？
 
-1. 登录错误出现的目标GPU服务器,切换到root用户
-```
-$ sudo su
-```
-2. 查看nvidia 内核模块被哪个进程占用
-```
-$ lsof /dev/nvidia*
-
-$ kill -9 $进程号
-```
-3. 再次停止nvidia 内核相关模块
-```
-$ rmmod nvidia_drm
-$ rmmod nvidia_modeset
-$ rmmod nvidia_uvm
-$ rmmod nvidia
-```
-
-4. 查看所有nvidia 内核模块已经被卸载, 没有显示就表示已经卸载
+## 首次安装K8s集群后，如何给K8s集群worker节点打label
 
 ```
-
-$ lsmod | grep nvidia
-
-```
-
-5. 手动执行.run 文件 安装脚本
-
-```
-$ sh /root/NVIDIA-Linux-x86_64.run -a -s -Z -X
-```
-6. 验证安装驱动是否正常
-
-```
-$ nvidia-smi
-$ nvidia-container-cli -k -d /dev/tty info
-
-```
-
-
-7. 手动修复正常后，重新执行脚本
-
-```
-$ ansible-playbook playbooks/openi-octopus-add-node.yml -K
+$ ansible-playbook playbooks/openi-octopus-label-node.yml -K
 $ 输入sudo密码
 ```
+
+该脚本存在的意义在于，在不想新增worker节点的情况下，给集群中worker节点打新的labels。在运行命令前，请先根据如何增加worker节点章节配置labels
+该脚本作用的对象是[kube-label-node]节点组，此时openi-octopus-label-node.yml脚本与[kube-worker-node]节点组无关
+
+## 如何更改Es集群的节点数据目录
+
+1. config/group_vars/all.yml 中增加了配置项es_data_dir
+2. 执行脚本重新配置所有节点的公共配置
+```
+$ ansible-playbook playbooks/openi_common_setting_for_all_node.yml -K
+```
+
 
 
 ## 如果kubectl delete node $init-master，可以使用另外一个master当作init-master？
@@ -287,21 +287,76 @@ $ etcdctl endpoint status --cacert /etc/kubernetes/pki/etcd/ca.crt --cert /etc/k
 $ etcdctl member remove $unHealthMemberID  --cacert /etc/kubernetes/pki/etcd/ca.crt --cert /etc/kubernetes/pki/etcd/server.crt --key /etc/kubernetes/pki/etcd/server.key
 ```
 
+## 由于国内网络问题，如果 install nvidia-Docker步骤不能下载nvidia-docker文件如何修复？
 
-## 首次安装K8s集群后，如何给K8s集群worker节点打label
+##### 安装脚本报错如下
+```
+fatal: [v100-1]: FAILED! => changed=false 
+  msg: 'Failed to connect to raw.githubusercontent.com at port 443: [Errno 110] Connection timed out'
+```
+
+##### 修复方案
+
+1. 下载[nvidia-docker文件](https://github.com/NVIDIA/nvidia-docker/blob/master/nvidia-docker)
 
 ```
-$ ansible-playbook playbooks/openi-octopus-label-node.yml -K
-$ 输入sudo密码
+$ wget https://raw.githubusercontent.com/NVIDIA/nvidia-docker/master/nvidia-docker 
 ```
 
-该脚本存在的意义在于，在不想新增worker节点的情况下，给集群中worker节点打新的labels。在运行命令前，请先根据如何增加worker节点章节配置labels
-该脚本作用的对象是[kube-label-node]节点组，此时openi-octopus-label-node.yml脚本与[kube-worker-node]节点组无关
+2. 或者, 直接使用本仓库文件roles/installNvidiaDriver/files/nvidia-docker
 
-## 如何更改Es集群的节点数据目录
+3. 复制nvidia-docker到galaxy-roles/nvidia.nvidia_docker/files这个文件夹中
 
-1. config/group_vars/all.yml 中增加了配置项es_data_dir
-2. 执行脚本重新配置所有节点的公共配置
+注意：galaxy-roles/nvidia.nvidia_docker文件夹会在以上安装命令（ansible-galaxy install -r requirements.yml）执行成功后生成, 不需要自己创建
+
+
+4. 修改galaxy-roles/nvidia.nvidia_docker/tasks/main.yml
+
+###### 将以下脚本
+
 ```
-$ ansible-playbook playbooks/openi_common_setting_for_all_node.yml -K
+- name: grab nvidia-docker wrapper
+  get_url:
+    url: "{{ nvidia_docker_wrapper_url }}"
+    dest: /usr/local/bin/nvidia-docker
+    mode: 0755
+    owner: root
+    group: root
+  environment: "{{proxy_env if proxy_env is defined else {}}}"
 ```
+###### 替换为
+
+```
+- name: grab nvidia-docker wrapper
+  copy:
+    src: nvidia-docker
+    dest: /usr/local/bin/nvidia-docker
+    mode: 0755
+    owner: root
+    group: root
+```
+
+5. 重新运行安装脚本，进行安装OpenI章鱼集群
+
+
+
+## 如果 install Docker 步骤出错如何修复？
+
+节点安装docker-ce时候出错："E: Packages were downgraded and -y was used without --allow-downgrades", 如何修复？
+
+1. 查看配置文件config/group_vars/all.yml中 "docker_ce_version" 变量，是否比节点已安装的docker版本低？ 如果节点已安装了更高版本docker,请卸载再继续运行脚本
+
+2. 卸载命令：
+```
+$ sudo apt-get purge docker-ce docker-ce-cli containerd.io
+```
+3. rm -rf /var/lib/docker
+
+4. 如果出错：cannot remove **: Device or resource busy
+
+5. 重启机器
+
+6. 再次 rm -rf /var/lib/docker
+7. 如果还是cannot remove **: Device or resource busy
+8. umount /var/lib/docker
+9. 再次 rm -rf /var/lib/docker

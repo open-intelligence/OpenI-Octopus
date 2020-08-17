@@ -10,12 +10,5 @@ image:
   repository: kubesigs
   tag: v0.5
   pullPolicy: IfNotPresent
-resources:
-  limits:
-    cpu: 2000m
-    memory: 2048Mi
-  requests:
-    cpu: 2000m
-    memory: 2048Mi
-
+resources: {}
 nodeSelector: {}

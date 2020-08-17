@@ -3,8 +3,8 @@
 - src: dev-sec.ssh-hardening
   version: "6.1.3"
 
-- src: unxnn.users
-  version: '78fd08ca86678d00da376eaac909d22e1022a020'
+#- src: unxnn.users
+#  version: '78fd08ca86678d00da376eaac909d22e1022a020'
 
 - src: https://github.com/lukeyeager/ansible-role-hosts.git
   version: '711ba98571f068a8bc6739fa1055ac38fc931010'
@@ -20,7 +20,7 @@
   version: "v1.1.0"
 
 - src: nvidia.nvidia_docker
-  version: "v1.1.0"
+  version: "v1.2.1"
 
 - src: https://github.com/NVIDIA/ansible-role-enroot.git
   verions: "v0.1.2"

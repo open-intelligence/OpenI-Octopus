@@ -1,6 +1,6 @@
 export default {
     'login.username': 'Username',
-    'login.username.message': 'Please input your username!',
+    'login.username.message': 'The username contains upper and lower case letters and Numbers. Please enter them in the format!',
     'login.password': 'Password',
     'login.password.message': 'Please input your Password!',
     'login.button.login': 'Login',

@@ -9,14 +9,8 @@
 #- name: autoremove docker
 #  shell: apt-get autoremove -y docker-ce docker docker-engine docker.io
 
-- name: install dokcer dependence
-  apt:
-    state: present
-    name:
-    - apt-transport-https
-    - ca-certificates
-    - curl
-    - software-properties-common
+- name: apt-get install dokcer dependence
+  shell: apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 
 - name: add dokcer ali apt-key
   shell: curl -fsSL http://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo apt-key add -
@@ -41,7 +35,7 @@
     mode: 0644
 
 - name: install docker
-  shell: apt-get install -y --allow-downgrades docker-ce={{docker_ce_version}}
+  shell: apt-get install -y docker-ce={{docker_ce_version}}
 
 - name: enable and restart docker
   shell: systemctl enable docker && systemctl start docker

@@ -57,7 +57,7 @@ export default {
     "jobConfig.task_name.label":"子任务名",
     "jobConfig.task_name.dec":"<p>子任务名称，会反映成为容器内的环境变量</p>"+
                             "<p><h4>该怎么填?</h4></p>"+
-                            "<p>子任务名只能是小写字母和数字的字符串，长度最大30个字符。不同子任务的名称必须互不相同</p>",
+                            "<p>子任务名只能是首字母小写加小写字母和数字的字符串，长度最大15个字符。不同子任务的名称必须互不相同</p>",
 
     "jobConfig.replicas_number.label":"副本数",
     "jobConfig.replicas_number.dec": "<p>表示该子任务创建的Docker容器数量，子任务默认会有1个副本用来运行本任务。子任务类比于进程，该选项定义了将启动的进程数量</p>"+
@@ -100,6 +100,20 @@ export default {
                                     "<p><h4>该怎么填?</h4></p>"+
                                     "<p>1<=最小副本失败数<=副本数。默认值为1</p>",
 
+    "jobConfig.ib_device.label":"InfiniBand设备",
+    "jobConfig.ib_device.dec": "<p>鹏城云脑已经集成了InfiniBand网络设备, 支持任务使用RDMA协议进行多机通信</p>"+
+                            "<p>目前很多软件框架(如NCCL)已经支持使用InfiniBand网络设备进行多机通信</p>"+
+                            "<p>InfiniBand网络设备是分布式训练的利器.</p>"+
+                            "<p><h4>该怎么填?</h4></p>"+
+                            "<p>勾选意味着子任务的运行条件是等待云脑分配到InfiniBand网络设备资源才能运行</p>"+
+                            "<p>子任务运行后，可以在系统文件/etc/hosts看到各个子任务(可配置为IB server)的内部域名</p>",
+
+    "jobConfig.is_main_role.label":"主干任务",
+    "jobConfig.is_main_role.dec": "<p>将子任务设定为主干任务，开启该设置将会让该子任务的最终状态直接等价于总任务的最终状态，例如：</p>"+
+      "<p>该子任务成功，总任务将成功，其他子任务如果还在运行中会立即停止；</p>"+
+      "<p>该子任务失败，总任务将失败，其他子任务如果还在运行中会立即停止。</p>",
+    "jobConfig.subtask_isMailRole.pattern.errMsg": "主干任务选择框只能是布尔值",
+
     "jobConfig.command.label":"启动命令",
     "jobConfig.command.dec": "<p>子任务的启动命令</p>"+
                             "<p><h4>该怎么填?</h4></p>"+
@@ -123,10 +137,11 @@ export default {
     "jobConfig.subtaskList.empty.errMsg":"子任务列表不能为空",
     "jobConfig.subtask_name.replicas.errMsg":"子任务列表有相同名字的任务",
 
-    "jobConfig.subtask_name.pattern.errMsg":'子任务名只能是小写字母和数字的字符串',
-    "jobConfig.subtask_name.length.errMsg":"最长30个字符",
+    "jobConfig.subtask_name.pattern.errMsg":'子任务名只能是首字母小写加小写字母和数字的字符串',
+    "jobConfig.subtask_name.length.errMsg":"最长15个字符",
 
     "jobConfig.subtask_command.pattern.errMsg":"启动命令不能包含除空格外的非可见字符",
+    'jobConfig.subtask_needIBDevice.pattern.errMsg': 'IB设备选择框只能是布尔值',
 
     "jobConfig.title.editSubTask":"编辑子任务",
     "jobConfig.task.button.confirm":"确定",
@@ -147,7 +162,8 @@ export default {
     "jobConfig.success.submit_job":"任务提交成功",
     "jobConfig.error.submit_failed":"任务提交失败",
 
-    "jobConfig.debug.onesubtask.confirm.title":'Debug任务的子任务列表只允许有1个子任务',
+    "jobConfig.debug_cpu.onesubtask.confirm.title":'Debug_CPU 任务的子任务列表最多只允许有1个子任务',
+    "jobConfig.debug.onesubtask.confirm.title":'Debug 任务的子任务列表最多只允许有2个子任务',
     "jobConfig.debug.submit.title":"调试任务温馨提示",
     "jobConfig.debug.submit.tips": DebugJobContent,
 }

@@ -1,0 +1,41 @@
+kind: pipeline
+name: pipeline-octopus-charts
+platform:
+  os: linux
+  arch: amd64
+steps:
+- name: pull
+  image: alpine/git
+  volumes:
+    - name: gitssh
+      path: /root/.ssh
+  commands:
+    - git clone git@github.com:open-intelligence/charts.git ./.tmp/charts
+- name: package
+  image: alpine/helm
+  commands:
+    - mkdir -p ./.tmp/build
+    - helm package ${DRONE_TAG%-*} -d ./.tmp/build --dependency-update --version ${DRONE_TAG##*-}
+    - cp -rf ./.tmp/build/* ./.tmp/charts/docs
+    - helm repo index ./.tmp/charts/docs --url https://open-intelligence.github.io/charts
+- name: sync
+  image: alpine/git
+  volumes:
+    - name: gitssh
+      path: /root/.ssh
+  commands:
+    - cd ./.tmp/charts
+    - git config --global user.name "ci-robot"
+    - git config --global user.email "cloudbrain_register@pcl.ac.cn"
+    - git add --all ./
+    - git commit -m "sync ${DRONE_TAG}"
+    - git push origin
+
+trigger:
+  event:
+  - tag
+
+volumes:
+- name: gitssh
+  host:
+    path: /root/.ssh

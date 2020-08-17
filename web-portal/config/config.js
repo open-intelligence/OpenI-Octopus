@@ -135,10 +135,16 @@ export default {
     },
     proxy: {
         //grafana,kubernetes-dashboard,yarn,can not test the path will redirect by server in local env
+        /*
         [webportalConfig.restServerUri]: {
-            target: "http://localhost:9186/",
+            target: "http://192.168.202.71/rest-server-core/",
             changeOrigin: true,
             pathRewrite: {[webportalConfig.restServerUri]:""}
+        },*/
+        [webportalConfig.restServerUri]: {
+             target: "http://localhost:9186/",
+             changeOrigin: true,
+             pathRewrite: {[webportalConfig.restServerUri]:""}
         },
         "/es": {
             target: "http://192.168.202.71/",

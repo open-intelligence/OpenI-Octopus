@@ -53,6 +53,27 @@ const getHumanizedJobStateString = (jobInfo) => {
 };
 
 
+const getHumanizedStateString = (state) => {
+    let hjss = '';
+    if (state === 'JOB_NOT_FOUND') {
+        hjss = 'N/A';
+    } else if (state === 'WAITING') {
+        hjss = 'Waiting';
+    } else if (state === 'RUNNING') {
+        hjss = 'Running';
+    } else if (state === 'SUCCEEDED') {
+        hjss = 'Succeeded';
+    } else if (state === 'FAILED') {
+        hjss = 'Failed';
+    } else if (state === 'STOPPED') {
+        hjss = 'Stopped';
+    } else {
+        hjss = 'Unknown';
+    }
+    return hjss;
+};
+
+
 const getDurationInSeconds = (startTime, endTime) => {
     if (startTime == null) {
         return 0;
@@ -73,7 +94,7 @@ const getDate = (times) => {
     let year = time.getFullYear();
     let month = time.getMonth() + 1;
     let date = time.getDate();
-    let hour = time.getHours() < 12 ? `上午${getFormat(time.getHours())}` : `下午${getFormat(time.getHours())}`;
+    let hour = time.getHours() < 12 ? `${getFormat(time.getHours())}` : `${getFormat(time.getHours())}`;
     let minutes = time.getMinutes();
     let seconds = time.getSeconds();
     return `${year}/${getFormat(month)}/${getFormat(date)} ${hour}:${getFormat(minutes)}:${getFormat(seconds)}`;
@@ -230,18 +251,25 @@ export default {
 
                 //console.log("Job",job);
                 let jobns = userid?userid.toLowerCase():'';
-                //let jobTerminalUrl= __WEBPORTAL__.terminalUri+'/?pod.FC_FRAMEWORK_NAME='+job.jobId+'&namespace.name='+jobns;
                 let jobTerminalUrl= __WEBPORTAL__.terminalUri+'/?pod.TaskSet='+job.jobId+'&namespace.name='+jobns;
-                //let jobMetricsPageUrl=__WEBPORTAL__.grafanaUri+'/dashboard/db/joblevelmetrics?var-job='+jobName;
-
+                
                 //console.log("sub tasks",tasks);
                 let  jobConfigRes = yield call(apiService.loadJobConfig,jobId);
 
                 let gpuType = '';
                 let gpuTypeAction = "no_debug";
+                let taskCommands = {};
                 if(jobConfigRes.success)
                 {
                     configInfo = JSON.stringify(jobConfigRes.job, null, 2);
+                    
+                    for(let i=0;i<jobConfigRes.job.taskRoles.length;i++)
+                    {
+                        let taskname = jobConfigRes.job.taskRoles[i].name;
+                        let taskCommand = jobConfigRes.job.taskRoles[i]?jobConfigRes.job.taskRoles[i].command:'';
+                        taskCommands[taskname] = taskCommand;
+                    }
+                    
 
                     if(jobConfigRes.job.gpuType){
                         gpuType = jobConfigRes.job.gpuType;
@@ -257,57 +285,50 @@ export default {
 
                 for (let taskRoleName of Object.keys(response.job.taskRoles)){
                     let rawTask= response.job.taskRoles[taskRoleName];
+                    let taskCommand = taskCommands[taskRoleName];
                     let task={
                         taskRole:taskRoleName,
                         actions:true
                     };
 
+                    
+
                     for(let index in rawTask.taskStatuses)
                     {
+                        
                         let taskStatus = rawTask.taskStatuses[index];
+
+                        let taskState = getHumanizedStateString(taskStatus.state.toUpperCase());
+                        
                         task.key= taskStatus.podUid;
                         task.taskIndex = ''+taskStatus.taskIndex;
-                        task.containerName= taskStatus.containerId || "";
-                        task.podName = taskStatus.podName;
+                        task.podName= taskStatus.podName;
+                        task.containerName= taskStatus.containerId;
                         task.podIp= taskStatus.podIp;
                         task.ip=taskStatus.containerIp;
                         task.gpus=convertGpu(taskStatus.containerGpus);
-                        task.status= jobState;
+                        task.status= taskState;
 
-                        if (jobState == "Running" && "" == task.containerName){
-                            task.status = "Waiting";
-                        } 
-
-                        task.trackingPageUrl = "/#/openi/single/log?job="+jobName +
+                        task.trackingPageUrl = "#/openi/single/log?job="+jobName +
                             "&taskName="+taskRoleName +
-                            "&taskPod="+task.key +
-                            "&container="+task.containerName;
+                            "&taskPod="+task.podName;
 
-                        // task.metricUrl=__WEBPORTAL__.grafanaUri+"/d/TK8iV8nWk/taskmetrics?orgId=1&refresh=10s&var-pod="+
-                        //     job.jobId+"-"+task.taskRole+"-"+task.taskIndex;
-
-                        task.metricUrl=__WEBPORTAL__.grafanaUri+"/d/TK8iV8nWk/taskmetrics?orgId=1&refresh=10s&var-pod="+task.podName;
-
+                        if (task.podName){
+                            task.metricUrl=__WEBPORTAL__.grafanaUri+"/d/TK8iV8nWk/taskmetrics?orgId=1&refresh=10s&var-pod="+task.podName+"&var-pod_name="+task.podName;
+                        } else {
+                            task.metricUrl = ""
+                        }
                         task.debugIDEUrl="";
                         if(gpuType==='' || gpuType === 'debug'){
-                            if(jobState === 'Running'){
-
-                                const logResponse = yield call(apiService.loadContainerLog,jobName,task.key
-                                    ,task.containerName,200,1);
-
-                                if(logResponse.hits)
-                                {
-                                    let pageLogList = logResponse.hits.hits;
-                                    for(let logMsgObj of pageLogList)
-                                    {
-                                        let logMsgText = logMsgObj._source.message;
-                                        let tokenRegex = /\?token=\S*/;
-                                        let matchTokenArray = logMsgText.match(tokenRegex);
-                                        if(matchTokenArray){
-                                            let matchTokenString = matchTokenArray[0];
-                                            task.debugIDEUrl =__WEBPORTAL__.jupyterLabProxyUri+"/jpylab/lab"+matchTokenString+"&target="+task.podIp;
-                                        }
-                                    }
+                            if(taskState === 'Running'){
+                                let baseUrlRegex = /base_url=\S*/;
+                                let matchBaseUrlArray = taskCommand.match(baseUrlRegex);
+                                if(matchBaseUrlArray){
+                                    let matchBaseUrlString = matchBaseUrlArray[matchBaseUrlArray.length-1];
+                                    let debugJpylabPath=matchBaseUrlString.replace("base_url=","");
+                                    debugJpylabPath=debugJpylabPath.replace(/"/g,"");
+                                    debugJpylabPath=debugJpylabPath.replace(/'/g,"");
+                                    task.debugIDEUrl = __WEBPORTAL__.jupyterLabProxyUri + debugJpylabPath+"/";
                                 }
                             }
                         }
@@ -432,13 +453,13 @@ export default {
 
         *commitImage({payload}, { call, put }){
             const onSuccessed = payload && payload.onSuccessed ? payload.onSuccessed : function onSuccessed(){};
-            const onFailed = payload && payload.onFailed ? payload.onFailed : function onFailed(){};
-            const onOverMaxSize = payload && payload.onOverMaxSize ? payload.onOverMaxSize : function onOverMaxSize(){};
+            const onFailed = payload && payload.onFailed ? payload.onFailed : function onFailed(msg){};
 
             const commitResponse = yield call(apiService.commitImage,
                 payload.task.ip,
                 payload.jobId,
                 payload.task.containerName,
+                payload.imageTag,
                 payload.imageDescription);
 
             yield put({
@@ -451,10 +472,8 @@ export default {
             if(commitResponse.code === "S000")
             {
                 onSuccessed();
-            }else if(commitResponse.code === "S100"){
-                onOverMaxSize();
             }else{
-                onFailed();
+                onFailed(commitResponse.msg);
             }
 
         }

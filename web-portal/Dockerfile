@@ -23,14 +23,12 @@
 # Management Regulation V1.0", which is provided by The New Generation of
 # Artificial Intelligence Technology Innovation Strategic Alliance (the AITISA).
 
-FROM nginx:1.15
+FROM node:10.15
 
-WORKDIR /etc/nginx
+COPY ./ /app
 
-ENV SERVER_PORT 8080
+WORKDIR /app
 
-RUN rm /etc/nginx/nginx.conf
-COPY ./nginx.conf /etc/nginx/nginx.conf
-COPY ./dist_prod/ /usr/share/nginx/html/
-
-EXPOSE ${SERVER_PORT}
+#RUN npm config set registry https://registry.npm.taobao.org && \
+#    npm install && \
+#    npm test

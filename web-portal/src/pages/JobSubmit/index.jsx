@@ -1,5 +1,5 @@
 import {Component} from "react";
-import {Modal,Input,message,Select,Drawer,Form,Row,Col,Button,Icon,InputNumber,Popover,Spin,AutoComplete,Card,Divider,Alert,Popconfirm,Tag} from 'antd';
+import {Modal,Checkbox,Input,message,Select,Drawer,Form,Row,Col,Button,Icon,InputNumber,Popover,Spin,AutoComplete,Card,Divider,Alert,Popconfirm,Tag} from 'antd';
 import {formatMessage,FormattedMessage} from 'umi/locale';
 
 import StandardTable from '@/components/StandardTable';
@@ -53,6 +53,12 @@ const mapDispatchToProps=(dispatch)=>{
         showSubTaskListLoading:()=>{
             dispatch({type:`${namespace}/showSubTaskListLoading`})
         },
+        changeCurrentTaskNeedIBDevice:(needIBDevice)=>{
+            dispatch({type:`${namespace}/changeCurrentTaskNeedIBDevice`,payload:{needIBDevice}});
+        },
+        changeCurrentTaskIsMainRole:(isMainRole)=>{
+            dispatch({type:`${namespace}/changeCurrentTaskIsMainRole`,payload:{isMainRole}});
+        },
         changeJobInfoError:(jobInfoError,jobInfoErrorMsg)=>{
             dispatch({type:`${namespace}/changeJobInfoError`,payload:{jobInfoError,jobInfoErrorMsg}});
         },
@@ -77,9 +83,6 @@ const mapDispatchToProps=(dispatch)=>{
     }
 };
 
-
-
-
 @connect(mapStateToProps,mapDispatchToProps)
 class JobSubmit extends Component {
 
@@ -90,6 +93,7 @@ class JobSubmit extends Component {
 
     subTaskColumnTitles = [
         formatMessage({id:'jobConfig.task_name.label'}),
+        formatMessage({id:'jobConfig.is_main_role.label'}),
         formatMessage({id:'jobConfig.cpu_num.label'}),
         formatMessage({id:'jobConfig.gpu_num.label'}),
         formatMessage({id:'jobConfig.memery.label'}),
@@ -97,12 +101,14 @@ class JobSubmit extends Component {
         formatMessage({id:'jobConfig.replicas_number.label'}),
         formatMessage({id:'jobConfig.min_succeeded_num.label'}),
         formatMessage({id:'jobConfig.min_failed_num.label'}),
+        formatMessage({id:'jobConfig.ib_device.label'}),
         formatMessage({id:'jobConfig.command.label'}),
         formatMessage({id:'jobConfig.task.header.operations'}),
     ];
 
     subTaskColumnDataIndexs = [
         "name",
+        "isMainRole",
         "cpuNumber",
         "gpuNumber",
         "memoryMB",
@@ -110,6 +116,7 @@ class JobSubmit extends Component {
         "taskNumber",
         "minSucceededTaskCount",
         "minFailedTaskCount",
+        "needIBDevice",
         "command",
         "operations",
     ];
@@ -122,7 +129,21 @@ class JobSubmit extends Component {
             key: this.subTaskColumnDataIndexs[index]
         };
 
-       if(DataIndex === "minSucceededTaskCount" || DataIndex === "minFailedTaskCount"){
+        if(DataIndex === "needIBDevice"){
+            return {
+                ...columnDef,
+                render: (needIBDevice,record) =>{
+                    return <span>{needIBDevice?needIBDevice+'':false+''}</span>;
+                }
+            };
+        } else if(DataIndex === "isMainRole"){
+            return {
+                ...columnDef,
+                render: (isMainRole,record) =>{
+                    return <span>{isMainRole?isMainRole+'':false+''}</span>;
+                }
+            };
+        } else if(DataIndex === "minSucceededTaskCount" || DataIndex === "minFailedTaskCount"){
             return {
                 ...columnDef,
                 render: (mintaskCount,record) =>{
@@ -257,6 +278,14 @@ class JobSubmit extends Component {
             newFormInfo.command = nextProps.currentSubTask.command?nextProps.currentSubTask.command:"";//推荐模版没有这一项设置为默认值
         }
 
+        if (nextProps.currentSubTask.needIBDevice !== this.props.currentSubTask.needIBDevice) {
+            newFormInfo.needIBDevice = nextProps.currentSubTask.needIBDevice?nextProps.currentSubTask.needIBDevice:false;
+        }
+
+        if (nextProps.currentSubTask.isMainRole !== this.props.currentSubTask.isMainRole) {
+            newFormInfo.isMainRole = nextProps.currentSubTask.isMainRole?nextProps.currentSubTask.isMainRole:false;
+        }
+
         if(Object.keys(newFormInfo).length !== 0){
             this.props.form.setFieldsValue(newFormInfo);
             //console.log("set form fields",newFormInfo,"old props:",this.props,",new props:",nextProps);
@@ -264,9 +293,17 @@ class JobSubmit extends Component {
     }
 
     createSubTask= () => {
-        if(this.props.constGpuTypeMap[this.props.gpuType] && this.props.taskRoles.length>0)
+        if(this.props.gpuType === 'debug_cpu' && this.props.taskRoles.length>0)
         {
 
+            Modal.info({
+                title: formatMessage({id:'jobConfig.debug_cpu.onesubtask.confirm.title'}),
+                content: '',
+                onOk() {},
+            });
+
+        }else if(this.props.gpuType === 'debug' && this.props.taskRoles.length>1)
+        {
             Modal.info({
                 title: formatMessage({id:'jobConfig.debug.onesubtask.confirm.title'}),
                 content: '',
@@ -301,7 +338,9 @@ class JobSubmit extends Component {
             "gpuNumber",
             "memoryMB",
             "shmMB",
-            "command"],(err, values) => {
+            "command",
+            "isMainRole",
+            "needIBDevice"],(err, values) => {
             if (!err) {
                 //导入，增加子任务成功都要去掉子任务列表空error
                 props.changeJobInfoError(false,'');
@@ -336,7 +375,7 @@ class JobSubmit extends Component {
 
 
             const SubTaskBaseSchema = Joi.object({
-                name: Joi.string().regex(/^[a-z0-9]+$/).max(30).required().error(new Error(
+                name: Joi.string().regex(/^[a-z][a-z0-9]{0,14}$/).max(15).required().error(new Error(
                     formatMessage({id:'jobConfig.subtask_importerr.title'})+
                     "name"+";"+
                     formatMessage({id:'jobConfig.subtask_name.pattern.errMsg'})+";"+
@@ -397,7 +436,19 @@ class JobSubmit extends Component {
                     "command"+";"+
                     formatMessage({id:'jobConfig.subtask_command.pattern.errMsg'})+";"+
                     formatMessage({id:'jobConfig.required.errMsg'})+";"
-                )) //complete
+                )), //complete
+                needIBDevice: Joi.boolean().required().error(new Error(
+                    formatMessage({id:'jobConfig.subtask_importerr.title'})+
+                    "needIBDevice"+";"+
+                    formatMessage({id:'jobConfig.subtask_needIBDevice.pattern.errMsg'})+";"+
+                    formatMessage({id:'jobConfig.required.errMsg'})+";"
+                )), //complete
+                isMainRole: Joi.boolean().required().error(new Error(
+                  formatMessage({id:'jobConfig.subtask_importerr.title'})+
+                  "isMainRole"+";"+
+                  formatMessage({id:'jobConfig.subtask_isMailRole.pattern.errMsg'})+";"+
+                  formatMessage({id:'jobConfig.required.errMsg'})+";"
+                )), //complete
             });
 
             const JobSchema = Joi.object({
@@ -537,6 +588,8 @@ class JobSubmit extends Component {
                     tmp.memoryMB = tmp.memoryMB ? tmp.memoryMB : 100;
                     tmp.shmMB = tmp.shmMB ? tmp.shmMB : 64;
                     tmp.command = tmp.command ? tmp.command : "";
+                    tmp.needIBDevice = tmp.needIBDevice?tmp.needIBDevice:false;
+                    tmp.isMainRole = tmp.isMainRole ? tmp.isMainRole : false;
 
                     //去掉无用值
                     delete tmp.operations;
@@ -577,6 +630,8 @@ class JobSubmit extends Component {
                 tmp.memoryMB = tmp.memoryMB?tmp.memoryMB:100;
                 tmp.shmMB = tmp.shmMB?tmp.shmMB:64;
                 tmp.command = tmp.command?tmp.command:"";
+                tmp.needIBDevice = tmp.needIBDevice?tmp.needIBDevice:false;
+                tmp.isMainRole = tmp.isMainRole ? tmp.isMainRole : false;
 
                 //去掉无用值
                 delete tmp.operations;
@@ -714,6 +769,16 @@ class JobSubmit extends Component {
 
     onJobNameInputed = ()=>{
         this.props.changeJobNameSuffix();
+    };
+
+    onIBDeviceCheckboxChange= (e) => {
+        this.props.changeCurrentTaskNeedIBDevice(e.target.checked);
+        //console.log(`checked = ${e.target.checked}`);
+    };
+
+    onMainRoleCheckboxChange= (e) => {
+        this.props.changeCurrentTaskIsMainRole(e.target.checked);
+        //console.log(`checked = ${e.target.checked}`);
     };
 
     render(){
@@ -927,8 +992,8 @@ class JobSubmit extends Component {
                                             initialValue:this.props.currentSubTask.name,
                                             rules: [
                                                 { required: true, message: formatMessage({id:'jobConfig.required.errMsg'}) },
-                                                {pattern:/^[a-z0-9]+$/,message: formatMessage({id: "jobConfig.subtask_name.pattern.errMsg"})},
-                                                {max:30,message: formatMessage({id: "jobConfig.subtask_name.length.errMsg"})},
+                                                {pattern:/^[a-z][a-z0-9]{0,14}$/,message: formatMessage({id: "jobConfig.subtask_name.pattern.errMsg"})},
+                                                {max:15,message: formatMessage({id: "jobConfig.subtask_name.length.errMsg"})},
                                                 {validator: this.handleConfirmSubTaskName}
                                                 ],
                                         })(<Input />)}
@@ -1153,6 +1218,62 @@ class JobSubmit extends Component {
                                 </Col>
                             </Row>
 
+                            <Row gutter={16}>
+                                <Col span={24}>
+                                <Form.Item
+                                      label={(<span></span>)}
+                                    >
+                                        {getFieldDecorator('needIBDevice', {
+                                            
+                                        })(
+                                            <Checkbox checked={this.props.currentSubTask.needIBDevice?this.props.currentSubTask.needIBDevice:false} 
+                                            onChange={this.onIBDeviceCheckboxChange}>
+                                                <span>
+                                                    <span><FormattedMessage id="jobConfig.ib_device.label" />&nbsp;</span>
+    
+                                                    <Popover content={(<div dangerouslySetInnerHTML={{__html:formatMessage({id:'jobConfig.ib_device.dec'})}}></div>)}
+                                                            title={formatMessage({id:'jobConfig.dec.title'})}
+                                                            trigger="hover"
+                                                            placement="right">
+                                                        <Icon type="question-circle-o"  theme="twoTone" twoToneColor="#ffac16" />
+                                                    </Popover>
+                                                </span>
+                                            </Checkbox>
+                                        
+                                        )}
+                                        
+
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+
+                            <Row gutter={16}>
+                                <Col span={24}>
+                                    <Form.Item
+                                      label={(<span></span>)}
+                                    >
+                                        {getFieldDecorator('isMainRole', {
+
+                                        })(
+                                          <Checkbox checked={this.props.currentSubTask.isMainRole?this.props.currentSubTask.isMainRole:false}
+                                                    onChange={this.onMainRoleCheckboxChange}>
+                                                <span>
+                                                    <span><FormattedMessage id="jobConfig.is_main_role.label" />&nbsp;</span>
+
+                                                    <Popover content={(<div dangerouslySetInnerHTML={{__html:formatMessage({id:'jobConfig.is_main_role.dec'})}}></div>)}
+                                                             title={formatMessage({id:'jobConfig.dec.title'})}
+                                                             trigger="hover"
+                                                             placement="right">
+                                                        <Icon type="question-circle-o"  theme="twoTone" twoToneColor="#ffac16" />
+                                                    </Popover>
+                                                </span>
+                                          </Checkbox>
+
+                                        )}
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+
                             <div className={styles.subTaskButtons}>
                                 <Row type="flex" justify="end">
                                     <Form.Item>
@@ -1166,8 +1287,6 @@ class JobSubmit extends Component {
                                 </Row>
                             </div>
                         </Form>
-
-
                     </Drawer>
                 </div>
             </Spin>

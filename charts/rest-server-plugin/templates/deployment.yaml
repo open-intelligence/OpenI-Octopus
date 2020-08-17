@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "rest-server-plugin.fullname" . }}
+  labels:
+    {{- include "rest-server-plugin.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicacount }}
+  selector:
+    matchLabels:
+      {{- include "rest-server-plugin.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "rest-server-plugin.selectorLabels" . | nindent 8 }}
+    spec:
+    {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      serviceAccountName: {{ include "rest-server-plugin.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podsecurityContext | nindent 8 }}
+      volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
+      - name: share-directory
+        hostPath:
+          path: "{{ .Values.sharehosts.shareDirectory }}"
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: '{{ default .Values.global.image.repository.address .Values.image.address }}{{ default .Values.global.image.repository.pathname .Values.image.pathname }}/{{ .Values.image.name }}:{{ default .Chart.Version .Values.image.tag }}'
+          imagePullPolicy: {{ default .Values.global.image.pullPolicy .Values.image.pullPolicy }}
+          volumeMounts:
+          - name: localtime
+            mountPath: /etc/localtime
+          - mountPath: "{{ .Values.sharehosts.shareDirectory }}"
+            name: share-directory
+          ports:
+            - name: core-plugin
+              containerPort: {{ .Values.service.targetPort }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          env:
+            - name: EGG_SERVER_ENV
+              value: "prod"
+            - name: NODE_ENV
+              value: "production"
+            - name: MYSQL_HOST
+              value: '{{ template "rest-plugin-storage.host" .}}'
+            - name: MYSQL_PORT
+              value: "{{ .Values.storage.service.targetPort }}"
+            - name: MYSQL_USER
+              value: "root"
+            - name: MYSQL_PWD
+              value: "{{ .Values.storage.rootPassword }}"
+            - name: DEBUG_JOB_MAX_RUN_TIME 
+              value: "{{ .Values.service.debugJobMaxRunTime }}"
+            - name: WORK_IN_K8S_CLUSTER
+              value: "YES"
+            - name: SERVER_PORT
+              value: "{{ .Values.service.targetPort }}"
+            - name: TASKSET_CORE_HOST
+              value: '{{ template "taskset-core.address" . }}'
+            - name: TASKSET_CORE_ACCESS_TOKEN
+              value: "{{ .Values.tasksetCore.accessToken }}"
+            - name: IMAGE_POD_DISCOVERY
+              value: '{{ default .Values.global.image.repository.address .Values.image.poddiscoveryAddress }}{{ default .Values.global.image.repository.pathname .Values.image.poddiscoveryPathname }}/{{ .Values.image.poddiscoveryName }}:{{ .Values.image.poddiscoveryTag }}'
+            - name: PLUGIN_HOST
+              value: '{{ template "rest-server-plugin.serviceName" . }}'
+            - name: SHARE_DIRECTORY
+              value: "{{ .Values.sharehosts.shareDirectory }}"
+            - name: NNI_HOST
+              value: "{{ .Values.common.nniHost }}"
+            - name: DISABLE_JPYLAB_REQUEST_BODY_LIMIT
+              value: "{{ .Values.common.disableJpyLabRequestBodyLimit }}"
+      {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

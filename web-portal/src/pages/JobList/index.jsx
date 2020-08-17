@@ -90,10 +90,10 @@ class JobList extends Component{
         formatMessage({id:'jobList.column.resubmit'})
     ];
     columnDataIndexs = [
-        "job_name",
+        "jobName",
         "username",
-        "job_state",
-        "created_at",
+        "jobState",
+        "createdAt",
         "duration",
         "retries",
         "stop",
@@ -145,19 +145,19 @@ class JobList extends Component{
             };
         }
 
-        if(DataIndex ==='job_state'){
+        if(DataIndex ==='jobState'){
             return {
                 ...columnDef,
                 search:true,
                 onSearch: this.onSearch,
                 searchColumnRender:function Parent(props){
-                    let color = getJobStateColor(props.record.job_state);
+                    let color = getJobStateColor(props.record.jobState);
                     return (<Tag color={color}>{props.children}</Tag>);
                 }
             };
         }
 
-        if(DataIndex ==='job_name'){
+        if(DataIndex ==='jobName'){
             return {
                 ...columnDef,
                 search:true,
@@ -176,7 +176,7 @@ class JobList extends Component{
             };
         }
 
-        if(DataIndex ==='created_at'){
+        if(DataIndex ==='createdAt'){
             return {
                 ...columnDef,
                 search:true,

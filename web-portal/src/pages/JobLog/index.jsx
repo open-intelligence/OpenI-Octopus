@@ -16,10 +16,11 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import {Component} from "react";
 import { connect } from 'dva';
-import { Card,List,Alert,message,PageHeader} from 'antd';
+import { List,message,PageHeader} from 'antd';
 import styles from "./index.less";
 import {formatMessage } from 'umi/locale';
-import moment from 'moment';
+
+import InfiniteScroll from 'react-infinite-scroller';
 
 const namespace = 'jobLog';
 
@@ -31,9 +32,12 @@ function mapStateToProps(state) {
 
 const mapDispatchToProps=(dispatch)=>{
     return {
-        loadLog: (pageNumber,onFailed)=>{
-            dispatch({type:`${namespace}/loadLog`,payload:{pageNumber,onFailed}});
+        loadLogNextPage: (pageToken,onFailed)=>{
+            dispatch({type:`${namespace}/loadLogNextPage`,payload:{pageToken,onFailed}});
         },
+        getFistPageAndPageToken: (pageToken,onFailed) => {
+            dispatch({type:`${namespace}/getFistPageAndPageToken`,payload:{pageToken,onFailed}});
+        }
 
     }
 };
@@ -41,71 +45,68 @@ const mapDispatchToProps=(dispatch)=>{
 @connect(mapStateToProps,mapDispatchToProps)
 class JobLog extends Component {
 
-    loadLog=(pageNumber)=>{
-        this.props.loadLog(pageNumber,function(){
+    componentDidMount(){
+        this.props.getFistPageAndPageToken(function(){
             message.error(formatMessage({id:'jobLog.fetch.failed'}))
         });
-    };
-
-    componentWillMount(){
-        this.loadLog(1);
     }
 
-    render(){
+  handleInfiniteOnLoad = () => {
+    
+   //let hasMorelog = !this.props.loading && (this.props.pageLogList.length<this.props.totalLogNumber);
+   //console.log("haseMoreLog: ",hasMorelog)
 
-        return (
-            <div className={styles.content}>
-                <Card bordered={false}>
-                    <List
-                        loading={this.props.loading}
-                        itemLayout="vertical"
-                        size="small"
-                        header={<PageHeader  title={formatMessage({id:'jobLog.header.title'})}
-                                             subTitle={this.props.job+" / "+this.props.taskName} />}
-                        pagination={{
-                            onChange: pageNumber => {
-                                //console.log(pageNumber);
+    this.props.loadLogNextPage(this.props.pageToken, function(){
+        message.error(formatMessage({id:'jobLog.fetch.failed'}))
+    });
+  };
 
-                                this.loadLog(pageNumber);
+  render() {
+    return (
+      <div>
+          <PageHeader  title={formatMessage({id:'jobLog.header.title'})}
+                                 subTitle={this.props.job+" / "+this.props.taskName} />
+        
+            <div className={styles.infinitecontainer}>
+                <InfiniteScroll 
+                initialLoad={false}
+                pageStart={0}
+                loadMore={this.handleInfiniteOnLoad}
+                hasMore={!this.props.loading && (this.props.pageLogList.length<this.props.totalLogNumber)}
+                useWindow={false}
+                
+                >
+                <List
+                    size={"small"}
+                    dataSource={this.props.pageLogList}
+                    renderItem={item => {
 
-                            },
-                            pageSize: this.props.pageSize,
-                            total: this.props.totalLogNumber
-                        }}
-                        dataSource={this.props.pageLogList}
+                        let logmsg =item.message;
 
-                        renderItem={item =>{
-                            let logTime = moment.utc(item._source["@timestamp"]).toDate();
-                            logTime = moment(logTime).format("YYYY/MM/DD hh:mm:ss");
-
-                            let logmsg = "["+logTime+"] " + item._source.message;
-
-                            if(item._source.stream==="stdout")
-                            {
-                                logmsg = <Alert type="info" message={logmsg} banner />;
-                            }
-
-                            if(item._source.stream==="stderr")
-                            {
-                                logmsg = <Alert type="error" message={logmsg} banner />;
-                            }
-
-                            return (
-                                <List.Item
-                                    key={item._index}
-                                >
-                                    {
-                                        logmsg
-                                    }
-                                </List.Item>
-                               )
-                            }
-                        }
-                    />
-                </Card>
-            </div>
-        )
-    }
+                        return (
+                            <List.Item
+                                key={item._id}
+                            >
+                                {
+                                    logmsg
+                                }
+                            </List.Item>
+                        )
+                    }
+                    }
+                >
+                    {this.props.loading && (this.props.pageLogList.length<this.props.totalLogNumber) && (
+                    <div className={styles.loadingcontainer}>
+                        <Spin />
+                    </div>
+                    )}
+                </List>
+                </InfiniteScroll>
+        </div>
+      </div>
+      
+    );
+  }
 }
 
 export default JobLog

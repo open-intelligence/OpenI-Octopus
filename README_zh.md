@@ -55,7 +55,7 @@ OPENI以开源的模式运营：来自学术和工业界的贡献我们都非常
 执行以下几个步骤来部署和使用本系统。
 
 1. [部署适配OpenI章鱼系统的kubernetes](./deepops/README_zh.md)
-2. [部署OpenI章鱼系统服务](./install_openi_octopus_zh.md)
+2. [部署OpenI章鱼系统服务](./doc/install_openi_octopus_zh.md)
 3. 访问[web门户页面](./web-portal/README.zh-CN.md) 进行任务提交和集群管理
 
 #### 作业管理

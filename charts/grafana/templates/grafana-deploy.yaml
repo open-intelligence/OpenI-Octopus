@@ -20,6 +20,7 @@ spec:
       {{- end }}
       containers:
       - image: grafana/grafana:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         name: grafana
         # env:
         resources:

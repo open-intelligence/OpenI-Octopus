@@ -29,6 +29,16 @@
   shell: kubeadm reset -f
   ignore_errors: True
 
+- name: stop kubelet
+  shell: systemctl stop kubelet
+  ignore_errors: True
+
+- name: remove dir /var/lib/etcd 
+  shell: rm -rf /var/lib/etcd
+
+- name: remove dir /etc/kubernetes
+  shell: rm -rf /etc/kubernetes
+
 - name: clear iptables
   shell: iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
 

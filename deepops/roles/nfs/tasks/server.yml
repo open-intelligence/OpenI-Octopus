@@ -1,8 +1,6 @@
 ---
-- name: install ubuntu packages
-  apt:
-    name: nfs-kernel-server
-    state: latest
+- name: apt-get install ubuntu packages
+  shell: apt-get install nfs-kernel-server
   when: ansible_os_family == "Debian"
   tags:
     - nfs

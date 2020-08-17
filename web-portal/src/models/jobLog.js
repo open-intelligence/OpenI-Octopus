@@ -15,22 +15,16 @@
 // DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-import { routerRedux } from 'dva/router';
 import * as apiService from '@/services/api';
 
-import { getAuthority } from '@/utils/authority';
 import { getPageQuery,getSshFileExt } from '@/utils/utils';
 
-import {formatMessage } from 'umi/locale';
-
 const initState = {
-    loading:true,
+    loading:false,
     job:'',
     taskName:'',
     taskPod:'',
     container:'',
-    pageSize:20,
-    pageNumber:1,
     pageLogList:[],
     totalLogNumber:0
 };
@@ -43,7 +37,7 @@ export default {
     },
 
     effects: {
-        *loadLog({payload}, { call, put }) {
+        *getFistPageAndPageToken({payload}, { call, put  }) {
 
             yield put({
                 type: 'updateLogData',
@@ -56,22 +50,30 @@ export default {
 
             const params = getPageQuery();
 
-            //console.log("loadLog params",params);
-            let { job,taskName,taskPod,container } = params;
-            let pageSize = initState.pageSize;
-            let pageNumber = payload.pageNumber;
-            const response = yield call(apiService.loadContainerLog,
-                job,taskPod,container,pageSize,pageNumber);
+            let { job,taskName,taskPod } = params;
+            let pageSize = __WEBPORTAL__.logPageSize;
+            let pageTokenExpired = __WEBPORTAL__.logPageTokenExpired;
 
-            console.log("loadLog",response);
+            console.log("job Log info",pageSize,pageTokenExpired);
+
+            const response = yield call(apiService.loadContainerLogFistPageAndPageToken,
+                taskPod,pageSize,pageTokenExpired);
+
+            //console.log("loadLog",response);
             let totalLogNumber = 0;
             let pageLogList = [];
-
+            let pageToken = '';
             if(response.hits)
             {
                 //console.log("response",response);
+                pageToken =response._scroll_id;
                 totalLogNumber = response.hits.total.value;
-                pageLogList = response.hits.hits;
+                pageLogList = response.hits.hits.map((item) => {
+                    return {
+                        _id: item._id,
+                        message: item._source.message
+                    }
+                });
 
             }else{
                 onFailed && onFailed();
@@ -84,10 +86,55 @@ export default {
                     job,
                     taskName,
                     taskPod,
-                    container,
-                    pageNumber,
+                    pageToken,
                     pageLogList,
                     totalLogNumber
+                },
+            });
+        },
+
+        *loadLogNextPage({payload}, { call, put,select }) {
+            
+            yield put({
+                type: 'updateLogData',
+                payload: {
+                    loading:true,
+                },
+            });
+
+            const onFailed = payload&&payload.onFailed?payload.onFailed:function onFailed(){};
+
+            const pageLogList = yield select((state)=>state.jobLog.pageLogList )
+            
+            let pageTokenExpired = initState.pageTokenExpired;
+            let pageToken = payload.pageToken;
+            const response = yield call(apiService.loadContainerLogByPageToken,
+                pageTokenExpired,pageToken);
+
+            //console.log("loadLog",response);
+
+            let newPageLogList = [];
+            if(response.hits)
+            {
+                //console.log("response",response);
+                let onePageList = response.hits.hits.map((item) => {
+                    return {
+                        _id: item._id,
+                        message: item._source.message
+                    }
+                });
+
+                newPageLogList = pageLogList.concat(onePageList);
+
+            }else{
+                onFailed && onFailed();
+            }
+
+            yield put({
+                type: 'updateLogData',
+                payload: {
+                    loading:false,
+                    pageLogList: newPageLogList
                 },
             });
         },

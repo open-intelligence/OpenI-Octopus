@@ -1,0 +1,13 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ template "taskset-core.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ template "taskset-core.fullname" . }}
+  # TO BE UPDATED IF NEEDED
+  namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io

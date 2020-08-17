@@ -59,7 +59,7 @@ And the system need [NTP](http://www.ntp.org/) service for clock synchronization
 To deploy and use the system, the process consists of the following steps.
 
 1. [Deploy Kubernetes for OPENI-octopus system](./deepops/README_zh.md)
-2. [Deploy OPENI-octopus system services](./install_openi_octopus.md)
+2. [Deploy OPENI-octopus system services](./doc/install_openi_octopus.md)
 3. Access [web portal](./web-portal/README.md) for job submission and cluster management
 
 #### Job management

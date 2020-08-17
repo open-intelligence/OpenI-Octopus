@@ -29,11 +29,13 @@ spec:
       {{- end }}
       containers:
       - name: rest-server
-        image: "{{ .Values.global.image.repository.address }}{{ .Values.global.image.repository.pathname }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
-        imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+        image: '{{ default .Values.global.image.repository.address .Values.image.address }}{{ default .Values.global.image.repository.pathname .Values.image.pathname }}/{{ .Values.image.name }}:{{ default .Chart.Version .Values.image.tag }}'
+        imagePullPolicy: {{ default .Values.global.image.pullPolicy .Values.image.pullPolicy }}
         securityContext:
           privileged: true
         volumeMounts:
+        - name: localtime
+          mountPath: /etc/localtime
 {{- if .Values.volumes }}
   {{- range .Values.volumes }}
         - mountPath: {{ .mountPath }}
@@ -67,10 +69,6 @@ spec:
           value: "{{ .Values.common.jwtSecret }}"
         - name: IMAGE_FACTORY_URI
           value: '{{ template "image-factory-shield.address" . }}'
-        - name: IMAGE_FRAMEWORKBARRIER
-          value: "frameworkcontroller/frameworkbarrier"
-        - name: IMAGE_POD_DISCOVERY
-          value: "{{ .Values.global.image.repository.address }}{{ .Values.global.image.repository.pathname }}/{{ .Values.image.poddiscoveryName }}:{{ .Values.image.poddiscoveryTag }}"
         - name: IMAGE_UBUNTU_GIT
           value: "{{ .Values.global.image.repository.address }}/openi/ubuntu-git2"
         - name: GIT_SERVER
@@ -89,6 +87,8 @@ spec:
           value: "{{ .Values.tasksetCore.accessToken }}"
         - name: SCHEDULER_TYPE
           value: "{{ .Values.global.scheduler.type }}"
+        - name: ALLOWS_CORS_DOMAINS
+          value: "{{ .Values.common.allowCorsDomains }}"
 {{- if .Values.envs }}
     {{- range .Values.envs }}
         - name: "{{ .name }}"
@@ -99,6 +99,9 @@ spec:
         - name: {{ template "rest-server.name" . }}
           containerPort: {{ .Values.service.targetPort }}
       volumes:
+      - name: localtime
+        hostPath:
+          path: /etc/localtime
 {{- if .Values.volumes }}
   {{- range .Values.volumes }}
       - name: {{ .name }}

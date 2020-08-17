@@ -12,12 +12,15 @@ global:
     repository:
       address: ""
       pathname: "openi"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   nodeSelector: {}
 
 image:
+  pullPolicy: ""
+  address: ""
+  pathname: ""
   name: "web-portal"
-  tag: "latest"
+  tag: ""
 
 service:
   type: ClusterIP
@@ -34,6 +37,18 @@ ingress:
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
+
+common:
+  helperDocUri: "https://github.com/open-intelligence/openi"
+  restServerUri: "/rest-server"
+  logServiceUri: "/es"
+  grafanaUri: "/grafana"
+  terminalUri: "/terminal"
+  clusterName: "default"
+  jupyterLabProxyUri: ""
+  nniHost: "/"
+
+envs: []
 
 resources: {}
 

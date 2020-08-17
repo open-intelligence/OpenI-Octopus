@@ -98,12 +98,6 @@ app.kubernetes.io/instance: {{ include "log-factory-es.fullname" . }}
 {{- printf "%s" (join "," $es.servers) | quote -}}
 {{- end -}}
 
-{{- define "log-factory-es.minimum_master_nodes" -}}
-{{- $init_master_counts := (div .Values.es.replicaCount 2) }}
-{{- $init_master := (add $init_master_counts 1) -}}
-{{- printf "%d" ($init_master) | quote -}}
-{{- end -}}
-
 {{- define "log-factory-es.namelist" -}}
 {{- $name := include "log-factory-es.fullname" . -}}
 {{- $es := dict "servers" (list) -}}

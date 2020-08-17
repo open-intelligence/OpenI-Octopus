@@ -164,7 +164,7 @@ export default {
 
             for(let searchKey in searchFilters)
             {
-                if(searchKey === 'job_state')
+                if(searchKey === 'jobState')
                 {
                     searchParamStr += searchFilters[searchKey][0]?'&'+searchKey + "=" + convertJobStateStr(searchFilters[searchKey][0]):'';
                 }else{
@@ -176,7 +176,7 @@ export default {
 
             if(response.success)
             {
-                totalNumber = response.total_size;
+                totalNumber = response.totalSize;
 
                 let jobs = [];
                 const query = getPageQuery() || {};
@@ -207,10 +207,10 @@ export default {
                     let job = {
                         key:index+1,
                         jobId:rawJob.id,
-                        job_name: rawJob.name,
-                        username: rawJob.userId,
-                        job_state: jobState,
-                        created_at: convertTime(false, rawJob.createdTime),
+                        jobName: rawJob.name,
+                        username: rawJob.username,
+                        jobState: jobState,
+                        createdAt: convertTime(false, rawJob.createdTime),
                         jobDetailUrl:'/openi/job?jobId='+rawJob.id,
                         vcName:  vClusterName,
                         vcUrl:'/openi/virtualClusters?vcName='+vClusterName,

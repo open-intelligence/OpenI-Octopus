@@ -28,11 +28,60 @@ spec:
       {{- end }}
       containers:
       - name: {{ .Chart.Name }}
-        image: "{{ .Values.global.image.repository.address }}{{ .Values.global.image.repository.pathname }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
-        imagePullPolicy: "{{ .Values.global.image.pullPolicy }}"
+        image: "nginx:1.15"
         ports:
         - name: http
           containerPort: {{ .Values.service.targetPort }}
           protocol: TCP
+        volumeMounts:
+        - name: staticdir
+          mountPath: /usr/share/nginx/html/
+        - name: nginxconf
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
         resources:
 {{ toYaml .Values.resources | indent 10 }}
+      initContainers:
+      - name: build
+        image: '{{ default .Values.global.image.repository.address .Values.image.address }}{{ default .Values.global.image.repository.pathname .Values.image.pathname }}/{{ .Values.image.name }}:{{ default .Chart.Version .Values.image.tag }}'
+        imagePullPolicy: {{ default .Values.global.image.pullPolicy .Values.image.pullPolicy }}
+        command: [ "sh","-c","npm config set registry https://registry.npm.taobao.org; npm install; npm run build:prod" ]
+        volumeMounts:
+        - name: staticdir
+          mountPath: /app/dist
+        env:
+        - name: CLUSTER_NAME
+          value: "{{ .Values.common.clusterName }}"
+        - name: HELPER_DOC_URI
+          value: "{{ .Values.common.helperDocUri }}"
+        - name: REST_SERVER_URI
+          value: "{{ .Values.common.restServerUri }}"
+        - name: LOG_SERVER_URI
+          value: "{{ .Values.common.logServiceUri }}"
+        - name: GRAFANA_URI
+          value: "{{ .Values.common.grafanaUri }}"
+        - name: TERMINAL_URI
+          value: "{{ .Values.common.terminalUri }}"
+        - name: JUPYTERLABPROXY_URI
+          value: "{{ .Values.common.jupyterLabProxyUri }}"
+        - name: LOG_PAGE_TOKEN_EXPIRED
+          value: "{{ .Values.common.logPageTokenExpired }}"
+        - name: LOG_PAGE_SIZE
+          value: "{{ .Values.common.logPageSize }}"
+        - name: NNI_HOST
+          value: "{{ .Values.common.nniHost }}"
+{{- if .Values.envs }}
+  {{- range .Values.envs }}
+        - name: "{{ .name }}"
+          value: "{{ default .defaultValue .value }}"
+  {{- end }}
+{{- end }}
+      volumes:
+      - name: staticdir
+        emptyDir: {}
+      - name: nginxconf
+        configMap:
+          items:
+            - key: nginx.conf
+              path: nginx.conf
+          name: {{ template "web-portal.fullname" . }}-nginx

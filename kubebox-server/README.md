@@ -26,8 +26,12 @@
 ```
 
 ### 部署
-```bash
-# Modify the placeholder `${xxx}` configuration item in the file
-~/kubebox-server$ kubectl apply -f ./build/kubebox-server.yaml
+
+通过按需求修改 `./charts/kubebox-server/value.yaml` 文件中的配置
+  
 ```
+// 安装
+helm install octopus ./charts/kubebox-server
+```
+    
 发布成功后可以通过 http://${nodeip}/terminal/ 访问。

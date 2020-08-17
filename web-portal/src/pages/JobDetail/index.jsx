@@ -80,8 +80,8 @@ const mapDispatchToProps=(dispatch)=>{
         showCommitImageModel:(jobId,task)=>{
             dispatch({type:`${namespace}/showCommitImageModel`,payload:{jobId,task}});
         },
-        commitImage:(jobId,task,imageDescription,onSuccessed,onFailed,onOverMaxSize)=>{
-            dispatch({type:`${namespace}/commitImage`,payload:{jobId,task,imageDescription,onSuccessed,onFailed,onOverMaxSize}});
+        commitImage:(jobId,task,imageTag,imageDescription,onSuccessed,onFailed,onOverMaxSize)=>{
+            dispatch({type:`${namespace}/commitImage`,payload:{jobId,task,imageTag,imageDescription,onSuccessed,onFailed,onOverMaxSize}});
         },
         closeCommitImageModel:()=>{
             dispatch({type:`${namespace}/closeCommitImageModel`});
@@ -222,9 +222,9 @@ class JobDetail extends Component {
                     let debugBtnVisiable = this.props.gpuTypeAction==='debug';
 
                     let canDebug = this.props.gpuType==='debug' &&
-                    this.props.job.status==='Running' && record.debugIDEUrl!=="" ?true:false;
+                    record.status==='Running' && record.debugIDEUrl!=="" ?true:false;
 
-                    let canCommitImage = this.props.job.status==='Running';
+                    let canCommitImage = canDebug && this.props.job.status==='Running';
 
                     let commitImageVisiable = this.props.gpuType ==='debug';
 
@@ -257,8 +257,12 @@ class JobDetail extends Component {
 
                             <Button size={'small'}
                                     type="primary"
+                                    disabled={!record.metricUrl}
                                     style={{ marginRight: 4 }}
                                     onClick={()=>{
+                                        if (!record.metricUrl) {
+                                            return
+                                        }
                                         window.open(record.metricUrl);
                                     }}
                             >
@@ -301,16 +305,30 @@ class JobDetail extends Component {
 
     commitCurrentTaskImage=()=>{
 
-        let imageDescription = this.props.form.getFieldValue("imageDescription") || '';
+        let props = this.props;
 
-        this.props.commitImage(this.props.job.jobId,this.props.currentTask,imageDescription,
-            function(){
-            message.success(formatMessage({id:'jobDetail.task.commitimage.successed'}))
-        },function(){
-            message.error(formatMessage({id:'jobDetail.task.commitimage.failed'}))
-        },function(){
-                message.error(formatMessage({id:'jobDetail.task.commitimage.overmaxsize'}))
+        props.form.validateFields([
+            "imageTag"
+        ],(err, imageInfo) => {
+            if (!err) {
+
+                let imageTag = props.form.getFieldValue("imageTag") || '';
+                let imageDescription = props.form.getFieldValue("imageDescription") || '';
+
+                this.props.commitImage(props.job.jobId,props.currentTask,imageTag, imageDescription,
+                    function(){
+                    message.success(formatMessage({id:'jobDetail.task.commitimage.successed'}))
+                },function(msg){
+                    if(msg)
+                    {
+                        message.error(msg)
+                    }else{
+                        message.error(formatMessage({id:'jobDetail.task.commitimage.failed'}))
+                    }
+                });
+            }
         });
+        
     }
 
     render(){
@@ -387,10 +405,6 @@ class JobDetail extends Component {
                     cancelText={formatMessage({id:'jobConfig.task.button.cancel'})}
                 >
                     <p>
-                        <strong>{formatMessage({id:'jobDetail.task.commitimage.imageName'})}</strong>
-                        <span>{this.props.currentUser.username}</span>
-                    </p>
-                    <p>
                         <strong>{formatMessage({id:'jobDetail.task.commitimage.lastImageStatus'})}</strong>
                         <span>
                             {
@@ -399,17 +413,39 @@ class JobDetail extends Component {
                         </span>
                     </p>
                     <p>
-                        <strong>{formatMessage({id:'jobDetail.task.commitimage.imageDescription'})}</strong>
+                        <strong>{formatMessage({id:'jobDetail.task.commitimage.imageName'})}</strong>
+                        <span>{this.props.currentUser.username}</span>
                     </p>
                     <Form className="imageDesForm">
-                        <Form.Item>
-                            {getFieldDecorator('imageDescription', {
+                        <p>
+                            <strong>{formatMessage({id:'jobDetail.task.commitimage.imageTag'})}</strong>
+                        </p>
+                        <Form.Item name={'imageTag'}>
+                            {
+                                getFieldDecorator('imageTag', {
+                                    rules: [
+                                        { required: true, message: formatMessage({id:'jobConfig.required.errMsg'}) },
+                                    ],
+                                })
+                                (
+                                    <Input />
+                                )
+                            }
+                        </Form.Item>
 
-                            })(
-                                <TextArea disabled={!this.props.currentTask.enableCommitImage}
-                                          autosize={{ minRows: 2, maxRows: 6 }}
-                                          />
-                            )}
+                        <p>
+                            <strong>{formatMessage({id:'jobDetail.task.commitimage.imageDescription'})}</strong>
+                        </p>
+                    
+                        <Form.Item>
+                            {
+                                getFieldDecorator('imageDescription', {})
+                                (
+                                    <TextArea disabled={!this.props.currentTask.enableCommitImage}
+                                            autosize={{ minRows: 2, maxRows: 6 }}
+                                    />
+                                )
+                            }
                         </Form.Item>
                     </Form>
                 </Modal>

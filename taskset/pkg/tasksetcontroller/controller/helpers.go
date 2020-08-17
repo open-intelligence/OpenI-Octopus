@@ -27,7 +27,6 @@ import (
 	"fmt"
 
 	typeTaskSet "scheduler/pkg/crd/apis/taskset/v1alpha1"
-	typeTaskset "scheduler/pkg/crd/apis/taskset/v1alpha1"
 	libClientsets "scheduler/pkg/crd/generated/clientset/versioned"
 
 	corev1 "k8s.io/api/core/v1"
@@ -51,8 +50,8 @@ func createPodKey(taskSetAttemptID, attemptID, index uint, roleName, taskSetName
 	return fmt.Sprintf("%s-%s-%d-%d-%d", taskSetName, roleName, taskSetAttemptID, attemptID, index)
 }
 
-func newPod(key string, id uint, role *typeTaskset.TaskRole, configMap *corev1.ConfigMap,
-	taskset *typeTaskset.TaskSet) *corev1.Pod {
+func newPod(key string, id uint, role *typeTaskSet.TaskRole, configMap *corev1.ConfigMap,
+	taskset *typeTaskSet.TaskSet) *corev1.Pod {
 
 	taskPod := role.Pod.DeepCopy()
 
@@ -111,7 +110,7 @@ func newPod(key string, id uint, role *typeTaskset.TaskRole, configMap *corev1.C
 	return pod
 }
 
-func newConfigMap(key string, taskset *typeTaskset.TaskSet) *corev1.ConfigMap {
+func newConfigMap(key string, taskset *typeTaskSet.TaskSet) *corev1.ConfigMap {
 
 	configMap := &corev1.ConfigMap{}
 
@@ -124,7 +123,7 @@ func newConfigMap(key string, taskset *typeTaskset.TaskSet) *corev1.ConfigMap {
 	}
 	// The owner of ConfigMap should be TaskSet
 	configMap.OwnerReferences = append(configMap.OwnerReferences, *meta.NewControllerRef(taskset,
-		typeTaskset.SchemeGroupVersionKind))
+		typeTaskSet.SchemeGroupVersionKind))
 
 	if configMap.Annotations == nil {
 		configMap.Annotations = map[string]string{}
@@ -188,9 +187,9 @@ func deltaFIFOObjToConfigMap(obj interface{}) (*corev1.ConfigMap, string) {
 	return configMap, ""
 }
 
-func deltaFIFOObjToTaskSet(obj interface{}) (*typeTaskset.TaskSet, string) {
+func deltaFIFOObjToTaskSet(obj interface{}) (*typeTaskSet.TaskSet, string) {
 
-	taskset, ok := obj.(*typeTaskset.TaskSet)
+	taskset, ok := obj.(*typeTaskSet.TaskSet)
 
 	if ok {
 		return taskset, ""
@@ -202,7 +201,7 @@ func deltaFIFOObjToTaskSet(obj interface{}) (*typeTaskset.TaskSet, string) {
 		return nil, fmt.Sprintf("Failed to convert obj to TaskSet or DeletedFinalStateUnknown: %#v", obj)
 	}
 
-	taskset, ok = deletedFinalStateUnknown.Obj.(*typeTaskset.TaskSet)
+	taskset, ok = deletedFinalStateUnknown.Obj.(*typeTaskSet.TaskSet)
 
 	if !ok {
 
@@ -407,7 +406,7 @@ func bindDefaultEventPolicy(taskset *typeTaskSet.TaskSet) {
 
 	for i := 0; i < len(taskset.Spec.Roles); i++ {
 		if nil == taskset.Spec.Roles[i].EventPolicies {
-			taskset.Spec.Roles[i].EventPolicies = DefaultTaskRoleCompletionPolicies
+			taskset.Spec.Roles[i].EventPolicies = DefaultTaskRoleCompletedPolicies
 		}
 	}
 

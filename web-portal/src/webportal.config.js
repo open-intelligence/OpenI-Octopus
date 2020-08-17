@@ -17,18 +17,20 @@
 
 // get config from environment variables
 let config = {
-  helpDocUri: 'https://github.com/open-intelligence/OpenI-Octopus/tree/k8s',
-  restServerUri: "/rest-server-core",//process.env.REST_SERVER_URI,
-  logServiceUri: "",//process.env.YARN_WEB_PORTAL_URI,
-  grafanaUri: "/grafana",//process.env.GRAFANA_URI,
-  terminalUri: "/terminal",
-  jupyterLabProxyUri: "",
-  clusterName: "default",
+  helpDocUri: process.env.HELPER_DOC_URI,
+  restServerUri: process.env.REST_SERVER_URI,
+  logServiceUri: process.env.LOG_SERVER_URI,
+  grafanaUri: process.env.GRAFANA_URI,
+  terminalUri: process.env.TERMINAL_URI,
+  clusterName: process.env.CLUSTER_NAME,
+  jupyterLabProxyUri: process.env.JUPYTERLABPROXY_URI,
+  logPageTokenExpired: '30m',
+  logPageSize:1500,
 };
 
 for(let key in config){
   config[key] = config[key];
-}
+}  
 
 // module exports
 module.exports = config;

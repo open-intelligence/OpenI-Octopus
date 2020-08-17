@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {Form, Icon, Input, Button, Modal,message,Spin} from 'antd';
 import {accountRegister} from "@/services/api";
+import {formatValidateError} from "@/utils/validator";
 import {formatMessage } from 'umi/locale';
 import styles from './index.less';
 import {connect} from 'dva';
@@ -55,8 +56,15 @@ class NormalRegisterForm extends Component {
             }
             delete values['confirmPassword'];
 
-            props.accountRegister(values,function(resMessage){
-                message.error(resMessage)
+            props.accountRegister(values, function(resMessage, details){
+                if (details) {
+                    message.error(formatValidateError(details, {
+                        username:formatMessage({id:'register.username.schema'}),
+                        password:formatMessage({id:'register.password.schema'}),
+                    }).join('<br/>'))
+                } else {
+                    message.error(resMessage)
+                }
             });
         });
     };
@@ -111,7 +119,14 @@ class NormalRegisterForm extends Component {
                     <Form onSubmit={this.handleSubmit}>
                         <Form.Item>
                             {getFieldDecorator('username', {
-                                rules: [{ required: true, message: formatMessage({id:'register.username.message'})}],
+                                rules: [{
+                                    required: true,
+                                    type: "string",
+                                    message: formatMessage({id:'register.username.schema'}),
+                                    pattern: /^([a-zA-Z_])([a-zA-Z0-9_])+$/,
+                                    min: 3,
+                                    max: 20
+                                }],
                             })(
                                 <Input prefix={<Icon type="user" style={{ color: 'rgba(0,0,0,.25)' }} />}
                                        placeholder={formatMessage({id:'register.username'})} />
@@ -120,8 +135,13 @@ class NormalRegisterForm extends Component {
                         <Form.Item>
                             {getFieldDecorator('password', {
                                 rules: [
-                                    { required: true, message: formatMessage({id:'register.password.message'}) },
-                                    { validator: this.validateToNextPassword }
+                                    {
+                                        required: true,
+                                        message: formatMessage({id:'register.password.schema'}),
+                                        min: 6,
+                                        max: 30,
+                                    },
+                                    {  validator: this.validateToNextPassword }
                                 ],
                             })(
                                 <Input prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />}
@@ -131,7 +151,12 @@ class NormalRegisterForm extends Component {
                         <Form.Item>
                             {getFieldDecorator('confirmPassword', {
                                 rules: [
-                                    { required: true, message: formatMessage({id:'register.password.message'}) },
+                                    {
+                                        required: true,
+                                        message: formatMessage({id:'register.password.schema'}),
+                                        min: 6,
+                                        max: 30,
+                                    },
                                     { validator: this.compareToFirstPassword }
                                 ],
                             })(
