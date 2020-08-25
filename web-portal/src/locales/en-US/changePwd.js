@@ -11,5 +11,7 @@ export default {
     'changePwd.password.confirm.message':'Password confirmation error, inconsistent with the new password',
     'changePwd.password.new.confirm.required':'Confirm password as required',
     'changePwd.password.new.required':'New password as required',
-    'changePwd.password.old.required':'Old password as required'
+    'changePwd.password.old.required':'Old password as required',
+    'changePwd.password.old.error':'Old password is error',
+    'changePwd.password.length.errMsg':'Password number cannot be less than 6'
 }

@@ -54,7 +54,14 @@ class NormalLoginForm extends Component {
                 <Form onSubmit={this.handleSubmit}>
                     <Form.Item>
                         {getFieldDecorator('username', {
-                            rules: [{ required: true, message: formatMessage({id:'login.username.message'})}],
+                            rules: [{
+                                required: true,
+                                type: "string",
+                                message: formatMessage({id:'login.username.message'}),
+                                pattern: /^([a-zA-Z_])([a-zA-Z0-9_])+$/,
+                                min: 3,
+                                max: 20
+                            }],
                         })(
                             <Input prefix={<Icon type="user" style={{ color: 'rgba(0,0,0,.25)' }} />}
                                    placeholder={formatMessage({id:'login.username'})} />
@@ -62,7 +69,12 @@ class NormalLoginForm extends Component {
                     </Form.Item>
                     <Form.Item>
                         {getFieldDecorator('password', {
-                            rules: [{ required: true, message: formatMessage({id:'login.password.message'}) }],
+                            rules: [{
+                                required: true,
+                                message: formatMessage({id:'login.password.message'}),
+                                min: 6,
+                                max: 30
+                            }],
                         })(
                             <Input prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />}
                                    type="password" placeholder={formatMessage({id:'login.password'})} />

@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {updatePassword} from "@/services/api";
 import {Form, Icon, Input, Button, Modal,message,Row,Col} from 'antd';
 import {formatMessage } from 'umi/locale';
-
+import {ResponseCodes} from '@/utils/response'
 import styles from './index.less';
 import {connect} from 'dva';
 
@@ -32,7 +32,14 @@ class ChangePwdForm extends Component {
             delete values['confirmNewPassword'];
             updatePassword(values).then((result)=>{
                 if(!result.success){
-                    return message.error(result.message);
+                    switch(result.code){
+                        case ResponseCodes.WRONG_PASSWORD:
+                            return message.error(formatMessage({id:'changePwd.password.old.error'}));
+                        case ResponseCodes.FAILURE:
+                            return message.error(result.message);
+                        default:
+                            return message.error(result.message);
+                    }
                 }
                 this.updated()
             }).catch((e)=>{
@@ -102,7 +109,10 @@ class ChangePwdForm extends Component {
                     <Form onSubmit={this.handleSubmit}>
                         <Form.Item {...formItemLayout} label={formatMessage({id:'changePwd.password.old'})}>
                             {getFieldDecorator('oldPassword', {
-                                rules: [{ required: true, message: formatMessage({id:'changePwd.password.old.required'})}],
+                                rules: [
+                                    {required: true, message: formatMessage({id:'changePwd.password.old.required'})},
+                                    {min:6,message: formatMessage({id: "changePwd.password.length.errMsg"})}
+                                ],
                             })(
                                 <Input prefix={<Icon type="user" style={{ color: 'rgba(0,0,0,.25)' }} />}
                                        type="password" placeholder={formatMessage({id:'changePwd.password.required'})} />
@@ -112,7 +122,8 @@ class ChangePwdForm extends Component {
                             {getFieldDecorator('newPassword', {
                                 rules: [
                                     { required: true, message: formatMessage({id:'changePwd.password.new.required'}) },
-                                    { validator: this.validateToNewPassword }
+                                    { validator: this.validateToNewPassword },
+                                    {min:6,message: formatMessage({id: "changePwd.password.length.errMsg"})}
                                 ],
                             })(
                                 <Input prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />}
@@ -123,7 +134,8 @@ class ChangePwdForm extends Component {
                             {getFieldDecorator('confirmNewPassword', {
                                 rules: [
                                     { required: true, message: formatMessage({id:'changePwd.password.new.confirm.required'}) },
-                                    { validator: this.compareToFirstPassword }
+                                    { validator: this.compareToFirstPassword },
+                                    {min:6,message: formatMessage({id: "changePwd.password.length.errMsg"})}
                                 ],
                             })(
                                 <Input prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />}

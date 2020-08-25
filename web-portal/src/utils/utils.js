@@ -163,27 +163,30 @@ export function getSshFileExt() {
 export function format_subtask (task){
     let _task = {}
     _task.taskNumber = parseInt(task.taskNumber || 1);
-    _task.minSucceededTaskCount = parseInt(task.minSucceededTaskCount) || null;
-    _task.minFailedTaskCount = parseInt(task.minFailedTaskCount) || null;
+    _task.minSucceededTaskCount = parseInt(task.minSucceededTaskCount) || 1;
+    _task.minFailedTaskCount = parseInt(task.minFailedTaskCount) || 1;
     _task.cpuNumber = parseInt(task.cpuNumber || 1);
     _task.gpuNumber = parseInt(task.gpuNumber || 0);
     _task.memoryMB = parseInt(task.memoryMB || 100);
     _task.shmMB =parseInt( task.shmMB || 64);
     _task.command = task.command || "";
-    _task.name = task.name;
+    _task.name = task.name||"";
+    _task.name = _task.name.length>15?_task.name.substring(0,15):_task.name;
+    _task.needIBDevice = task.needIBDevice;
+    _task.isMainRole = task.isMainRole;
 
     if(!task.id){
         _task.id = randomNumber()+"_"+Date.now();
     }else{
         _task.id = task.id;
     }
-    task.taskNumber = isNaN(task.taskNumber) ? 1 : task.taskNumber;
-    task.minSucceededTaskCount = isNaN(task.minSucceededTaskCount) ? null:task.minSucceededTaskCount;
-    task.minFailedTaskCount = isNaN(task.minFailedTaskCount) ? null: task.minFailedTaskCount;
-    task.cpuNumber = isNaN(task.cpuNumber) ? 1 : task.cpuNumber;
-    task.gpuNumber = isNaN(task.gpuNumber) ? 0 : task.gpuNumber;
-    task.memoryMB = isNaN(task.memoryMB) ? 100 : task.memoryMB;
-    task.shmMB = isNaN(task.shmMB) ? 64 : task.shmMB;
+    _task.taskNumber = isNaN(_task.taskNumbevr) ? 1 : _task.taskNumber;
+    _task.minSucceededTaskCount = isNaN(_task.minSucceededTaskCount) ? 1:_task.minSucceededTaskCount;
+    _task.minFailedTaskCount = isNaN(_task.minFailedTaskCount) ? 1: _task.minFailedTaskCount;
+    _task.cpuNumber = isNaN(_task.cpuNumber) ? 1 : _task.cpuNumber;
+    _task.gpuNumber = isNaN(_task.gpuNumber) ? 0 : _task.gpuNumber;
+    _task.memoryMB = isNaN(_task.memoryMB) ? 100 : _task.memoryMB;
+    _task.shmMB = isNaN(_task.shmMB) ? 64 : _task.shmMB;
 
 
     return _task;
@@ -191,7 +194,7 @@ export function format_subtask (task){
 
 
 export function format_job (job){
-    let task = {
+    let newJob = {
         "jobName": (job.jobName||"").split(" ").join("_"),
         "image": job.image,
         "gpuType": job.gpuType,
@@ -199,39 +202,34 @@ export function format_job (job){
         "taskRoles": []
     };
 
-    task.retryCount = parseInt(task.retryCount);
+    newJob.retryCount = parseInt(newJob.retryCount);
 
-    if(isNaN(task.retryCount)){
-        task.retryCount = 0;
+    if(isNaN(newJob.retryCount)){
+      newJob.retryCount = 0;
     }
 
     let taskRoles = job.taskRoles || [];
 
-    let current_edit_task = format_subtask(job.current_task||{});
-
-    taskRoles = taskRoles.filter(it=>{
-        return it.name != current_edit_task.name;
-    });
-
-    !! current_edit_task.name && current_edit_task.name != "" && taskRoles.push(current_edit_task);
-
-
-    let filter  = {};
+    let sameNameFilter  = {};
 
     for(let i=0;i<taskRoles.length;i++){
 
         let s_t = taskRoles[i];
+        
+        let formatTask = format_subtask(s_t);
 
-        if(filter[s_t.name] == true){
-            continue;
+        if(formatTask && formatTask.name!==""){
+
+          if(sameNameFilter[s_t.name] === true){
+              continue;
+          }
+
+          sameNameFilter[s_t.name] = true;
+          newJob.taskRoles.push(formatTask);
         }
-
-        filter[s_t.name] = true;
-
-        task.taskRoles.push(format_subtask(s_t));
     }
 
-    return task;
+    return newJob;
 }
 
 export function transform_job(job){

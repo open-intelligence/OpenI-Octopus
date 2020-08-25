@@ -145,3 +145,25 @@ type TaskSetList struct {
 	// items is the list of TaskSet
 	Items []TaskSet `json:"items" protobuf:"bytes,2,rep,name=items"`
 }
+
+// TaskMessage is about Task message
+type TaskMessage struct {
+	State  string `json:"state"`
+	StateMessage string `json:"stateMessage"`
+	Roles []RoleMessage `json:"roles"`
+}
+
+// RoleMessage is about phase message
+type RoleMessage struct {
+	Name string `json:"name"`
+	Phase  string `json:"phase"`
+	PhaseMessage string `json:"phaseMessage"`
+	Replicas []ReplicaMessage `json:"replicas"`
+}
+
+// ReplicaMessage is about phase message
+type ReplicaMessage struct {
+	Name string `json:"name"`
+	Phase  string `json:"phase"`
+	PhaseMessage string `json:"phaseMessage"`
+}

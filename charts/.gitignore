@@ -1,0 +1,9 @@
+logs/
+coverage/
+.idea/
+run/
+.DS_Store
+*.sw*
+*.un~
+logs
+tmp/

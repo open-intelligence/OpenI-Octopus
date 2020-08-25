@@ -28,8 +28,8 @@ spec:
 {{- end }}
       containers:
       - name: mysql-db
-        image: "{{ .Values.global.image.repository.address }}{{ .Values.global.image.repository.pathname }}/{{ .Values.storage.image.name }}:{{ .Values.storage.image.tag }}"
-        imagePullPolicy: {{ .Values.global.image.pullPolicy }}
+        image: '{{ default .Values.global.image.repository.address .Values.storage.image.address }}{{ default .Values.global.image.repository.pathname .Values.storage.image.pathname }}/{{ .Values.storage.image.name }}:{{ default .Chart.Version .Values.storage.image.tag }}'
+        imagePullPolicy: {{ default .Values.global.image.pullPolicy .Values.storage.image.pullPolicy }}
 {{- with .Values.storage.args }}
         args:
 {{ toYaml . | indent 8 }}
@@ -38,6 +38,8 @@ spec:
         - mountPath: /var/lib/mysql
           name: mysql-storage
         env:
+        - name: TZ
+          value: Asia/Shanghai
         - name: MYSQL_ROOT_PASSWORD
           value: "{{ .Values.storage.rootPassword }}"
         ports:

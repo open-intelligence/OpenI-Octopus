@@ -14,15 +14,18 @@ global:
     repository:
       address: ""
       pathname: "openi"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   nodeSelector: {}
 
 storage:
   replicaCount: 1
   rootPassword: "root"
   image:
+    pullPolicy: ""
+    address: ""
+    pathname: ""
     name: "rest-server-storage"
-    tag: "latest"
+    tag: ""
   args:
     - "--character-set-server=utf8mb4"
     - "--collation-server=utf8mb4_general_ci"
@@ -35,23 +38,22 @@ storage:
   ingress:
     enabled: false
   resources: {}
-  tolerations:
-  - key: "node-role.kubernetes.io/master"
-    operator: "Exists"
-    effect: "NoSchedule"
+  tolerations: []
   affinity: {}
   nodeSelector:
     octopus.openi.pcl.cn/rest-server-storage: "yes"
 
 image:
+  pullPolicy: ""
+  address: ""
+  pathname: ""
   name: "rest-server"
-  tag: "latest"
-  poddiscoveryName: "poddiscovery"
-  poddiscoveryTag: "latest"
+  tag: ""
 
 common:
   jwtSecret: "M1qTVRVNRMBFn0oC"
   enabledApiDoc: "YES"
+  allowCorsDomains: ""
 
 git:
   server: ""
@@ -65,13 +67,13 @@ docker:
   password: ""
 
 imageFactory:
-  customAddr: "http://octopus-image-factory-shield:80"
+  customAddr: ""
   protocol: "http"
   host: "image-factory-shield"
   port: "80"
 
 tasksetCore:
-  customAddr: "http://octopus-taskset-core-0.octopus-taskset-core:8080"
+  customAddr: ""
   port: "8080"
   protocol: "http"
   host: "taskset-core"
@@ -92,7 +94,7 @@ ingress:
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
-  path: /rest-server-core
+  path: /rest-server
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:

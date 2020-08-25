@@ -18,7 +18,7 @@ spec:
       serviceAccountName: {{ template "kubebox-server.fullname" . }}
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.global.image.repository.address }}{{ .Values.global.image.repository.pathname }}/{{ .Values.image.name }}:{{ .Values.image.tag }}"
+          image: "{{ .Values.global.image.repository.address }}{{ .Values.global.image.repository.pathname }}/{{ .Values.image.name }}:{{ default .Chart.Version .Values.image.tag }}"
           imagePullPolicy: {{ .Values.global.image.pullPolicy }}
           env:
           - name: KUBEBOX_CLUSTER_NUM

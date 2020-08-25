@@ -9,12 +9,16 @@ global:
     repository:
       address: ""
       pathname: "openi"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   nodeSelector: {}
+
+common:
+  workerAmount: "10"
+  cacheCreationTimeoutSec: "300"
 
 image:
   name: "tasksetcontroller"
-  tag: "latest"
+  tag: ""
 
 ingress:
   enabled: false

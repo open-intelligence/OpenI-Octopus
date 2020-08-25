@@ -1,1 +1,1 @@
-KUBELET_EXTRA_ARGS=--feature-gates=KubeletPodResources=true
+KUBELET_EXTRA_ARGS=--cgroup-driver=systemd --feature-gates=KubeletPodResources=true

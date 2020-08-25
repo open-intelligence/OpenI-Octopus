@@ -20,9 +20,9 @@
 # ----------------------------------------------------------
   
 # Install driver and container runtime on GPU servers
-- include: install-nvidia-driver.yml
-  tags:
-    - nvidia
+#- include: install-nvidia-driver.yml
+#  tags:
+#    - nvidia
 
 - include: nvidia-docker.yml
   tags:

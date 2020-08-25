@@ -10,18 +10,18 @@
 - include: check-and-reset-all-node-in-k8s.yml
 
 # Install driver and container runtime on GPU servers
-- include: install-nvidia-driver.yml
-  tags:
-    - nvidia
-
-- include: nvidia-docker.yml
-  tags:
-    - nvidia
+#- include: install-nvidia-driver.yml
+#  tags:
+#    - nvidia
 
 # Install Kubernetes
 # for configuration, see: config/group_vars/all.yml
 
 - include: create-single-k8s-cluster.yml
+
+- include: nvidia-docker.yml
+  tags:
+    - nvidia
 
 # config nvidia docker
 - include: config-openi-octopus-nvidia-docker.yml

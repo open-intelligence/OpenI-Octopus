@@ -5,7 +5,7 @@ metadata:
   name: {{ template "log-factory-filebeat.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-{{ include "log-factory-filebeat.labels" . | indent 4 }}
+    k8s-app: filebeat
 data:
   filebeat.yml: |-
     filebeat.inputs:
@@ -23,7 +23,7 @@ data:
     #filebeat.autodiscover:
     #  providers:
     #    - type: kubernetes
-    #      host: ${NODE_NAME}
+    #      node: ${NODE_NAME}
     #      hints.enabled: true
     #      hints.default_config:
     #        type: container
@@ -37,11 +37,18 @@ data:
     cloud.id: ${ELASTIC_CLOUD_ID}
     cloud.auth: ${ELASTIC_CLOUD_AUTH}
 
-    setup.template.settings:
-      index.number_of_shards: 5
-      index.number_of_replicas: 2
     output.elasticsearch:
       hosts: ['${ELASTICSEARCH_HOST:elasticsearch}:${ELASTICSEARCH_PORT:9200}']
+    
+    setup.ilm.enabled: false
+    setup.template.overwrite: true
+    setup.template.enabled: true
+    output.elasticsearch.index: "customname-%{[kubernetes.pod.name]}"
+    setup.template.name: "customname"
+    setup.template.pattern: "customname-*"
+    setup.template.settings:
+      index.number_of_shards: {{ .Values.es.index.number_of_shards}}
+      index.number_of_replicas: {{ .Values.es.index.number_of_replicas}}
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -49,15 +56,15 @@ metadata:
   name: {{ template "log-factory-filebeat.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-{{ include "log-factory-filebeat.labels" . | indent 4 }}
+    k8s-app: filebeat
 spec:
   selector:
     matchLabels:
-{{ include "log-factory-filebeat.labels" . | indent 6 }}
+      k8s-app: filebeat
   template:
     metadata:
       labels:
-{{ include "log-factory-filebeat.labels" . | indent 8 }}
+        k8s-app: filebeat
     spec:
       serviceAccountName: {{ template "log-factory-filebeat.fullname" . }}
       terminationGracePeriodSeconds: 30
@@ -68,73 +75,74 @@ spec:
       {{ toYaml . | indent 2 }}
       {{- end }}
       containers:
-        - name: filebeat
-          image: docker.elastic.co/beats/filebeat:{{ .Values.filebeat.image.tag }}
-          args: [
-            "-c", "/etc/filebeat.yml",
-            "-e",
-          ]
-          env:
-            - name: ELASTICSEARCH_HOST
-              value: '{{ template "log-factory-es.fullname" . }}-external.{{ .Release.Namespace }}'
-            - name: ELASTICSEARCH_PORT
-              value:  "{{ .Values.es.service.ports.db.port }}"
-            - name: ELASTICSEARCH_USERNAME
-              value:
-            - name: ELASTICSEARCH_PASSWORD
-              value:
-            - name: ELASTIC_CLOUD_ID
-              value:
-            - name: ELASTIC_CLOUD_AUTH
-              value:
-            - name: NODE_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: spec.nodeName
-          securityContext:
-            runAsUser: 0
-            # If using Red Hat OpenShift uncomment this:
-            #privileged: true
-          resources:
+      - name: filebeat
+        image: elastic/filebeat:{{ .Values.filebeat.image.tag }}
+        imagePullPolicy: {{ .Values.filebeat.image.pullPolicy }}
+        args: [
+          "-c", "/etc/filebeat.yml",
+          "-e",
+        ]
+        env:
+        - name: ELASTICSEARCH_HOST
+          value: '{{ template "log-factory-es.fullname" . }}-external.{{ .Release.Namespace }}'
+        - name: ELASTICSEARCH_PORT
+          value: "{{ .Values.es.service.ports.db.port }}"
+        - name: ELASTICSEARCH_USERNAME
+          value: 
+        - name: ELASTICSEARCH_PASSWORD
+          value: 
+        - name: ELASTIC_CLOUD_ID
+          value:
+        - name: ELASTIC_CLOUD_AUTH
+          value:
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        securityContext:
+          runAsUser: 0
+          # If using Red Hat OpenShift uncomment this:
+          #privileged: true
+        resources:
 {{ toYaml .Values.filebeat.resources | indent 12 }}
-          volumeMounts:
-            - name: config
-              mountPath: /etc/filebeat.yml
-              readOnly: true
-              subPath: filebeat.yml
-            - name: data
-              mountPath: /usr/share/filebeat/data
-            - name: varlibdockercontainers
-              mountPath: /var/lib/docker/containers
-              readOnly: true
-            - name: varlog
-              mountPath: /var/log
-              readOnly: true
-      volumes:
+        volumeMounts:
         - name: config
-          configMap:
-            defaultMode: 0600
-            name: {{ template "log-factory-filebeat.fullname" . }}
-        - name: varlibdockercontainers
-          hostPath:
-            path: /var/lib/docker/containers
-        - name: varlog
-          hostPath:
-            path: /var/log
-        # data folder stores a registry of read status for all files, so we don't send everything again on a Filebeat pod restart
+          mountPath: /etc/filebeat.yml
+          readOnly: true
+          subPath: filebeat.yml
         - name: data
-          hostPath:
-            path: /var/lib/filebeat-data
-            type: DirectoryOrCreate
+          mountPath: /usr/share/filebeat/data
+        - name: varlibdockercontainers
+          mountPath: /var/lib/docker/containers
+          readOnly: true
+        - name: varlog
+          mountPath: /var/log
+          readOnly: true
+      volumes:
+      - name: config
+        configMap:
+          defaultMode: 0600
+          name: {{ template "log-factory-filebeat.fullname" . }}
+      - name: varlibdockercontainers
+        hostPath:
+          path: /var/lib/docker/containers
+      - name: varlog
+        hostPath:
+          path: /var/log
+      # data folder stores a registry of read status for all files, so we don't send everything again on a Filebeat pod restart
+      - name: data
+        hostPath:
+          path: /var/lib/filebeat-data
+          type: DirectoryOrCreate
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: {{ template "log-factory-filebeat.fullname" . }}
 subjects:
-  - kind: ServiceAccount
-    name: {{ template "log-factory-filebeat.fullname" . }}
-    namespace: {{ .Release.Namespace }}
+- kind: ServiceAccount
+  name: {{ template "log-factory-filebeat.fullname" . }}
+  namespace: {{ .Release.Namespace }}
 roleRef:
   kind: ClusterRole
   name: {{ template "log-factory-filebeat.fullname" . }}
@@ -145,16 +153,16 @@ kind: ClusterRole
 metadata:
   name: {{ template "log-factory-filebeat.fullname" . }}
   labels:
-{{ include "log-factory-filebeat.labels" . | indent 4 }}
+    k8s-app: filebeat
 rules:
-  - apiGroups: [""] # "" indicates the core API group
-    resources:
-      - namespaces
-      - pods
-    verbs:
-      - get
-      - watch
-      - list
+- apiGroups: [""] # "" indicates the core API group
+  resources:
+  - namespaces
+  - pods
+  verbs:
+  - get
+  - watch
+  - list
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -162,5 +170,5 @@ metadata:
   name: {{ template "log-factory-filebeat.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-{{ include "log-factory-filebeat.labels" . | indent 4 }}
+    k8s-app: filebeat
 ---

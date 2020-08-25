@@ -87,7 +87,7 @@ func shouldTaskSetCompleted(taskset *typeTaskSet.TaskSet, record *TaskSetRecord)
 		var eventPolicies []typeTaskSet.EventPolicy = roleSpec.EventPolicies
 
 		if len(eventPolicies) == 0 {
-			eventPolicies = DefaultTaskRoleCompletionPolicies
+			eventPolicies = DefaultTaskRoleCompletedPolicies
 		} else {
 
 			var completedEvent, failedEvent bool = false, false

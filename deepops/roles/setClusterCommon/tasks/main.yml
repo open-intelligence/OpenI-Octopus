@@ -1,24 +1,21 @@
 ---
-- name: DNS config
-  copy:
-     src: resolv.conf
-     dest: /etc/resolv.conf
+#- name: DNS config
+#  copy:
+#     src: resolv.conf
+#     dest: /etc/resolv.conf
 
-- name: backup apt source
-  copy: 
-   src: /etc/apt/sources.list
-   dest: /etc/apt/sources.list.old
+#- name: backup apt source
+#  copy: 
+#   src: /etc/apt/sources.list
+#   dest: /etc/apt/sources.list.old
 
-- name: replace apt source to ali source
-  copy: 
-    src: sources.list
-    dest: /etc/apt/sources.list
+#- name: replace apt source to ali source
+#  copy: 
+#    src: sources.list
+#    dest: /etc/apt/sources.list
 
-- name: install curl
-  apt:
-    state: present
-    name:
-    - curl
+- name: apt-get install curl
+  shell: apt-get install curl -y
 
 - name: add ali k8s apt-key
   shell: curl -s https://mirrors.aliyun.com/kubernetes/apt/doc/apt-key.gpg | sudo apt-key add -
@@ -29,17 +26,13 @@
     dest: /etc/apt/sources.list.d/kubernetes.list
 
 - name: apt-get update
-  apt:
-   update_cache: yes
+  shell: apt-get update
 
 - name: apt fix broken pkg
   shell: apt --fix-broken install
 
-- name: install ufw
-  apt:
-    state: present
-    name:
-    - ufw
+- name: apt-get install ufw
+  shell: apt-get install ufw -y
 
 - name: disable firewall
   shell: ufw disable
@@ -53,6 +46,11 @@
   copy:
     src: selinuxconfig
     dest: /etc/selinux/config
+
+- name: touch rc.local
+  copy:
+    src: rc.local
+    dest: /etc/rc.local
 
 - name: persist allow Linux kernel forward net pkg (don't worry reboot)
   lineinfile:
@@ -97,39 +95,41 @@
   shell: sed -i 's/.*swap.*/#&/' /etc/fstab
 
 #----- config for kubeproxy and keepalived to use ipvs
-- name: install ipset
-  apt:
-    state: present
-    name:
-    - ipset
+- name: apt-get install ipset
+  shell: apt-get install ipset -y
+  when: kube_proxy_mode == "ipvs"
 
-- name: install ipvsadm
-  apt:
-    state: present
-    name:
-    - ipvsadm
+- name: apt-get install ipvsadm
+  shell: apt-get install ipvsadm -y
+  when: kube_proxy_mode == "ipvs"
 
 - name: mkdir ipvs modules dir
   shell: mkdir -p /etc/sysconfig/modules
+  when: kube_proxy_mode == "ipvs"
 
 - name: persist active ipvs (don't worry reboot)
   copy:
     src: ipvs.modules
     dest: /etc/sysconfig/modules/ipvs.modules
+  when: kube_proxy_mode == "ipvs"
 
 - name: chmod 755 /etc/sysconfig/modules/ipvs.modules 
   shell: chmod 755 /etc/sysconfig/modules/ipvs.modules
+  when: kube_proxy_mode == "ipvs"
 
 - name: active ipvs.modules
   shell: bash /etc/sysconfig/modules/ipvs.modules
+  when: kube_proxy_mode == "ipvs"
 
 - name: get lsmod info
   shell: lsmod | grep -e ip_vs -e nf_conntrack_ipv4
+  when: kube_proxy_mode == "ipvs"
   register: lsmodinfo
 
 - name: show lsmod info
   debug:
     msg: "{{lsmodinfo}}"
+  when: kube_proxy_mode == "ipvs"
 
 #---- config for keepalived
 

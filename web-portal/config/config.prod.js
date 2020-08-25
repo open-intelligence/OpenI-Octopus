@@ -7,6 +7,7 @@ global.jobTypesFilter = {
 
 export default {
     history: 'hash',
+    hash: true,
     publicPath: "./",
     plugins: [
         ['umi-plugin-react', {

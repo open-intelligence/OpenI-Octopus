@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ template "taskset-core.fullname" . }}
+  labels:
+{{ include "taskset-core.labels" . | indent 4 }}
+spec:
+  serviceName: {{ template "taskset-core.fullname" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+{{ include "taskset-core.select-labels" . | indent 8 }}
+  template:
+    metadata:
+      name: {{ template "taskset-core.name" . }}
+      labels:
+{{ include "taskset-core.labels" . | indent 8 }}
+    spec:
+      serviceAccountName: {{ template "taskset-core.fullname" . }}
+      {{- with .Values.global.nodeSelector }}
+      nodeSelector:
+      {{ toYaml . | indent 2 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+      {{ toYaml . | indent 2 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+      {{ toYaml . | indent 2 }}
+      {{- end }}
+      containers:
+      - name: taskset-core
+        image: '{{ default .Values.global.image.repository.address .Values.image.address }}{{ default .Values.global.image.repository.pathname .Values.image.pathname }}/{{ .Values.image.name }}:{{ default .Chart.Version .Values.image.tag }}'
+        imagePullPolicy: {{ default .Values.global.image.pullPolicy .Values.image.pullPolicy }}
+        args: [ "--config", "/etc/taskset/core/core-config.yml" ]
+        env:
+        - name: GIN_MODE
+          value: "release"
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - name: core-config
+            mountPath: /etc/taskset/core/
+          - name: localtime
+            mountPath: /etc/localtime
+        ports:
+        - name: {{ template "taskset-core.name" . }}
+          containerPort: {{ .Values.service.targetPort }}
+      volumes:
+      - name: core-config
+        configMap:
+          name: {{ template "taskset-core.fullname" . }}
+      - name: localtime
+        hostPath: 
+          path: /etc/localtime

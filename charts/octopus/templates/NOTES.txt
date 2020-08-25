@@ -1,1 +1,15 @@
-1. Get the application URL by running these commands:
+--------------------------------------------------------------------------------------------------
+
+After the service is started, it is necessary to provide external services through the Ingress.
+The service entry is: http://$$NODE_IP:80
+Please confirm whether the Ingress-NGINX component has been installed in kubernetes cluster.
+Refer to: https://github.com/kubernetes/ingress-nginx.
+Now, you can query the detailed service status by executing 'kubectl get po'
+
+--------------------------------------------------------------------------------------------------
+
+服务启动后,需要通过Ingress对外提供服务,服务入口为: http://$NODE_IP:80
+请先确认kubernetes集群是否已安装Ingress-NGINX组件,可参考: https://github.com/kubernetes/ingress-nginx.
+现在,可以通过执行`kubectl get po`查询详细服务状态.
+
+--------------------------------------------------------------------------------------------------

@@ -1,0 +1,9 @@
+.idea/
+.vscode/
+./tasksetcontroller
+./poddiscovery
+testfiles
+ 
+./pkg/core/goconvey
+
+tmp/

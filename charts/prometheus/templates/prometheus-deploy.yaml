@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "prometheus.fullname" . }}
+  labels:
+{{ include "prometheus.labels" . | indent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+{{ include "prometheus.select-labels" . | indent 6 }}
+  template:
+    metadata:
+      labels:
+{{ include "prometheus.labels" . | indent 8 }}
+    spec:
+      {{- with .Values.prometheus.nodeSelector }}
+      nodeSelector:
+      {{ toYaml . | indent 2 }}
+      {{- end }}
+      containers:
+      - image: prom/prometheus:{{ .Values.image.tag }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        name: prometheus
+        command:
+        - "/bin/prometheus"
+        args:
+        - "--config.file=/etc/prometheus/prometheus.yml"
+        - "--storage.tsdb.path=/prometheus"
+        - "--storage.tsdb.retention={{ .Values.prometheus.retentionDuration }}"
+        ports:
+        - containerPort: {{ .Values.service.targetPort }}
+          protocol: TCP
+        volumeMounts:
+        - mountPath: "/prometheus"
+          name: data
+        - mountPath: "/etc/prometheus"
+          name: config-volume
+        resources:
+{{ toYaml .Values.resources | indent 10 }}
+      serviceAccountName: {{ template "prometheus.fullname" . }}
+      volumes:
+      - name: data
+{{- if .Values.prometheus.volumes.dataPath }}
+        hostPath:
+          path: {{ .Values.prometheus.volumes.dataPath }}
+          type: DirectoryOrCreate
+{{- else }}
+        emptyDir: {}
+{{- end }}
+      - name: config-volume
+        configMap:
+          name: {{ template "prometheus.fullname" . }}

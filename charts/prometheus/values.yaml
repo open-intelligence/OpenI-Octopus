@@ -7,8 +7,17 @@ replicaCount: 1
 nameOverride: ""
 fullnameOverride: ""
 
+prometheus:
+  nodeSelector:
+    octopus.openi.pcl.cn/prometheus: "yes"
+  retentionDuration: 365d
+  volumes:
+    # image prom/prometheus run `nobody:nogroup` as user and group, so this path need privilege
+    dataPath: ""
+
 image:
   tag: "v2.0.0"
+  pullPolicy: IfNotPresent
 
 service:
   type: NodePort

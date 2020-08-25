@@ -31,6 +31,7 @@
     "react-container-query": "^0.11.0",
     "react-document-title": "^2.0.3",
     "react-highlight-words": "^0.15.1",
+    "react-infinite-scroller": "^1.2.4",
     "umi": "^2.7.7",
     "umi-plugin-react": "^1.7.0"
   }

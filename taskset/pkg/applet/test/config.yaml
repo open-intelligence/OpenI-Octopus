@@ -1,0 +1,10 @@
+server:
+  host: "http://localhost"
+  port: "8081"
+pipeline:
+  address: "http://localhost:8080"
+  secret: "f1token"
+options:
+  - name: 'hpc'
+    arguments:
+      enabled: true

@@ -20,12 +20,14 @@
 
 let config = {
   helpDocUri: 'https://github.com/open-intelligence/OpenI-Octopus/tree/k8s',
-  restServerUri: '/rest-server-core',
-  logServiceUri: "http://192.168.202.73",
-  grafanaUri: "http://192.168.202.73/grafana",
-  terminalUri: "http://192.168.202.73/terminal",
-  jupyterLabProxyUri: "http://192.168.202.73",
+  restServerUri: "/rest-server-core",
+  logServiceUri: "http://192.168.202.71/es",
+  grafanaUri: "http://192.168.202.71/grafana-core",
+  terminalUri: "http://192.168.202.71/terminal",
+  jupyterLabProxyUri: "http://192.168.202.71",
   clusterName: "default",
+  logPageTokenExpired: '30m',
+  logPageSize:1500,
 };
 
 // module exports

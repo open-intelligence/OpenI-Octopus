@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "rest-plugin-storage.fullname" . }}
+  labels:
+{{ include "rest-plugin-storage.labels" . | indent 4 }}
+spec:
+  clusterIP: None
+  ports:
+    - port: {{ .Values.storage.service.port }}
+      name: http
+  selector:
+{{ include "rest-plugin-storage.select-labels" . | indent 8 }}

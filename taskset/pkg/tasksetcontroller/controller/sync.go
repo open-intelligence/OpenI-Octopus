@@ -36,6 +36,15 @@ import (
 func (c *TaskSetController) syncTaskSet(key string) (rtError error) {
 
 	defer func() {
+		// should I catch the system error ? TODO...
+		// if err := recover(); err != nil {
+		// 	c.logger.Warn(
+		// 		"System Error",
+		// 		zap.Error(fmt.Errorf("%v", err)),
+		// 		zap.String("key", key),
+		// 	)
+		// 	return
+		// }
 
 		if rtError != nil {
 			c.logger.Error(

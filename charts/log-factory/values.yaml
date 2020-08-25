@@ -6,17 +6,18 @@ nameOverride: ""
 fullnameOverride: ""
 
 es:
-  replicaCount: 3
+  replicaCount: 1
   index:
     number_of_shards: 5
     number_of_replicas: 2
   username: ""
   password: ""
   image:
-    pullPolicy: Always
-    tag: "7.5.2"
+    pullPolicy: IfNotPresent
+    tag: "7.8.1"
   volumes:
-    esDataPath: /usr/share/elasticsearch
+    esDataPath: /usr/share/elasticsearch/data
+    esBackupPath: /usr/share/elasticsearch/backup
   service:
     type: ClusterIP
     ports:
@@ -36,32 +37,25 @@ es:
     #  - secretName: chart-example-tls
     #    hosts:
     #      - chart-example.local
-  ES_JAVA_OPTS: "-Xms30g -Xmx30g"
+  ES_JAVA_OPTS: ""
   resources: {
-    limits: {
-      cpu: "8000m",
-      memory: "32Gi"
-    },
-    requests: {
-      cpu: "8000m",
-      memory: "32Gi"
-    }         
   }
   nodeSelector:
     octopus.openi.pcl.cn/log-service-es: "yes"
-  affinity:
+  affinity: {}
 
 filebeat:
   image:
-    tag: "7.5.2"
+    tag: "7.8.1"
+    pullPolicy: IfNotPresent
   resources: {
     limits: {
-      cpu: "4000m",
-      memory: "8Gi"
+      cpu: "1000m",
+      memory: "2Gi"
     },
     requests: {
-      cpu: "4000m",
-      memory: "8Gi"
+      cpu: "1000m",
+      memory: "2Gi"
     }         
   }
   nodeSelector: {}

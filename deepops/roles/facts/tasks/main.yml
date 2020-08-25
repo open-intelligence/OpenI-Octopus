@@ -1,11 +1,6 @@
 ---
-- name: apt install pciutils
-  apt: name=pciutils update_cache=yes
-  when: ansible_os_family == 'Debian'
-
-- name: yum install pciutils
-  yum: name=pciutils update_cache=yes
-  when: ansible_os_family == 'RedHat'
+- name: apt-get install pciutils
+  shell: apt-get install pciutils -y
 
 - name: create fact directory
   file:

@@ -39,7 +39,7 @@ export async function loadJobs(pageSize,pageNumber,searchParamStr) {
         return {
             success:true,
             jobs:response.payload.jobs,
-            total_size: response.payload.total_size
+            totalSize: response.payload.totalSize
         };
     }
 
@@ -110,7 +110,8 @@ export async function updatePassword(params){
     if (response&&'S000' != response.code){
         return {
             success:false,
-            message:response.msg
+            message:response.msg,
+            code: response.code
         };
     }
 
@@ -445,13 +446,14 @@ export async function getCommitImageStatus(jobId,taskContainerId) {
 }
 
 
-export async function commitImage(ip,jobId,taskContainerId,imageDescription) {
+export async function commitImage(ip,jobId,taskContainerId,imageTag,imageDescription) {
 
     let response = await requestWithAuth('/api/v1/jobs/'+jobId+'/commitImage',{
         method:'POST',
         body:{
             ip,
             taskContainerId,
+            imageTag,
             imageDescription
         }
     });
@@ -459,22 +461,32 @@ export async function commitImage(ip,jobId,taskContainerId,imageDescription) {
     return response;
 }
 
-export async function loadContainerLog(job,taskPod,container,pageSize,pageNumber) {
-
-    let logIndex = (pageNumber-1)*pageSize;
-    //container = "03db5f4ec6e2fa76d0580c17b0b1e0d68f754385cca5359de49fbdcf64e0694a";
-    let response = await request('/es/_search',{
+export async function loadContainerLogFistPageAndPageToken(taskPod,pageSize,pageTokenExpired) {
+    let searchPath = __WEBPORTAL__.logServiceUri + '/_search?_source=message&scroll='+pageTokenExpired;
+    let response = await request(searchPath,{
         method:'POST',
         body:{
             query: {
                 match:{
-                    "log.file.path": "/var/lib/docker/containers/"+
-                        container+"/"+container+"-json.log"
+                    "kubernetes.pod.name": taskPod
                 }
             },
             size:pageSize,
-            from:logIndex,
             sort: "log.offset"
+        }
+    });
+
+    return response;
+}
+
+export async function loadContainerLogByPageToken(pageTokenExpired,pageToken) {
+    let searchPath = __WEBPORTAL__.logServiceUri + '/_search/scroll';
+    
+    let response = await request(searchPath,{
+        method:'POST',
+        body:{
+            scroll:pageTokenExpired,
+            scroll_id: pageToken
         }
     });
 

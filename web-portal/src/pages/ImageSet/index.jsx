@@ -1,8 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'dva';
 import {
-    message,
-    Popover
+    message
 } from 'antd';
 
 import StandardTable from '@/components/StandardTable';
@@ -40,11 +39,12 @@ class ImageList extends Component {
         formatMessage({id:'imageset.column.id'}),
         formatMessage({id:'imageset.column.name'}),
         formatMessage({id:'imageset.column.path'}),
+        formatMessage({id:'imageset.column.desc'}),
         formatMessage({id:'imageset.column.provider'}),
         formatMessage({id:'imageset.column.createtime'})
     ];
 
-    columnDataIndexs = ["id","name","place", "provider", "createtime"];
+    columnDataIndexs = ["id","name","place","description", "provider", "createtime"];
 
     columns = this.columnDataIndexs.map((DataIndex,index)=>{
 
@@ -63,12 +63,7 @@ class ImageList extends Component {
                 },
                 render:(text,record)=>{
                     return (
-                        <Popover content={(<div dangerouslySetInnerHTML={{__html:record.description}}></div>)}
-                                 title={formatMessage({id:'imageset.title.dec'})}
-                                 trigger="hover"
-                                 placement="right">
-                            <Link to={'#'}>{text}</Link>
-                        </Popover>
+                        <Link to={'#'}>{text}</Link>
                     );
                 }
             };
@@ -90,6 +85,15 @@ class ImageList extends Component {
                     return rowADataObj.place < rowBDataObj.place?1:-1;
                 }
             };
+        }else if(DataIndex === "description")
+        {
+            return {
+                ...columnDef,
+                render:(text,record)=>{
+                    return <div dangerouslySetInnerHTML={{__html:text}}></div>
+                    
+                }
+            };
         }else if(DataIndex === "provider")
         {
             return {
@@ -106,6 +110,12 @@ class ImageList extends Component {
                 search:true,
                 sorter: (rowADataObj,rowBDataObj) =>{
                     return rowADataObj.createtime < rowBDataObj.createtime?1:-1;
+                },
+                render:(text,record)=>{
+                    if (!text) {
+                        return text
+                    }
+                    return new Date(text).toLocaleString()
                 }
             };
         }

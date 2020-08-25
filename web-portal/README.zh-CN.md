@@ -4,7 +4,7 @@
 
 ## 前端架构
 
-请查看 [Antd-Design](https://ant.design) 和 [Antd-Design Course](https://www.yuque.com/ant-design/course)
+请查看 [Antd-Design](https://ant.design)
 
 ## 如何开发
 
@@ -14,19 +14,17 @@ $ npm run dev
 $ 打开浏览器访问 http://localhost:9286/
 ```
 
-## 源码编译部署
+## 快速部署
 
 ### 1.编译镜像
 
 ```
 # cd webportal
-# npm install
-# npm run build:prod
 # docker build -t $dockerRegistry/openi/webportal:latest .
 # docker push $dockerRegistry/openi/webportal:latest
 ```
 
-### 2 使用helm启动
+### 2.k8s部署
 
 通过按需求修改 `./charts/web-portal/value.yaml` 文件中的配置
 
@@ -34,5 +32,7 @@ $ 打开浏览器访问 http://localhost:9286/
 // 安装
 helm install octopus ./charts/web-portal
 ```
+
+发布成功后可以通过 http://${ip}/ 访问
 
 

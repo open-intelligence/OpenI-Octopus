@@ -143,8 +143,8 @@ const (
 	ActionNoAction string = "NoAction"
 )
 
-//DefaultTaskRoleCompletionPolicies define the default role completion event policy
-var DefaultTaskRoleCompletionPolicies = []typeTaskSet.EventPolicy{
+//DefaultTaskRoleCompletedPolicies define the default role completion event policy
+var DefaultTaskRoleCompletedPolicies = []typeTaskSet.EventPolicy{
 	typeTaskSet.EventPolicy{
 		Event:  EventRoleFailed,
 		Action: ActionTaskSetFailed,

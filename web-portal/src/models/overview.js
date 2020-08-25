@@ -69,7 +69,7 @@ export default {
 
             const state = {
                 runCount: rsp.jobsSummary.RUNNING,
-                waitCount:rsp.jobsSummary.WAITING,
+                waitCount:rsp.jobsSummary.PENDING || rsp.jobsSummary.WAITING || 0,
                 stopCount:rsp.jobsSummary.STOPPED,
                 failCount:rsp.jobsSummary.FAILED,
                 successCount:rsp.jobsSummary.SUCCEEDED,

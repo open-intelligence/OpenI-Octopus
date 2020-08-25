@@ -1,7 +1,6 @@
 ---
-- name: apt update
-  apt:
-    update_cache: yes
+- name: apt-get update
+  shell: apt-get update
   when: ansible_distribution == 'Ubuntu'
 
 - name: restart cachefilesd

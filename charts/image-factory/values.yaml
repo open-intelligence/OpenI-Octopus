@@ -10,7 +10,7 @@ global:
     repository:
       address: ""
       pathname: "openi"
-    pullPolicy: Always
+    pullPolicy: IfNotPresent
   nodeSelector: {}
 
 agent:

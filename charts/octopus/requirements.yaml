@@ -1,12 +1,12 @@
 dependencies:
   - name: tasksetcontroller
-    version: 0.1.0
+    version: 5.5.3
     repository: https://open-intelligence.github.io/charts
   - name: web-portal
-    version: 0.1.0
+    version: 10.7.3
     repository: https://open-intelligence.github.io/charts
   - name: rest-server
-    version: 0.1.1
+    version: 10.7.1
     repository: https://open-intelligence.github.io/charts
   - name: log-factory
     version: 0.1.0
@@ -25,4 +25,10 @@ dependencies:
     repository: https://open-intelligence.github.io/charts
   - name: kube-batch
     version: 0.4.2
+    repository: https://open-intelligence.github.io/charts
+  - name: taskset-core
+    version: 6.6.1
+    repository: https://open-intelligence.github.io/charts
+  - name: rest-server-plugin
+    version: 6.6.1
     repository: https://open-intelligence.github.io/charts

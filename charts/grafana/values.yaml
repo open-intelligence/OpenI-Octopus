@@ -9,6 +9,7 @@ global:
 
 image:
   tag: "6.2.0"
+  pullPolicy: IfNotPresent
 
 env:
   GF_AUTH_BASIC_ENABLED: "true"
@@ -17,10 +18,10 @@ env:
   GF_SECURITY_ADMIN_USER: "admin"
   GF_SECURITY_ADMIN_PASSWORD: "Pa22word"
   GF_SECURITY_ALLOW_EMBEDDING: "true"
-  GF_SERVER_ROOT_URL: "/grafana-core"
+  GF_SERVER_ROOT_URL: "/grafana"
 
 prometheus:
-  customAddr: "http://octopus-prometheus:9090"
+  customAddr: ""
   protocol: "http"
   host: "prometheus"
   port: "9090"
@@ -30,13 +31,12 @@ service:
   port: 3000
   targetPort: 3000
 
-
 ingress:
   enabled: true
   annotations: {}
   # kubernetes.io/ingress.class: nginx
   # kubernetes.io/tls-acme: "true"
-  path: /grafana-core
+  path: /grafana
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local

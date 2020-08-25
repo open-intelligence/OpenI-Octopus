@@ -168,19 +168,24 @@ export default {
                 return onFailed && onFailed(formatMessage({id:"jobConfig.error.load_failed_gpu"}))
             }
 
+            const currentUser= getAuthority();
+            //console.log("userinfo:", currentUser);
+
             let gpuTypeMap = {};
             let gpus = rsp.list.map(gpuInfo=>{
+                
                 gpuTypeMap[gpuInfo.platformKey] = gpuInfo;
-                return gpuInfo;
-            }) || [];
 
-            if(gpuTypeMap["debug_cpu"]&&gpuTypeMap["debug"]){
-                gpuTypeMap["debug_cpu"].imageSets = gpuTypeMap["debug"].imageSets;
-            }
+                //根据用户信息过滤提交界面的镜像列表框
+                gpuTypeMap[gpuInfo.platformKey].imageSets = gpuTypeMap[gpuInfo.platformKey].imageSets.filter(it=>{
+                    if(currentUser.admin){
+                        return true;
+                    }else{
+                        return it.provider==='admin' || it.provider===currentUser.username;
+                    }
+                });
 
-            for(let gpuType in gpuTypeMap)
-            {
-                gpuTypeMap[gpuType].images = gpuTypeMap[gpuType].imageSets.map(it=>{
+                gpuTypeMap[gpuInfo.platformKey].images = gpuTypeMap[gpuInfo.platformKey].imageSets.map(it=>{
                     return {
                         id:it.id,
                         name:it.name,
@@ -188,9 +193,17 @@ export default {
                     };
                 });
 
-                delete gpuTypeMap[gpuType].imageSets;
-            }
+               
+                
+                delete gpuTypeMap[gpuInfo.platformKey].imageSets;
 
+                return gpuInfo;
+
+            }) || [];
+
+            if(gpuTypeMap["debug_cpu"]&&gpuTypeMap["debug"]){
+                gpuTypeMap["debug_cpu"].imageSets = gpuTypeMap["debug"].imageSets;
+            }
 
 
             let jobConfig = null;
@@ -411,7 +424,7 @@ export default {
             //去掉相同的id
             delete copyTask.id;
 
-            copyTask.name = (copyTask.name.split("00"))[0] + "00" + new Date().getTime();
+            copyTask.name = copyTask.name[0] + "0" + next.taskRoles.length;
 
             next.taskRoles.push(copyTask);
 
@@ -520,6 +533,23 @@ export default {
             return {
                 ...state,
                 subTaskListLoading:true
+            }
+        },
+        changeCurrentTaskNeedIBDevice(state,{payload}){
+            let changeCurrentSubTask = state.currentSubTask;
+            changeCurrentSubTask.needIBDevice = payload.needIBDevice;
+            
+            return {
+                ...state,
+                currentSubTask: {...changeCurrentSubTask} 
+            }
+        },
+        changeCurrentTaskIsMainRole(state,{payload}){
+            let changeCurrentSubTask = state.currentSubTask;
+            changeCurrentSubTask.isMainRole = payload.isMainRole;
+            return {
+                ...state,
+                currentSubTask: {...changeCurrentSubTask}
             }
         },
         changeJobInfoError(state,{payload}){

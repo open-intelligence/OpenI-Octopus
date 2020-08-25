@@ -49,6 +49,31 @@ func (t *TaskSet) GetTaskRoleSpec(rolename string) *TaskRole {
 	return roleSpec
 }
 
+//GetTaskPhaseMessage returns the phase message
+func (t *TaskSet) GetTaskPhaseMessage() *TaskMessage {
+	taskMessage := &TaskMessage{}
+	taskMessage.State = t.Status.State
+	taskMessage.StateMessage = t.Status.StateMessage
+	for i := 0; i < len(t.Status.TaskRoleStatus); i++ {
+		var role = t.Status.TaskRoleStatus[i]
+		roleMessage := RoleMessage{}
+		roleMessage.Name = role.Name
+		roleMessage.Phase = role.Phase
+		roleMessage.PhaseMessage = role.PhaseMessage
+		for j := 0; j < len(role.ReplicaStatuses); j++ {
+			replicaMessage := ReplicaMessage{}
+			var replica = role.ReplicaStatuses[j]
+			replicaMessage.Name = replica.Name
+			replicaMessage.Phase = replica.Phase
+			replicaMessage.PhaseMessage  = replica.PhaseMessage
+			roleMessage.Replicas = append(roleMessage.Replicas, replicaMessage)
+		}
+		taskMessage.Roles = append(taskMessage.Roles, roleMessage)
+	}
+	return taskMessage
+}
+
+
 //GetTaskRoleCompletionPolicy returns the completion policy of specific taskrole
 func (t *TaskSet) GetTaskRoleCompletionPolicy(rolename string) *CompletionPolicy {
 	spec := t.GetTaskRoleSpec(rolename)

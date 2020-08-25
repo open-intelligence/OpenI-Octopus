@@ -57,7 +57,7 @@ export default {
     "jobConfig.task_name.label":"Sub Task Name",
     "jobConfig.task_name.dec":"<p>The name of sub task</p>"+
                             "<p><h4>How to set?</h4></p>"+
-                            "<p>A string with lower-letters or numbers. And the max length is 30.</p>",
+                            "<p>A string with first lower-letter and lower-letters or numbers. And the max length is 15.</p>",
 
     "jobConfig.replicas_number.label":"Replicas",
     "jobConfig.replicas_number.dec": "<p>The amount of sub task replicas.</p>"+
@@ -101,6 +101,20 @@ export default {
                                     "<p><h4>How to set?</h4></p>"+
                                     "<p>1<=MinFailedReplicas<=Replicas. The default value is 1.</p>",
 
+    "jobConfig.ib_device.label":"InfiniBand Device",
+    "jobConfig.ib_device.dec": "<p>SZ Cloud Brain has integrated Infiniband network device. It can support job to use RDMA protocol for multi-machine communication</p>"+
+                            "<p>At present, many software frameworks (such as NCCL) have supported the use of Infiniband network device for multi-machine communication</p>"+
+                            "<p>Infiniband network device is a powerful tool for distributed training.</p>"+
+                            "<p><h4>How to set?</h4></p>"+
+                            "<p>Check this box to set the subtask to be assigned to the Infiniband network device resource to run</p>"+
+                            "<p>After the subtask runs, you can see the internal domain name of each subtask(can be set as IB server) in the system file /etc/hosts </p>",
+
+    "jobConfig.is_main_role.label":"Main Task",
+    "jobConfig.is_main_role.dec": "<p>Set the subtask as the backbone task. Turning on this setting will make the final state of the subtask directly equivalent to the final state of the total task, for example:</p>"+
+      "<p>If the subtask succeeds, the total task will succeed, and other subtasks will stop immediately if they are still running；</p>"+
+      "<p>If this subtask fails, the total task will fail, and other subtasks will stop immediately if they are still running。</p>",
+    "jobConfig.subtask_isMailRole.pattern.errMsg": "Main task checkbox only support boolean value",
+
     "jobConfig.command.label":"Command",
     "jobConfig.command.dec": "<p>The command which is used to start the job.</p>"+
                             "<p><h4>How to set?</h4></p>"+
@@ -125,10 +139,12 @@ export default {
     "jobConfig.subtaskList.empty.errMsg":"Sub task list cannot be empty",
     "jobConfig.subtask_name.replicas.errMsg":"Tasks with the same name in the subtask list",
 
-    "jobConfig.subtask_name.pattern.errMsg":'A sub task name string with lower-letters or numbers.',
-    "jobConfig.subtask_name.length.errMsg":"The max length is 30",
+    "jobConfig.subtask_name.pattern.errMsg":'A sub task name string with first lower-letter and lower-letters or numbers.',
+    "jobConfig.subtask_name.length.errMsg":"The max length is 15",
 
     "jobConfig.subtask_command.pattern.errMsg":"Cannot contain non-visible characters other than space",
+
+    'jobConfig.subtask_needIBDevice.pattern.errMsg': 'InfiniBand Device checkbox only support boolean value',
 
     "jobConfig.title.editSubTask":"Edit Sub Task",
     "jobConfig.task.button.confirm":"Confirm",
@@ -152,7 +168,8 @@ export default {
     "jobConfig.success.submit_job":"Submit job successfully!",
     "jobConfig.error.submit_failed":"Failed to submit job",
 
-    "jobConfig.debug.onesubtask.confirm.title":'Subtask List for Debug job allows only one subtask',
+    "jobConfig.debug.onesubtask.confirm.title":'Subtask List for Debug job can only have 2 subtasks at most',
+    "jobConfig.debug_cpu.onesubtask.confirm.title":'Subtask List for Debug_CPU job can only have 1 subtask at most',
     "jobConfig.debug.submit.title":"Submit Debug Job Tips",
     "jobConfig.debug.submit.tips": DebugJobContent,
 };

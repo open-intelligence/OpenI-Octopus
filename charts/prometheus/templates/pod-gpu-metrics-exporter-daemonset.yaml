@@ -21,6 +21,7 @@ spec:
         hardware-type: NVIDIAGPU
       containers:
       - image: nvidia/pod-gpu-metrics-exporter:v1.0.0-alpha
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
       #- image: yzs981130/pod-gpu-metrics-exporter:latest
         name: pod-nvidia-gpu-metrics-exporter
         ports:
@@ -37,6 +38,7 @@ spec:
           readOnly: true
           mountPath: /run/prometheus
       - image: nvidia/dcgm-exporter:1.4.6
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
         name: nvidia-dcgm-exporter
         securityContext:
           runAsNonRoot: false

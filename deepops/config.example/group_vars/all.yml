@@ -64,18 +64,19 @@ kube_image_repo: "registry.aliyuncs.com/google_containers"
 
 ## K8s集群中Service资源的内部虚拟ip地址网段空间
 ## Kubernetes internal network for services, unused block of space.
-kube_service_addresses: 10.16.0.0/16
+## service_addresses地址空间配置需要注意与pod_subnet的地址空间独立
+kube_service_addresses: 11.0.0.0/16
 
 ## K8s集群中Pod资源的内部虚拟ip地址网段空间
 ## 网络插件Calico也需要依赖这个配置
 ## internal network. Kubernetes will assign IP addresses from this range to individual pods.
 ## This network must be unused in your network infrastructure!
-kube_pods_subnet: 10.0.0.0/24
+kube_pods_subnet: 10.0.0.0/8
 
 ## kubeproxy工作模式，ipvs或者iptables
 ## Kube-proxy proxyMode configuration.
 ## Can be ipvs, iptables.
-kube_proxy_mode: ipvs
+kube_proxy_mode: iptables
 
 # ----------------------------------------- Config Calico -----------------------------------------------------------
 
@@ -85,14 +86,16 @@ kube_proxy_mode: ipvs
 ## String format: calico-$version (is the filename in roles/installCalico/templates)
 kube_network_plugin: calico-v3.10
 
-## calico使用Bgp模式还是IPIP隧道模式(注意：如果集群的机器是来自于多网段的，只能使用IPIP模式)
+## calico使用Bgp模式还是IPIP隧道模式(注意：如果集群的机器是来自于多网段的，只能使用CrossSubnet模式)
 ## IPIP模式填写: "Always"
-## Bgp模式填写："off"
+## Bgp模式填写："Off"
+## 跨网段模式填写: "CrossSubnet" (ipip-bgp混合模式: 同子网内路由采用bgp，跨子网路由采用ipip)
 ## 查看Bgp网络的node mesh网络状态可使用命令: calicoctl node status
 ## 查看Bgp网络某个node的详情命令： calico get node $nodeName -o yaml
 ## 查看某个机器的网卡的ip包分析：tcpdump -i $网卡名字 host $主机名字 -n
-## enable calico IPIP mode input "Always", enable bgp mode inpu "off"
-calico_enable_IPIP: "off"
+## enable calico IPIP mode input "Always", enable bgp mode inpu "Off"
+## If cross subnet machine in cluster must use "CrossSubnet" mode
+calico_mode: "Off"
 
 # calico寻找可用物理网卡的策略
 # 1. 默认: "first-found"
@@ -169,7 +172,7 @@ nv_docker_daemon_json:
 # 根据服务器的GPU类型,Cuda版本选择GPU driver版本，注意：系统选择Linux x64——》点击下载——》跳转下载页面——》鼠标浮在下载按钮上——》右键——》复制链接地址
 # 获得通用的Linux 64位服务器的driver安装文件（.run文件）的下载路径
 # (注意，选择Ubutun系统会变成下载.deb文件，一般情况下手动用这种模式安装也是可以的，但实际测试中，.deb文件安装模式有可能会安装driver不成功, 所以本脚本只采用run文件安装模式)
-nvidia_driver_run_file_download_url: "http://cn.download.nvidia.com/tesla/418.116.00/NVIDIA-Linux-x86_64-418.116.00.run"
+#nvidia_driver_run_file_download_url: "http://cn.download.nvidia.com/tesla/418.116.00/NVIDIA-Linux-x86_64-418.116.00.run"
 
 # ------------------------------------------------ Config K8s Device Plugin For Nvidia GPU -------------------------------
 # 要让K8s资源管理器能识别到英伟达的GPU，需要安装英伟达GPU的 K8s deivce plugin

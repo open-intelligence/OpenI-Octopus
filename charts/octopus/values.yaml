@@ -2,6 +2,12 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+#  此配置文件聚合各子服务的配置项,包括:
+#  web-portal,rest-server,taskset-core,rest-server-plugin,
+#  kubebox-server,image-factory,image-factory,tasksetcontroller
+#  kube-batch,log-factory,prometheus,grafana;
+#  各服务下级属性为具体配置,这里只列出部分常需要修改项,更多配置参考具体服务chart包中的 values.yaml.
+
 global:
   scheduler:
     type: "kube-batch"
@@ -12,168 +18,157 @@ global:
     pullPolicy: Always
   nodeSelector: {}
 
+# 页面服务配置项
 web-portal:
-  image:
-    name: "web-portal"
-    tag: "latest"
+  common:
+    helperDocUri: "https://github.com/open-intelligence/openi"
+    restServerUri: "/rest-server"
+    logServiceUri: "/es"
+    grafanaUri: "/grafana"
+    terminalUri: "/terminal"
+    clusterName: "default"
+    jupyterLabProxyUri: ""
 
+# 接口服务配置项
 rest-server:
+  # 数据库配置
   storage:
-    replicaCount: 1
+    # 默认root账号密码
     rootPassword: "root"
-    image:
-      name: "rest-server-storage"
-      tag: "latest"
     dataVolume:
+      # 数据在物理机上的存储路径
       hostPath: ""
-    resources: {}
-    tolerations:
-      - key: "node-role.kubernetes.io/master"
-        operator: "Exists"
-        effect: "NoSchedule"
-    affinity: {}
+    # 数据库运行节点的labels
     nodeSelector:
       octopus.openi.pcl.cn/rest-server-storage: "yes"
-  image:
-    name: "rest-server"
-    tag: "latest"
-    poddiscoveryName: "poddiscovery"
-    poddiscoveryTag: "latest"
-  imageFactory:
-    customAddr: ""
-    protocol: "http"
-    host: "image-factory-shield"
-    port: "80"
-  logFactory:
-    customAddr: ""
-    port: "9200"
-    protocol: "http"
-    host: "log-factory-es"
-  envs: []
-  git:
-    server: ""
-    username: ""
-    password: ""
-    registry: ""
   docker:
+    # 镜像仓库地址
     registry: ""
+    # 镜像仓库用户名
     username: ""
+    # 镜像仓库密码
     password: ""
   volumes:
     - name: ghome
+      # 无需更改
       mountPath: /ghome
+      # 数据集目录,每个用户在此目的下都会自动生成独有子目录,任务启动时将挂载入任务容器
       hostPath: /ghome
     - name: gmodel
+      # 无需更改
       mountPath: /gmodel
+      # 模型目录,每个用户在此目的下都会自动生成独有子目录,任务启动时将挂载入任务容器
       hostPath: /gmodel
 
-kubebox-server:
-  image:
-    name: "kubebox-server"
-    tag: "latest"
+# 功能插件配置项
+rest-server-plugin:
+  # 数据库配置
+  storage:
+    # 默认root账号密码
+    rootPassword: "root"
+    dataVolume:
+      # 数据在物理机上的存储路径
+      hostPath: ""
+    # 数据库运行节点的labels
+    nodeSelector:
+      octopus.openi.pcl.cn/rest-server-plugin-storage: "yes"
+  service:
+    # debug类型任务的最大运行时间/秒
+    debugJobMaxRunTime: 7200
+  sharehosts:
+    # 同rest-server.volumes.[0].hostPath
+    shareDirectory: "/ghome"
+  common:
+    # 关闭jupyterLab请求body大小限制,开启限制单个请求限制在1M内
+    disableJpyLabRequestBodyLimit: "true"
 
-image-factory:
-  agent:
-    image:
-      name: "image-factory-agent"
-      tag: "latest"
-  shield:
-    image:
-      name: "image-factory-shield"
-      tag: "latest"
+# 任务管理服务配置项
+taskset-core:
+  # 数据库配置
+  storage:
+    # 默认root账号密码
+    rootPassword: "root"
+    dataVolume:
+      # 数据在物理机上的存储路径
+      hostPath: ""
+    # 数据库运行节点的labels
+    nodeSelector:
+      octopus.openi.pcl.cn/taskset-core-storage: "yes"
+  # 默认接口访问令牌
+  adminToken: "KLtmMug9BDvvRjlg"
+  # debug日志开关
+  debugMode: false
+  # debug sql
+  debugSql: false
+  pipeline:
+    # 新任务并行处理量
+    workerAmount: 10
+  lifehook:
+    # 通知超时/秒
+    requestTimeOutSec: 30
+    # 并行通知量
+    maxParallelProcessRequest: 5
+    # 通知失败重试次数
+    maxRetryOnFail: 3
 
-tasksetcontroller:
-  image:
-    name: "tasksetcontroller"
-    tag: "latest"
+# 虚拟终端配置项
+kubebox-server: {}
 
+# 镜像服务配置项
+image-factory: {}
+
+# 任务状态控制服务配置项
+tasksetcontroller: {}
+
+# 调度器配置项
+kube-batch: {}
+
+# 日志服务配置项
 log-factory:
   es:
-    replicaCount: 3
+    replicaCount: 1
+    # Elasticsearch索引分片配置
     index:
       number_of_shards: 5
       number_of_replicas: 2
     username: ""
     password: ""
-    image:
-      pullPolicy: Always
-      tag: "7.5.2"
     volumes:
-      esDataPath: /usr/share/elasticsearch
-    service:
-      type: ClusterIP
-      ports:
-        db:
-          port: 9200
-          targetPort: 9200
-        transport:
-          port: 9300
-          targetPort: 9300
-    ingress:
-      enabled: true
-      annotations: {}
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
-      path: /es
-      tls: []
-      #  - secretName: chart-example-tls
-      #    hosts:
-      #      - chart-example.local
-    ES_JAVA_OPTS: "-Xms30g -Xmx30g"
+      # Elasticsearch数据持久化路径
+      esDataPath: ""
+      # Elasticsearch备份持久化路径
+      esBackupPath: ""
+    ES_JAVA_OPTS: ""
     resources: {
-      limits: {
-        cpu: "8000m",
-        memory: "32Gi"
-      },
-      requests: {
-        cpu: "8000m",
-        memory: "32Gi"
-      }         
     }
+    # 数据库运行节点的labels
     nodeSelector:
       octopus.openi.pcl.cn/log-service-es: "yes"
-    affinity:
-      podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-        - labelSelector:
-            matchExpressions:
-            - key: app.kubernetes.io/name
-              operator: In
-              values:
-              - es
-          topologyKey: kubernetes.io/hostname
   filebeat:
-    image:
-      tag: "7.5.2"
+    # 资源限制
     resources: {
       limits: {
-        cpu: "4000m",
-        memory: "8Gi"
+        cpu: "1000m",
+        memory: "2Gi"
       },
       requests: {
-        cpu: "4000m",
-        memory: "8Gi"
+        cpu: "1000m",
+        memory: "2Gi"
       }         
     }
-    nodeSelector: {}
 
+# 监控服务配置项
 prometheus:
-  image:
-    tag: "v2.0.0"
-  service:
-    type: NodePort
-    hostPort: 30003
-    port: 9090
-    targetPort: 9090
-
-grafana:
-  image:
-    tag: "6.2.0"
   prometheus:
-    customAddr: ""
-    protocol: "http"
-    host: "prometheus"
-    port: "9090"
+    nodeSelector:
+      octopus.openi.pcl.cn/prometheus: "yes"
+    retentionDuration: 365d
+    volumes:
+      dataPath: ""
+
+
+# 监控界面配置项
+grafana:
   env:
     GF_AUTH_BASIC_ENABLED: "true"
     GF_AUTH_ANONYMOUS_ENABLED: "true"
@@ -181,8 +176,4 @@ grafana:
     GF_SECURITY_ADMIN_USER: "admin"
     GF_SECURITY_ADMIN_PASSWORD: "Pa22word"
     GF_SECURITY_ALLOW_EMBEDDING: "true"
-    GF_SERVER_ROOT_URL: "/grafana-core"
-  ingress:
-    enabled: true
-    annotations: {}
-    path: /grafana-core
+    GF_SERVER_ROOT_URL: "/grafana"
