@@ -3,7 +3,7 @@ Cython>=0.19.2
 numpy>=1.7.1
 scipy>=0.13.2
 matplotlib==2.0.0
-ipython==5.8.0
+ipython==8.10.0
 h5py>=2.2.0
 leveldb>=0.191
 networkx>=1.8.1
