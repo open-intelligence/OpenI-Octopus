@@ -15,7 +15,7 @@
     "execa": "^1.0.0",
     "fs-extra": "^7.0.1",
     "joi": "^14.3.0",
-    "jsonwebtoken": "^8.4.0",
+    "jsonwebtoken": "^9.0.0",
     "koa-compress": "^3.0.0",
     "koa-jwt": "^3.5.1",
     "lowdb": "^1.0.0",
